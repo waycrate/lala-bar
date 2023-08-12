@@ -54,9 +54,9 @@ pub struct ServiceInfo {
 }
 
 impl ServiceInfo {
-    fn new(path: &String, value: &HashMap<String, OwnedValue>) -> Self {
+    fn new(path: &str, value: &HashMap<String, OwnedValue>) -> Self {
         Self {
-            service_path: path.clone(),
+            service_path: path.to_owned(),
             metadata: Metadata::from_hashmap(value),
         }
     }
