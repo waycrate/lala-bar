@@ -36,6 +36,7 @@ impl Metadata {
 
         let album = &value["xesam:album"];
         let xesam_album: String = album.clone().try_into().unwrap_or_default();
+
         Self {
             mpris_trackid,
             xesam_title,
@@ -50,15 +51,47 @@ impl Metadata {
 #[derive(Debug, Clone)]
 pub struct ServiceInfo {
     service_path: String,
+    pub can_play: bool,
+    pub can_pause: bool,
+    pub playback_status: String,
     pub metadata: Metadata,
 }
 
 impl ServiceInfo {
-    fn new(path: &str, value: &HashMap<String, OwnedValue>) -> Self {
+    fn new(
+        path: &str,
+        can_play: bool,
+        can_pause: bool,
+        playback_status: String,
+        value: &HashMap<String, OwnedValue>,
+    ) -> Self {
         Self {
             service_path: path.to_owned(),
+            can_play,
+            can_pause,
+            playback_status,
             metadata: Metadata::from_hashmap(value),
         }
+    }
+
+    pub async fn pause(&self) -> Result<()> {
+        let conn = get_connection().await?;
+        let instance = MediaPlayer2DbusProxy::builder(&conn)
+            .destination(self.service_path.as_str())?
+            .build()
+            .await?;
+        instance.pause().await?;
+        Ok(())
+    }
+
+    pub async fn play(&self) -> Result<()> {
+        let conn = get_connection().await?;
+        let instance = MediaPlayer2DbusProxy::builder(&conn)
+            .destination(self.service_path.as_str())?
+            .build()
+            .await?;
+        instance.play().await?;
+        Ok(())
     }
 }
 
@@ -82,7 +115,6 @@ async fn set_mpirs_connection(list: Vec<ServiceInfo>) {
     *conns = list;
 }
 
-
 #[dbus_proxy(
     default_service = "org.freedesktop.DBus",
     interface = "org.freedesktop.DBus",
@@ -103,7 +135,23 @@ trait MediaPlayer2Dbus {
     fn can_pause(&self) -> Result<bool>;
 
     #[dbus_proxy(property)]
+    fn playback_status(&self) -> Result<String>;
+
+    #[dbus_proxy(property)]
+    fn can_play(&self) -> Result<bool>;
+
+    #[dbus_proxy(property)]
+    fn can_go_next(&self) -> Result<bool>;
+
+    #[dbus_proxy(property)]
+    fn can_go_previous(&self) -> Result<bool>;
+
+    #[dbus_proxy(property)]
     fn metadata(&self) -> Result<HashMap<String, OwnedValue>>;
+
+    fn pause(&self) -> Result<()>;
+
+    fn play(&self) -> Result<()>;
 }
 
 pub async fn init_pris() -> Result<()> {
@@ -124,8 +172,16 @@ pub async fn init_pris() -> Result<()> {
             .await?;
 
         let value = instance.metadata().await?;
-        serviceinfos.push(ServiceInfo::new(name, &value));
-        //let data = Metadata::from_hashmap(&value);
+        let can_pause = instance.can_pause().await?;
+        let can_play = instance.can_play().await?;
+        let playback_status = instance.playback_status().await?;
+        serviceinfos.push(ServiceInfo::new(
+            name,
+            can_play,
+            can_pause,
+            playback_status,
+            &value,
+        ));
     }
 
     set_mpirs_connection(serviceinfos).await;

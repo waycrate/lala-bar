@@ -1,4 +1,4 @@
-use iced::widget::{container, text};
+use iced::widget::{button, column, container, text};
 use iced::{executor, window};
 use iced::{Application, Command, Element, Length, Settings, Theme};
 use zbus_mpirs::ServiceInfo;
@@ -10,7 +10,7 @@ pub fn main() -> iced::Result {
 
     MpirsRoot::run(Settings {
         window: window::Settings {
-            size: (1000, 200),
+            size: (600, 200),
             decorations: false,
             transparent: true,
             resizable: false,
@@ -22,11 +22,13 @@ pub fn main() -> iced::Result {
 
 #[derive(Default)]
 struct MpirsRoot {
-    title: String,
+    service_data: Option<ServiceInfo>,
 }
 
 #[derive(Debug, Clone)]
 enum Message {
+    RequestPause,
+    RequestPlay,
     RequestDbusInfoUpdate,
     DBusInfoUpdate(Option<ServiceInfo>),
 }
@@ -56,21 +58,70 @@ impl Application for MpirsRoot {
 
     fn update(&mut self, message: Message) -> Command<Message> {
         match message {
-            Message::DBusInfoUpdate(Some(data)) => {
-                self.title = data.metadata.xesam_title.clone();
-            }
+            Message::DBusInfoUpdate(data) => self.service_data = data,
             Message::RequestDbusInfoUpdate => {
                 return Command::perform(get_metadata(), Message::DBusInfoUpdate)
             }
-            _ => {}
+            Message::RequestPlay => {
+                if let Some(ref data) = self.service_data {
+                    if !data.can_play {
+                        return Command::none();
+                    }
+                    let data = data.clone();
+                    return Command::perform(
+                        async move {
+                            data.play().await.ok();
+                            get_metadata().await
+                        },
+                        Message::DBusInfoUpdate,
+                    );
+                }
+            }
+            Message::RequestPause => {
+                if let Some(ref data) = self.service_data {
+                    if !data.can_pause {
+                        return Command::none();
+                    }
+                    let data = data.clone();
+                    return Command::perform(
+                        async move {
+                            data.pause().await.ok();
+                            get_metadata().await
+                        },
+                        Message::DBusInfoUpdate,
+                    );
+                }
+            }
         }
         Command::none()
     }
 
     fn view(&self) -> Element<Message> {
-        let default_checkbox = text(self.title.as_str());
+        let title = self
+            .service_data
+            .as_ref()
+            .map(|data| data.metadata.xesam_title.as_str())
+            .unwrap_or("No Video here");
+        let title = container(text(title)).width(Length::Fill).center_x();
+        let button = {
+            match self.service_data {
+                Some(ref data) => {
+                    if data.playback_status == "Playing" {
+                        container(button(text("Pause")).on_press(Message::RequestPause))
+                            .width(Length::Fill)
+                            .center_x()
+                    } else {
+                        container(button(text("Play")).on_press(Message::RequestPlay))
+                            .width(Length::Fill)
+                            .center_x()
+                    }
+                }
+                None => container(button(text("Nothing todo"))).width(Length::Fill).center_x(),
+            }
+        };
+        let col = column![title, button];
 
-        container(default_checkbox)
+        container(col)
             .width(Length::Fill)
             .height(Length::Fill)
             .center_x()
