@@ -175,6 +175,8 @@ async fn add_mpirs_connection(mpirs_service_info: ServiceInfo) -> Result<()> {
 async fn connect_to_signal(mpirs_service_info: &ServiceInfo) -> Result<()> {
     let service_path = mpirs_service_info.service_path.clone();
     let service_path2 = mpirs_service_info.service_path.clone();
+    let service_path3 = mpirs_service_info.service_path.clone();
+    let service_path4 = mpirs_service_info.service_path.clone();
     let conn = get_connection().await?;
     let instance = MediaPlayer2DbusProxy::builder(&conn)
         .destination(service_path.clone())?
@@ -207,6 +209,38 @@ async fn connect_to_signal(mpirs_service_info: &ServiceInfo) -> Result<()> {
                 .position(|info| info.service_path == service_path2.clone())
             {
                 conns[index].metadata = metadata;
+            } else {
+                break;
+            }
+        }
+        Ok::<(), anyhow::Error>(())
+    });
+    let mut can_go_next_changed = instance.receive_can_go_next_changed().await;
+    tokio::spawn(async move {
+        while let Some(signal) = can_go_next_changed.next().await {
+            let can_go_next = signal.get().await?;
+            let mut conns = MPIRS_CONNECTIONS.lock().await;
+            if let Some(index) = conns
+                .iter()
+                .position(|info| info.service_path == service_path3.clone())
+            {
+                conns[index].can_go_next = can_go_next;
+            } else {
+                break;
+            }
+        }
+        Ok::<(), anyhow::Error>(())
+    });
+    let mut can_go_pre_changed = instance.receive_can_go_previous_changed().await;
+    tokio::spawn(async move {
+        while let Some(signal) = can_go_pre_changed.next().await {
+            let can_go_pre = signal.get().await?;
+            let mut conns = MPIRS_CONNECTIONS.lock().await;
+            if let Some(index) = conns
+                .iter()
+                .position(|info| info.service_path == service_path4.clone())
+            {
+                conns[index].can_go_previous = can_go_pre;
             } else {
                 break;
             }
