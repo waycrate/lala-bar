@@ -4,9 +4,9 @@ use once_cell::sync::Lazy;
 
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::Mutex;
-use zbus::{dbus_proxy, zvariant::OwnedValue, Result};
-
+use zbus::fdo::DBusProxy;
 use zbus::zvariant::OwnedObjectPath;
+use zbus::{dbus_proxy, zvariant::OwnedValue, Result};
 
 use std::sync::OnceLock;
 #[allow(unused)]
@@ -176,17 +176,6 @@ async fn remove_mpirs_connection<T: ToString>(conn: T) {
 }
 
 #[dbus_proxy(
-    default_service = "org.freedesktop.DBus",
-    interface = "org.freedesktop.DBus",
-    default_path = "/org/freedesktop/DBus"
-)]
-trait FreedestopDBus {
-    #[dbus_proxy(signal)]
-    fn name_owner_changed(&self) -> Result<(String, String, String)>;
-    fn list_names(&self) -> Result<Vec<String>>;
-}
-
-#[dbus_proxy(
     interface = "org.mpris.MediaPlayer2.Player",
     default_path = "/org/mpris/MediaPlayer2"
 )]
@@ -216,12 +205,13 @@ trait MediaPlayer2Dbus {
 
 pub async fn init_pris() -> Result<()> {
     let conn = get_connection().await?;
-    let freedesktop = FreedestopDBusProxy::new(&conn).await?;
+    let freedesktop = DBusProxy::new(&conn).await?;
     let names = freedesktop.list_names().await?;
     let names: Vec<String> = names
         .iter()
         .filter(|name| name.starts_with("org.mpris.MediaPlayer2"))
         .cloned()
+        .map(|name| name.to_string())
         .collect();
 
     let mut serviceinfos = Vec::new();
