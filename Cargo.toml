@@ -19,3 +19,4 @@ serde = { version = "1.0.181", features = ["derive"] }
 
 zbus = { version = "3.14.1", default-features = false, features = ["tokio"] }
 tracing-subscriber = "0.3.17"
+anyhow = "1.0.72"

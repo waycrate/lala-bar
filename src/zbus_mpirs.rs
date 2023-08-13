@@ -1,5 +1,7 @@
 //use futures_util::StreamExt;
+use futures_util::StreamExt;
 use once_cell::sync::Lazy;
+
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::Mutex;
 use zbus::{dbus_proxy, zvariant::OwnedValue, Result};
@@ -47,7 +49,6 @@ impl Metadata {
     }
 }
 
-#[allow(unused)]
 #[derive(Debug, Clone)]
 pub struct ServiceInfo {
     service_path: String,
@@ -110,9 +111,70 @@ async fn get_connection() -> zbus::Result<zbus::Connection> {
 pub static MPIRS_CONNECTIONS: Lazy<Arc<Mutex<Vec<ServiceInfo>>>> =
     Lazy::new(|| Arc::new(Mutex::new(Vec::new())));
 
+async fn mpirs_is_ready_in<T: ToString>(path: T) -> bool {
+    let conns = MPIRS_CONNECTIONS.lock().await;
+    conns
+        .iter()
+        .any(|info| info.service_path == path.to_string())
+}
+
 async fn set_mpirs_connection(list: Vec<ServiceInfo>) {
     let mut conns = MPIRS_CONNECTIONS.lock().await;
     *conns = list;
+}
+
+async fn add_mpirs_connection(mpirs_service_info: ServiceInfo) -> Result<()> {
+    let mut conns = MPIRS_CONNECTIONS.lock().await;
+    conns.push(mpirs_service_info.clone());
+    drop(conns);
+    let service_path = mpirs_service_info.service_path.clone();
+    let service_path2 = mpirs_service_info.service_path.clone();
+    let conn = get_connection().await?;
+    let instance = MediaPlayer2DbusProxy::builder(&conn)
+        .destination(service_path.clone())?
+        .build()
+        .await?;
+    let mut statuschanged = instance.receive_playback_status_changed().await;
+    tokio::spawn(async move {
+        while let Some(signal) = statuschanged.next().await {
+            let status: String = signal.get().await?;
+            let mut conns = MPIRS_CONNECTIONS.lock().await;
+            if let Some(index) = conns
+                .iter()
+                .position(|info| info.service_path == service_path.clone())
+            {
+                conns[index].playback_status = status;
+            } else {
+                break;
+            }
+        }
+        Ok::<(), anyhow::Error>(())
+    });
+    let mut metadatachanged = instance.receive_metadata_changed().await;
+    tokio::spawn(async move {
+        while let Some(signal) = metadatachanged.next().await {
+            let metadatamap = signal.get().await?;
+            let metadata = Metadata::from_hashmap(&metadatamap);
+            let mut conns = MPIRS_CONNECTIONS.lock().await;
+            if let Some(index) = conns
+                .iter()
+                .position(|info| info.service_path == service_path2.clone())
+            {
+                conns[index].metadata = metadata;
+            } else {
+                break;
+            }
+        }
+        Ok::<(), anyhow::Error>(())
+    });
+    Ok(())
+    //    Ok::<(), anyhow::Error>(())
+    //});
+}
+
+async fn remove_mpirs_connection<T: ToString>(conn: T) {
+    let mut conns = MPIRS_CONNECTIONS.lock().await;
+    conns.retain(|iter| iter.service_path != conn.to_string());
 }
 
 #[dbus_proxy(
@@ -185,5 +247,38 @@ pub async fn init_pris() -> Result<()> {
     }
 
     set_mpirs_connection(serviceinfos).await;
+    tokio::spawn(async move {
+        let mut namechangesignal = freedesktop.receive_name_owner_changed().await?;
+        while let Some(signal) = namechangesignal.next().await {
+            let (interfacename, added, removed): (String, String, String) = signal.body()?;
+            if !interfacename.starts_with("org.mpris.MediaPlayer2") {
+                continue;
+            }
+            if removed.is_empty() {
+                remove_mpirs_connection(&interfacename).await;
+            } else if added.is_empty() && !mpirs_is_ready_in(interfacename.as_str()).await {
+                let instance = MediaPlayer2DbusProxy::builder(&conn)
+                    .destination(interfacename.as_str())?
+                    .build()
+                    .await?;
+
+                let value = instance.metadata().await?;
+                let can_pause = instance.can_pause().await?;
+                let can_play = instance.can_play().await?;
+                let playback_status = instance.playback_status().await?;
+                add_mpirs_connection(ServiceInfo::new(
+                    interfacename.as_str(),
+                    can_play,
+                    can_pause,
+                    playback_status,
+                    &value,
+                ))
+                .await
+                .ok();
+            }
+            //println!("name: {:?}", get_mpirs_connections().await);
+        }
+        Ok::<(), anyhow::Error>(())
+    });
     Ok(())
 }

@@ -33,8 +33,13 @@ enum Message {
     DBusInfoUpdate(Option<ServiceInfo>),
 }
 
-async fn get_metadata() -> Option<ServiceInfo> {
+async fn get_metadata_initial() -> Option<ServiceInfo> {
     zbus_mpirs::init_pris().await.ok();
+    let infos = zbus_mpirs::MPIRS_CONNECTIONS.lock().await;
+    infos.first().cloned()
+}
+
+async fn get_metadata() -> Option<ServiceInfo> {
     let infos = zbus_mpirs::MPIRS_CONNECTIONS.lock().await;
     infos.first().cloned()
 }
@@ -48,7 +53,7 @@ impl Application for MpirsRoot {
     fn new(_flags: Self::Flags) -> (Self, Command<Message>) {
         (
             Self::default(),
-            Command::perform(get_metadata(), Message::DBusInfoUpdate),
+            Command::perform(get_metadata_initial(), Message::DBusInfoUpdate),
         )
     }
 
