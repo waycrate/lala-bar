@@ -1,3 +1,4 @@
+use iced::theme::Palette;
 use iced::widget::{button, column, container, row, text};
 use iced::{executor, window};
 use iced::{Application, Command, Element, Length, Settings, Theme};
@@ -139,7 +140,13 @@ impl Application for MpirsRoot {
             .as_ref()
             .map(|data| data.metadata.xesam_title.as_str())
             .unwrap_or("No Video here");
-        let title = container(text(title)).width(Length::Fill).center_x();
+        let title = container(
+            text(title)
+                .size(20)
+                .style(iced::theme::Text::Color(iced::Color::BLACK)),
+        )
+        .width(Length::Fill)
+        .center_x();
         let can_play = self.service_data.as_ref().is_some_and(|data| data.can_play);
         let can_pause = self
             .service_data
@@ -196,5 +203,17 @@ impl Application for MpirsRoot {
 
     fn subscription(&self) -> iced::Subscription<Self::Message> {
         iced::time::every(std::time::Duration::from_secs(1)).map(|_| Message::RequestDBusInfoUpdate)
+    }
+
+    fn theme(&self) -> Self::Theme {
+        Theme::custom(Palette {
+            background: iced::Color {
+                r: 0.5,
+                g: 0.5,
+                b: 0.5,
+                a: 0.5,
+            },
+            ..Palette::DARK
+        })
     }
 }
