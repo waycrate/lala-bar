@@ -60,6 +60,8 @@ pub struct ServiceInfo {
     service_path: String,
     pub can_play: bool,
     pub can_pause: bool,
+    pub can_go_next: bool,
+    pub can_go_previous: bool,
     pub playback_status: String,
     pub metadata: Metadata,
 }
@@ -69,6 +71,8 @@ impl ServiceInfo {
         path: &str,
         can_play: bool,
         can_pause: bool,
+        can_go_previous: bool,
+        can_go_next: bool,
         playback_status: String,
         value: &HashMap<String, OwnedValue>,
     ) -> Self {
@@ -76,6 +80,8 @@ impl ServiceInfo {
             service_path: path.to_owned(),
             can_play,
             can_pause,
+            can_go_previous,
+            can_go_next,
             playback_status,
             metadata: Metadata::from_hashmap(value),
         }
@@ -98,6 +104,26 @@ impl ServiceInfo {
             .build()
             .await?;
         instance.play().await?;
+        Ok(())
+    }
+
+    pub async fn go_next(&self) -> Result<()> {
+        let conn = get_connection().await?;
+        let instance = MediaPlayer2DbusProxy::builder(&conn)
+            .destination(self.service_path.as_str())?
+            .build()
+            .await?;
+        instance.next().await?;
+        Ok(())
+    }
+
+    pub async fn go_previous(&self) -> Result<()> {
+        let conn = get_connection().await?;
+        let instance = MediaPlayer2DbusProxy::builder(&conn)
+            .destination(self.service_path.as_str())?
+            .build()
+            .await?;
+        instance.previous().await?;
         Ok(())
     }
 }
@@ -216,6 +242,10 @@ trait MediaPlayer2Dbus {
     fn pause(&self) -> Result<()>;
 
     fn play(&self) -> Result<()>;
+
+    fn next(&self) -> Result<()>;
+
+    fn previous(&self) -> Result<()>;
 }
 
 pub async fn init_pris() -> Result<()> {
@@ -240,10 +270,14 @@ pub async fn init_pris() -> Result<()> {
         let can_pause = instance.can_pause().await?;
         let can_play = instance.can_play().await?;
         let playback_status = instance.playback_status().await?;
+        let can_go_next = instance.can_go_next().await?;
+        let can_go_previous = instance.can_go_previous().await?;
         serviceinfos.push(ServiceInfo::new(
             name,
             can_play,
             can_pause,
+            can_go_next,
+            can_go_previous,
             playback_status,
             &value,
         ));
@@ -268,11 +302,15 @@ pub async fn init_pris() -> Result<()> {
                 let value = instance.metadata().await?;
                 let can_pause = instance.can_pause().await?;
                 let can_play = instance.can_play().await?;
+                let can_go_next = instance.can_go_next().await?;
+                let can_go_previous = instance.can_go_previous().await?;
                 let playback_status = instance.playback_status().await?;
                 add_mpirs_connection(ServiceInfo::new(
                     interfacename.as_str(),
                     can_play,
                     can_pause,
+                    can_go_next,
+                    can_go_previous,
                     playback_status,
                     &value,
                 ))

@@ -1,4 +1,4 @@
-use iced::widget::{button, column, container, text};
+use iced::widget::{button, column, container, row, text};
 use iced::{executor, window};
 use iced::{Application, Command, Element, Length, Settings, Theme};
 use zbus_mpirs::ServiceInfo;
@@ -27,6 +27,8 @@ struct MpirsRoot {
 
 #[derive(Debug, Clone)]
 enum Message {
+    RequestPre,
+    RequestNext,
     RequestPause,
     RequestPlay,
     RequestDBusInfoUpdate,
@@ -97,6 +99,36 @@ impl Application for MpirsRoot {
                     );
                 }
             }
+            Message::RequestPre => {
+                if let Some(ref data) = self.service_data {
+                    if !data.can_go_previous {
+                        return Command::none();
+                    }
+                    let data = data.clone();
+                    return Command::perform(
+                        async move {
+                            data.go_previous().await.ok();
+                            get_metadata().await
+                        },
+                        Message::DBusInfoUpdate,
+                    );
+                }
+            }
+            Message::RequestNext => {
+                if let Some(ref data) = self.service_data {
+                    if !data.can_go_next {
+                        return Command::none();
+                    }
+                    let data = data.clone();
+                    return Command::perform(
+                        async move {
+                            data.go_next().await.ok();
+                            get_metadata().await
+                        },
+                        Message::DBusInfoUpdate,
+                    );
+                }
+            }
         }
         Command::none()
     }
@@ -108,25 +140,51 @@ impl Application for MpirsRoot {
             .map(|data| data.metadata.xesam_title.as_str())
             .unwrap_or("No Video here");
         let title = container(text(title)).width(Length::Fill).center_x();
-        let button = {
+        let can_play = self.service_data.as_ref().is_some_and(|data| data.can_play);
+        let can_pause = self
+            .service_data
+            .as_ref()
+            .is_some_and(|data| data.can_pause);
+        let can_go_next = self
+            .service_data
+            .as_ref()
+            .is_some_and(|data| data.can_go_next);
+        let can_go_pre = self
+            .service_data
+            .as_ref()
+            .is_some_and(|data| data.can_go_previous);
+        let mut button_pre = button("<|");
+        if can_go_pre {
+            button_pre = button_pre.on_press(Message::RequestPre);
+        }
+        let mut button_next = button("|>");
+        if can_go_next {
+            button_next = button_next.on_press(Message::RequestNext);
+        }
+        let button_play = {
             match self.service_data {
                 Some(ref data) => {
                     if data.playback_status == "Playing" {
-                        container(button(text("Pause")).on_press(Message::RequestPause))
-                            .width(Length::Fill)
-                            .center_x()
+                        let mut btn = button(text("Pause"));
+                        if can_pause {
+                            btn = btn.on_press(Message::RequestPause);
+                        }
+                        btn
                     } else {
-                        container(button(text("Play")).on_press(Message::RequestPlay))
-                            .width(Length::Fill)
-                            .center_x()
+                        let mut btn = button(text("Play"));
+                        if can_play {
+                            btn = btn.on_press(Message::RequestPlay);
+                        }
+                        btn
                     }
                 }
-                None => container(button(text("Nothing todo")))
-                    .width(Length::Fill)
-                    .center_x(),
+                None => button(text("Nothing todo")),
             }
         };
-        let col = column![title, button].spacing(40);
+        let buttons = container(row![button_pre, button_play, button_next].spacing(5))
+            .width(Length::Fill)
+            .center_x();
+        let col = column![title, buttons].spacing(40);
 
         container(col)
             .width(Length::Fill)
