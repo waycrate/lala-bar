@@ -1,6 +1,6 @@
 use iced::theme::Palette;
 use iced::widget::{button, column, container, row, text};
-use iced::{executor, window};
+use iced::{executor, window, Font};
 use iced::{Application, Command, Element, Length, Settings, Theme};
 use zbus_mpirs::ServiceInfo;
 
@@ -143,6 +143,10 @@ impl Application for MpirsRoot {
         let title = container(
             text(title)
                 .size(20)
+                .font(Font {
+                    weight: iced::font::Weight::Bold,
+                    ..Default::default()
+                })
                 .style(iced::theme::Text::Color(iced::Color::BLACK)),
         )
         .width(Length::Fill)
