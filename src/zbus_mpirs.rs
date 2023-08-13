@@ -1,14 +1,20 @@
-//use futures_util::StreamExt;
+use std::{
+    collections::HashMap,
+    sync::{Arc, OnceLock},
+};
+
 use futures_util::StreamExt;
 use once_cell::sync::Lazy;
 
-use std::{collections::HashMap, sync::Arc};
 use tokio::sync::Mutex;
-use zbus::fdo::DBusProxy;
-use zbus::zvariant::OwnedObjectPath;
-use zbus::{dbus_proxy, zvariant::OwnedValue, Result};
 
-use std::sync::OnceLock;
+use zbus::{
+    dbus_proxy,
+    fdo::DBusProxy,
+    zvariant::{OwnedObjectPath, OwnedValue},
+    Result,
+};
+
 #[allow(unused)]
 #[derive(Debug, Clone)]
 pub struct Metadata {
