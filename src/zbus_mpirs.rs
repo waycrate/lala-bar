@@ -168,8 +168,6 @@ async fn add_mpirs_connection(mpirs_service_info: ServiceInfo) -> Result<()> {
         Ok::<(), anyhow::Error>(())
     });
     Ok(())
-    //    Ok::<(), anyhow::Error>(())
-    //});
 }
 
 async fn remove_mpirs_connection<T: ToString>(conn: T) {
