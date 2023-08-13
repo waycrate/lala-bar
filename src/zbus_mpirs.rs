@@ -15,6 +15,8 @@ use zbus::{
     Result,
 };
 
+const PLAYCTLD: &str = "org.mpris.MediaPlayer2.playerctld";
+
 #[allow(unused)]
 #[derive(Debug, Clone)]
 pub struct Metadata {
@@ -254,7 +256,7 @@ pub async fn init_pris() -> Result<()> {
     let names = freedesktop.list_names().await?;
     let names: Vec<String> = names
         .iter()
-        .filter(|name| name.starts_with("org.mpris.MediaPlayer2"))
+        .filter(|name| name.starts_with("org.mpris.MediaPlayer2") && name.to_string() != PLAYCTLD)
         .cloned()
         .map(|name| name.to_string())
         .collect();
@@ -288,7 +290,7 @@ pub async fn init_pris() -> Result<()> {
         let mut namechangesignal = freedesktop.receive_name_owner_changed().await?;
         while let Some(signal) = namechangesignal.next().await {
             let (interfacename, added, removed): (String, String, String) = signal.body()?;
-            if !interfacename.starts_with("org.mpris.MediaPlayer2") {
+            if !interfacename.starts_with("org.mpris.MediaPlayer2") && interfacename != PLAYCTLD {
                 continue;
             }
             if removed.is_empty() {
