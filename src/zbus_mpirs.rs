@@ -118,15 +118,24 @@ async fn mpirs_is_ready_in<T: ToString>(path: T) -> bool {
         .any(|info| info.service_path == path.to_string())
 }
 
-async fn set_mpirs_connection(list: Vec<ServiceInfo>) {
+async fn set_mpirs_connection(list: Vec<ServiceInfo>) -> Result<()> {
     let mut conns = MPIRS_CONNECTIONS.lock().await;
+    for info in list.iter() {
+        connect_to_signal(info).await?;
+    }
     *conns = list;
+    Ok(())
 }
 
 async fn add_mpirs_connection(mpirs_service_info: ServiceInfo) -> Result<()> {
     let mut conns = MPIRS_CONNECTIONS.lock().await;
     conns.push(mpirs_service_info.clone());
     drop(conns);
+    connect_to_signal(&mpirs_service_info).await?;
+    Ok(())
+}
+
+async fn connect_to_signal(mpirs_service_info: &ServiceInfo) -> Result<()> {
     let service_path = mpirs_service_info.service_path.clone();
     let service_path2 = mpirs_service_info.service_path.clone();
     let conn = get_connection().await?;
@@ -234,7 +243,7 @@ pub async fn init_pris() -> Result<()> {
         ));
     }
 
-    set_mpirs_connection(serviceinfos).await;
+    set_mpirs_connection(serviceinfos).await.ok();
     tokio::spawn(async move {
         let mut namechangesignal = freedesktop.receive_name_owner_changed().await?;
         while let Some(signal) = namechangesignal.next().await {
