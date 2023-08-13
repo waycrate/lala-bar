@@ -60,7 +60,7 @@ impl Application for MpirsRoot {
     }
 
     fn title(&self) -> String {
-        String::from("A Template")
+        String::from("Mpirs panel")
     }
 
     fn update(&mut self, message: Message) -> Command<Message> {
