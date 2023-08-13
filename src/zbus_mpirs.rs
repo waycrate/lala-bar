@@ -29,10 +29,10 @@ pub struct Metadata {
 
 impl Metadata {
     fn from_hashmap(value: &HashMap<String, OwnedValue>) -> Self {
-        let art_url = &value.get("mpris:artUrl");
+        let art_url = value.get("mpris:artUrl");
         let mut mpris_arturl = String::new();
         if let Some(art_url) = art_url {
-            mpris_arturl = (*art_url).clone().try_into().unwrap_or_default();
+            mpris_arturl = art_url.clone().try_into().unwrap_or_default();
         }
 
         let trackid = &value["mpris:trackid"];
@@ -44,8 +44,11 @@ impl Metadata {
         let artist = &value["xesam:artist"];
         let xesam_artist: Vec<String> = artist.clone().try_into().unwrap_or_default();
 
-        let album = &value["xesam:album"];
-        let xesam_album: String = album.clone().try_into().unwrap_or_default();
+        let mut xesam_album = String::new();
+        let album = value.get("xesam:album");
+        if let Some(album) = album {
+            xesam_album = album.clone().try_into().unwrap_or_default();
+        }
 
         Self {
             mpris_trackid,
