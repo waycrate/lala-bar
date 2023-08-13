@@ -29,7 +29,7 @@ struct MpirsRoot {
 enum Message {
     RequestPause,
     RequestPlay,
-    RequestDbusInfoUpdate,
+    RequestDBusInfoUpdate,
     DBusInfoUpdate(Option<ServiceInfo>),
 }
 
@@ -64,7 +64,7 @@ impl Application for MpirsRoot {
     fn update(&mut self, message: Message) -> Command<Message> {
         match message {
             Message::DBusInfoUpdate(data) => self.service_data = data,
-            Message::RequestDbusInfoUpdate => {
+            Message::RequestDBusInfoUpdate => {
                 return Command::perform(get_metadata(), Message::DBusInfoUpdate)
             }
             Message::RequestPlay => {
@@ -121,10 +121,12 @@ impl Application for MpirsRoot {
                             .center_x()
                     }
                 }
-                None => container(button(text("Nothing todo"))).width(Length::Fill).center_x(),
+                None => container(button(text("Nothing todo")))
+                    .width(Length::Fill)
+                    .center_x(),
             }
         };
-        let col = column![title, button];
+        let col = column![title, button].spacing(40);
 
         container(col)
             .width(Length::Fill)
@@ -135,6 +137,6 @@ impl Application for MpirsRoot {
     }
 
     fn subscription(&self) -> iced::Subscription<Self::Message> {
-        iced::time::every(std::time::Duration::from_secs(1)).map(|_| Message::RequestDbusInfoUpdate)
+        iced::time::every(std::time::Duration::from_secs(1)).map(|_| Message::RequestDBusInfoUpdate)
     }
 }
