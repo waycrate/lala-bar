@@ -1,4 +1,3 @@
-use iced::theme::Palette;
 use iced::widget::{button, container, row, text, Space};
 use iced::{executor, Font};
 use iced::{Command, Element, Length, Theme};
@@ -160,7 +159,7 @@ impl Application for MpirsRoot {
                     weight: iced::font::Weight::Bold,
                     ..Default::default()
                 })
-                .style(iced::theme::Text::Color(iced::Color::BLACK)),
+                .style(iced::theme::Text::Color(iced::Color::WHITE)),
         )
         .width(Length::Fill)
         .center_x();
@@ -230,17 +229,6 @@ impl Application for MpirsRoot {
     }
 
     fn theme(&self) -> Self::Theme {
-        Theme::custom(
-            "hello".to_string(),
-            Palette {
-                background: iced::Color {
-                    r: 0.5,
-                    g: 0.5,
-                    b: 0.5,
-                    a: 0.5,
-                },
-                ..Palette::DARK
-            },
-        )
+        Theme::TokyoNight
     }
 }
