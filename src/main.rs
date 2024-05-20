@@ -1,20 +1,29 @@
 use iced::theme::Palette;
-use iced::widget::{button, column, container, row, text};
-use iced::{executor, window, Font};
-use iced::{Application, Command, Element, Length, Settings, Theme};
+use iced::widget::{button, container, row, text, Space};
+use iced::{executor, Font};
+use iced::{Command, Element, Length, Theme};
 use zbus_mpirs::ServiceInfo;
+
+use iced_layershell::reexport::{Anchor, Layer};
+use iced_layershell::settings::{LayerShellSettings, Settings};
+use iced_layershell::Application;
+
+use iced_runtime::command::Action;
+use iced_runtime::window::Action as WindowAction;
+
+use iced::window::Id;
 
 mod zbus_mpirs;
 
-pub fn main() -> iced::Result {
+pub fn main() -> Result<(), iced_layershell::Error> {
     env_logger::builder().format_timestamp(None).init();
 
     MpirsRoot::run(Settings {
-        window: window::Settings {
-            size: (600, 200),
-            decorations: false,
-            transparent: true,
-            resizable: false,
+        layer_settings: LayerShellSettings {
+            size: Some((0, 40)),
+            exclusize_zone: 40,
+            anchor: Anchor::Bottom | Anchor::Left | Anchor::Right,
+            layer: Layer::Top,
             ..Default::default()
         },
         ..Default::default()
@@ -34,6 +43,7 @@ enum Message {
     RequestPlay,
     RequestDBusInfoUpdate,
     DBusInfoUpdate(Option<ServiceInfo>),
+    RequestExit,
 }
 
 async fn get_metadata_initial() -> Option<ServiceInfo> {
@@ -60,8 +70,8 @@ impl Application for MpirsRoot {
         )
     }
 
-    fn title(&self) -> String {
-        String::from("Mpirs panel")
+    fn namespace(&self) -> String {
+        String::from("Mpirs_panel")
     }
 
     fn update(&mut self, message: Message) -> Command<Message> {
@@ -130,6 +140,9 @@ impl Application for MpirsRoot {
                     );
                 }
             }
+            Message::RequestExit => {
+                return Command::single(Action::Window(WindowAction::Close(Id::MAIN)))
+            }
         }
         Command::none()
     }
@@ -195,7 +208,14 @@ impl Application for MpirsRoot {
         let buttons = container(row![button_pre, button_play, button_next].spacing(5))
             .width(Length::Fill)
             .center_x();
-        let col = column![title, buttons].spacing(40);
+        let col = row![
+            title,
+            Space::with_width(Length::Fill),
+            buttons,
+            Space::with_width(Length::Fixed(40.)),
+            button("x").on_press(Message::RequestExit)
+        ]
+        .spacing(10);
 
         container(col)
             .width(Length::Fill)
@@ -210,14 +230,17 @@ impl Application for MpirsRoot {
     }
 
     fn theme(&self) -> Self::Theme {
-        Theme::custom(Palette {
-            background: iced::Color {
-                r: 0.5,
-                g: 0.5,
-                b: 0.5,
-                a: 0.5,
+        Theme::custom(
+            "hello".to_string(),
+            Palette {
+                background: iced::Color {
+                    r: 0.5,
+                    g: 0.5,
+                    b: 0.5,
+                    a: 0.5,
+                },
+                ..Palette::DARK
             },
-            ..Palette::DARK
-        })
+        )
     }
 }
