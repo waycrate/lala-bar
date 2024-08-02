@@ -1,4 +1,4 @@
-use iced::widget::{button, container, row, text, Space};
+use iced::widget::{button, container, row, slider, text, Space};
 use iced::{executor, Font};
 use iced::{Command, Element, Length, Theme};
 use zbus_mpirs::ServiceInfo;
@@ -12,6 +12,7 @@ use iced_runtime::window::Action as WindowAction;
 
 use iced::window::Id;
 
+mod aximer;
 mod zbus_mpirs;
 
 pub fn main() -> Result<(), iced_layershell::Error> {
@@ -32,6 +33,26 @@ pub fn main() -> Result<(), iced_layershell::Error> {
 #[derive(Default)]
 struct MpirsRoot {
     service_data: Option<ServiceInfo>,
+    left: i64,
+    right: i64,
+}
+
+impl MpirsRoot {
+    fn balance_percent(&self) -> u8 {
+        if self.left == 0 && self.right == 0 {
+            return 0;
+        }
+        (self.right * 100 / (self.left + self.right))
+            .try_into()
+            .unwrap()
+    }
+    fn set_balance(&mut self, balance: u8) {
+        let total = self.left + self.right;
+        self.right = total * balance as i64 / 100;
+        self.left = total - self.right;
+        aximer::set_left(self.left);
+        aximer::set_right(self.right);
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -43,6 +64,7 @@ enum Message {
     RequestDBusInfoUpdate,
     DBusInfoUpdate(Option<ServiceInfo>),
     RequestExit,
+    BalanceChanged(u8),
 }
 
 async fn get_metadata_initial() -> Option<ServiceInfo> {
@@ -64,7 +86,11 @@ impl MultiApplication for MpirsRoot {
 
     fn new(_flags: Self::Flags) -> (Self, Command<Message>) {
         (
-            Self::default(),
+            Self {
+                service_data: None,
+                left: aximer::get_left().unwrap_or(0),
+                right: aximer::get_right().unwrap_or(0),
+            },
             Command::perform(get_metadata_initial(), Message::DBusInfoUpdate),
         )
     }
@@ -142,6 +168,13 @@ impl MultiApplication for MpirsRoot {
             Message::RequestExit => {
                 return Command::single(Action::Window(WindowAction::Close(Id::MAIN)))
             }
+            Message::BalanceChanged(balance) => {
+                let current_balance = self.balance_percent();
+                if current_balance == 0 {
+                    return Command::none();
+                }
+                self.set_balance(balance)
+            }
         }
         Command::none()
     }
@@ -207,10 +240,17 @@ impl MultiApplication for MpirsRoot {
         let buttons = container(row![button_pre, button_play, button_next].spacing(5))
             .width(Length::Fill)
             .center_x();
+
+        let balance_slider = row![
+            text("balance"),
+            Space::with_width(Length::Fixed(10.)),
+            slider(0..=100, self.balance_percent(), Message::BalanceChanged)
+        ];
         let col = row![
             title,
             Space::with_width(Length::Fill),
             buttons,
+            balance_slider,
             Space::with_width(Length::Fixed(40.)),
             button("x").on_press(Message::RequestExit)
         ]
