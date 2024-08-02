@@ -5,7 +5,7 @@ use zbus_mpirs::ServiceInfo;
 
 use iced_layershell::reexport::{Anchor, Layer};
 use iced_layershell::settings::{LayerShellSettings, Settings};
-use iced_layershell::Application;
+use iced_layershell::MultiApplication;
 
 use iced_runtime::command::Action;
 use iced_runtime::window::Action as WindowAction;
@@ -56,7 +56,7 @@ async fn get_metadata() -> Option<ServiceInfo> {
     infos.first().cloned()
 }
 
-impl Application for MpirsRoot {
+impl MultiApplication for MpirsRoot {
     type Message = Message;
     type Flags = ();
     type Executor = executor::Default;
@@ -146,7 +146,7 @@ impl Application for MpirsRoot {
         Command::none()
     }
 
-    fn view(&self) -> Element<Message> {
+    fn view(&self, _id: iced::window::Id) -> Element<Message> {
         let title = self
             .service_data
             .as_ref()
