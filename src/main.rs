@@ -42,6 +42,8 @@ impl LalaMusicBar {
             .unwrap()
     }
     fn set_balance(&mut self, balance: u8) {
+        self.left = aximer::get_left().unwrap_or(0);
+        self.right = aximer::get_right().unwrap_or(0);
         let total = self.left + self.right;
         self.right = total * balance as i64 / 100;
         self.left = total - self.right;
