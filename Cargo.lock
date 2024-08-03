@@ -1549,26 +1549,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "iced_mpirs"
-version = "0.1.0"
-dependencies = [
- "alsa",
- "anyhow",
- "env_logger",
- "futures-util",
- "iced",
- "iced_futures",
- "iced_layershell",
- "iced_runtime",
- "once_cell",
- "serde",
- "tokio",
- "tracing",
- "tracing-subscriber",
- "zbus",
-]
-
-[[package]]
 name = "iced_renderer"
 version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1808,6 +1788,26 @@ checksum = "1618d4ebd923e97d67e7cd363d80aef35fe961005cbbbb3d2dad8bdd1bc63440"
 dependencies = [
  "arrayvec",
  "smallvec",
+]
+
+[[package]]
+name = "lala_musicbar"
+version = "0.1.0"
+dependencies = [
+ "alsa",
+ "anyhow",
+ "env_logger",
+ "futures-util",
+ "iced",
+ "iced_futures",
+ "iced_layershell",
+ "iced_runtime",
+ "once_cell",
+ "serde",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "zbus",
 ]
 
 [[package]]

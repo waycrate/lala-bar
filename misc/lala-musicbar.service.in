@@ -1,0 +1,9 @@
+[Unit]
+Description=A music bar with iced
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=@bin_install_dir@/lala_musicbar
+Restart=on-failure

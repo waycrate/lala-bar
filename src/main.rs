@@ -13,7 +13,7 @@ mod zbus_mpirs;
 pub fn main() -> Result<(), iced_layershell::Error> {
     env_logger::builder().format_timestamp(None).init();
 
-    MpirsRoot::run(Settings {
+    LalaMusicBar::run(Settings {
         layer_settings: LayerShellSettings {
             size: Some((0, 40)),
             exclusize_zone: 40,
@@ -26,13 +26,13 @@ pub fn main() -> Result<(), iced_layershell::Error> {
 }
 
 #[derive(Default)]
-struct MpirsRoot {
+struct LalaMusicBar {
     service_data: Option<ServiceInfo>,
     left: i64,
     right: i64,
 }
 
-impl MpirsRoot {
+impl LalaMusicBar {
     fn balance_percent(&self) -> u8 {
         if self.left == 0 && self.right == 0 {
             return 0;
@@ -72,7 +72,7 @@ async fn get_metadata() -> Option<ServiceInfo> {
     infos.first().cloned()
 }
 
-impl MultiApplication for MpirsRoot {
+impl MultiApplication for LalaMusicBar {
     type Message = Message;
     type Flags = ();
     type Executor = executor::Default;
