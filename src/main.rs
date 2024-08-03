@@ -62,7 +62,7 @@ enum Message {
 }
 
 async fn get_metadata_initial() -> Option<ServiceInfo> {
-    zbus_mpirs::init_pris().await.ok();
+    zbus_mpirs::init_mpirs().await.ok();
     let infos = zbus_mpirs::MPIRS_CONNECTIONS.lock().await;
     infos.first().cloned()
 }

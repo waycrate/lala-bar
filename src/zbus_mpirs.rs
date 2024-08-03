@@ -302,7 +302,7 @@ trait FreedestopDBus {
     fn list_names(&self) -> Result<Vec<String>>;
 }
 
-pub async fn init_pris() -> Result<()> {
+pub async fn init_mpirs() -> Result<()> {
     let conn = get_connection().await?;
     let freedesktop = FreedestopDBusProxy::new(&conn).await?;
     let names = freedesktop.list_names().await?;
