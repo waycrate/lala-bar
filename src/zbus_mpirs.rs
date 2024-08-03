@@ -27,41 +27,26 @@ pub struct Metadata {
 }
 
 impl Metadata {
-    fn from_hashmap(value: &HashMap<String, OwnedValue>) -> Self {
-        let art_url = value.get("mpris:artUrl");
+    fn from_hashmap(mut value: HashMap<String, OwnedValue>) -> Self {
+        let art_url = value.remove("mpris:artUrl");
         let mut mpris_arturl = String::new();
         if let Some(art_url) = art_url {
-            mpris_arturl = art_url
-                .try_to_owned()
-                .map(|ov| ov.try_into().unwrap_or_default())
-                .unwrap_or_default();
+            mpris_arturl = art_url.try_into().unwrap_or_default()
         }
 
-        let trackid = &value["mpris:trackid"];
-        let mpris_trackid: OwnedObjectPath = trackid
-            .try_to_owned()
-            .map(|ov| ov.try_into().unwrap_or_default())
-            .unwrap_or_default();
+        let trackid = value.remove("mpris:trackid").unwrap();
+        let mpris_trackid: OwnedObjectPath = trackid.try_into().unwrap_or_default();
 
-        let title = &value["xesam:title"];
-        let xesam_title: String = title
-            .try_to_owned()
-            .map(|ov| ov.try_into().unwrap_or_default())
-            .unwrap_or_default();
+        let title = value.remove("xesam:title").unwrap();
+        let xesam_title: String = title.try_into().unwrap_or_default();
 
-        let artist = &value["xesam:artist"];
-        let xesam_artist: Vec<String> = artist
-            .try_to_owned()
-            .map(|ov| ov.try_into().unwrap_or_default())
-            .unwrap_or_default();
+        let artist = value.remove("xesam:artist").unwrap();
+        let xesam_artist: Vec<String> = artist.try_into().unwrap_or_default();
 
         let mut xesam_album = String::new();
-        let album = value.get("xesam:album");
+        let album = value.remove("xesam:album");
         if let Some(album) = album {
-            xesam_album = album
-                .try_to_owned()
-                .map(|ov| ov.try_into().unwrap_or_default())
-                .unwrap_or_default();
+            xesam_album = album.try_into().unwrap_or_default();
         }
 
         Self {
@@ -93,7 +78,7 @@ impl ServiceInfo {
         can_go_previous: bool,
         can_go_next: bool,
         playback_status: String,
-        value: &HashMap<String, OwnedValue>,
+        value: HashMap<String, OwnedValue>,
     ) -> Self {
         Self {
             service_path: path.to_owned(),
@@ -216,7 +201,7 @@ async fn connect_to_signal(mpirs_service_info: &ServiceInfo) -> Result<()> {
     tokio::spawn(async move {
         while let Some(signal) = metadatachanged.next().await {
             let metadatamap = signal.get().await?;
-            let metadata = Metadata::from_hashmap(&metadatamap);
+            let metadata = Metadata::from_hashmap(metadatamap);
             let mut conns = MPIRS_CONNECTIONS.lock().await;
             if let Some(index) = conns
                 .iter()
@@ -348,7 +333,7 @@ pub async fn init_pris() -> Result<()> {
             can_go_next,
             can_go_previous,
             playback_status,
-            &value,
+            value,
         ));
     }
 
@@ -386,7 +371,7 @@ pub async fn init_pris() -> Result<()> {
                     can_go_next,
                     can_go_previous,
                     playback_status,
-                    &value,
+                    value,
                 ))
                 .await
                 .ok();
