@@ -287,6 +287,7 @@ impl MultiApplication for LalaMusicBar {
                     weight: iced::font::Weight::Bold,
                     ..Default::default()
                 })
+                .shaping(text::Shaping::Advanced)
                 .style(iced::theme::Text::Color(iced::Color::WHITE)),
         )
         .width(Length::Fill)
