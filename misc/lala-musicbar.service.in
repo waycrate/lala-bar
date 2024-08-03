@@ -10,4 +10,4 @@ ExecStart=@bin_install_dir@/lala_musicbar
 Restart=on-failure
 
 [Install]
-WantedBy=default.target
+WantedBy=graphical-session.target
