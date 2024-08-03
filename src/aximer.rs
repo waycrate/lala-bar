@@ -1,11 +1,11 @@
 use alsa::mixer::{Mixer, SelemChannelId, SelemId};
 
 fn get_volume(volume: i64) -> i64 {
-    volume * 65536 / 100
+    (volume as f64 * 65536. / 100.) as i64
 }
 
 fn get_volume_from_alsa(value: i64) -> i64 {
-    value * 100 / 65536
+    (value as f64 * 100. / 65536.) as i64
 }
 pub fn get_left() -> Option<i64> {
     let mixer = Mixer::new("default", false).ok()?;
