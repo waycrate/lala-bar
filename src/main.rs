@@ -241,10 +241,13 @@ impl MultiApplication for MpirsRoot {
             .width(Length::Fill)
             .center_x();
 
+        let show_text = format!("balance {}%", self.balance_percent());
         let balance_slider = row![
-            text("balance"),
+            text(&show_text),
             Space::with_width(Length::Fixed(10.)),
-            slider(0..=100, self.balance_percent(), Message::BalanceChanged)
+            slider(0..=100, self.balance_percent(), Message::BalanceChanged),
+            Space::with_width(Length::Fixed(10.)),
+            button("R").on_press(Message::BalanceChanged(50))
         ];
         let col = row![
             title,
