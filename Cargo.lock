@@ -1531,9 +1531,9 @@ dependencies = [
 
 [[package]]
 name = "iced_layershell"
-version = "0.2.7"
+version = "0.3.0-beta2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "776cb13f983c2375026654b4698c479f9980a29177c1f2fae3fc1fed4cc6604b"
+checksum = "a28d25f98e12cfe127511dd6040187267bcf0f494cc21334ed7d406bc687c422"
 dependencies = [
  "futures",
  "iced",
@@ -1812,9 +1812,9 @@ dependencies = [
 
 [[package]]
 name = "layershellev"
-version = "0.2.7"
+version = "0.3.0-beta2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9022f2775ab37641f882065ea9b8ea42787da4c4d81402d24ee94ec36bf6c244"
+checksum = "ba42133ff5c41b6c50e2af26b69bc92623d65b103cb8a7f16ac55e0185763e24"
 dependencies = [
  "bitflags 2.6.0",
  "log",
@@ -1822,12 +1822,13 @@ dependencies = [
  "smithay-client-toolkit 0.18.1",
  "tempfile",
  "thiserror",
+ "waycrate_xkbkeycode",
  "wayland-backend",
  "wayland-client",
  "wayland-cursor",
- "wayland-protocols 0.31.2",
+ "wayland-protocols 0.32.3",
  "wayland-protocols-misc",
- "wayland-protocols-wlr 0.2.0",
+ "wayland-protocols-wlr 0.3.3",
 ]
 
 [[package]]
@@ -3548,6 +3549,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "waycrate_xkbkeycode"
+version = "0.3.0-beta2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b58956a08873970c7bc75eebcba60675c42c1b967212253f686b6524098fc49d"
+dependencies = [
+ "bitflags 2.6.0",
+ "log",
+ "memmap2 0.9.4",
+ "smol_str",
+ "wayland-backend",
+ "wayland-client",
+ "xkbcommon-dl",
+]
+
+[[package]]
 name = "wayland-backend"
 version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3621,14 +3637,14 @@ dependencies = [
 
 [[package]]
 name = "wayland-protocols-misc"
-version = "0.2.0"
+version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bfa5933740b200188c9b4c38601b8212e8c154d7de0d2cb171944e137a77de1e"
+checksum = "dfe44d48a0e51909c89da297f6b43bb814b881c78b69e254a4558a5fa8752887"
 dependencies = [
  "bitflags 2.6.0",
  "wayland-backend",
  "wayland-client",
- "wayland-protocols 0.31.2",
+ "wayland-protocols 0.32.3",
  "wayland-scanner",
 ]
 
