@@ -7,11 +7,6 @@ use iced_layershell::reexport::{Anchor, Layer};
 use iced_layershell::settings::{LayerShellSettings, Settings};
 use iced_layershell::MultiApplication;
 
-use iced_runtime::command::Action;
-use iced_runtime::window::Action as WindowAction;
-
-use iced::window::Id;
-
 mod aximer;
 mod zbus_mpirs;
 
@@ -63,7 +58,6 @@ enum Message {
     RequestPlay,
     RequestDBusInfoUpdate,
     DBusInfoUpdate(Option<ServiceInfo>),
-    RequestExit,
     BalanceChanged(u8),
 }
 
@@ -165,9 +159,6 @@ impl MultiApplication for MpirsRoot {
                     );
                 }
             }
-            Message::RequestExit => {
-                return Command::single(Action::Window(WindowAction::Close(Id::MAIN)))
-            }
             Message::BalanceChanged(balance) => {
                 let current_balance = self.balance_percent();
                 if current_balance == 0 {
@@ -254,8 +245,7 @@ impl MultiApplication for MpirsRoot {
             Space::with_width(Length::Fill),
             buttons,
             balance_slider,
-            Space::with_width(Length::Fixed(40.)),
-            button("x").on_press(Message::RequestExit)
+            Space::with_width(Length::Fixed(10.)),
         ]
         .spacing(10);
 
