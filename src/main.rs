@@ -30,6 +30,32 @@ struct LalaMusicBar {
     service_data: Option<ServiceInfo>,
     left: i64,
     right: i64,
+    bar_index: SliderIndex,
+}
+
+#[derive(Copy, Clone, Default)]
+enum SliderIndex {
+    #[default]
+    Balance,
+    Left,
+    Right,
+}
+
+impl SliderIndex {
+    fn next(&self) -> Self {
+        match self {
+            SliderIndex::Balance => SliderIndex::Left,
+            SliderIndex::Left => SliderIndex::Right,
+            SliderIndex::Right => SliderIndex::Balance,
+        }
+    }
+    fn pre(&self) -> Self {
+        match self {
+            SliderIndex::Balance => SliderIndex::Right,
+            SliderIndex::Left => SliderIndex::Balance,
+            SliderIndex::Right => SliderIndex::Left,
+        }
+    }
 }
 
 impl LalaMusicBar {
@@ -41,14 +67,71 @@ impl LalaMusicBar {
             .try_into()
             .unwrap()
     }
-    fn set_balance(&mut self, balance: u8) {
+
+    fn update_balance(&mut self) {
         self.left = aximer::get_left().unwrap_or(0);
         self.right = aximer::get_right().unwrap_or(0);
+    }
+
+    fn set_balance(&mut self, balance: u8) {
+        self.update_balance();
         let total = self.left + self.right;
         self.right = total * balance as i64 / 100;
         self.left = total - self.right;
         aximer::set_left(self.left);
         aximer::set_right(self.right);
+    }
+}
+
+impl LalaMusicBar {
+    fn balance_bar(&self) -> Element<Message> {
+        let show_text = format!("balance {}%", self.balance_percent());
+        row![
+            button("<").on_press(Message::SliderIndexPre),
+            Space::with_width(Length::Fixed(1.)),
+            text(&show_text),
+            Space::with_width(Length::Fixed(10.)),
+            slider(0..=100, self.balance_percent(), Message::BalanceChanged),
+            Space::with_width(Length::Fixed(10.)),
+            button("R").on_press(Message::BalanceChanged(50)),
+            Space::with_width(Length::Fixed(1.)),
+            button(">").on_press(Message::SliderIndexNext)
+        ]
+        .into()
+    }
+    fn left_bar(&self) -> Element<Message> {
+        let show_text = format!("left {}%", self.left);
+        row![
+            button("<").on_press(Message::SliderIndexPre),
+            Space::with_width(Length::Fixed(1.)),
+            text(&show_text),
+            Space::with_width(Length::Fixed(10.)),
+            slider(0..=100, self.left as u8, Message::UpdateLeft),
+            Space::with_width(Length::Fixed(10.)),
+            button(">").on_press(Message::SliderIndexNext)
+        ]
+        .into()
+    }
+    fn right_bar(&self) -> Element<Message> {
+        let show_text = format!("right {}%", self.right);
+        row![
+            button("<").on_press(Message::SliderIndexPre),
+            Space::with_width(Length::Fixed(1.)),
+            text(&show_text),
+            Space::with_width(Length::Fixed(10.)),
+            slider(0..=100, self.right as u8, Message::UpdateRight),
+            Space::with_width(Length::Fixed(10.)),
+            button(">").on_press(Message::SliderIndexNext)
+        ]
+        .into()
+    }
+
+    fn sound_slider(&self) -> Element<Message> {
+        match self.bar_index {
+            SliderIndex::Left => self.left_bar(),
+            SliderIndex::Right => self.right_bar(),
+            SliderIndex::Balance => self.balance_bar(),
+        }
     }
 }
 
@@ -59,8 +142,13 @@ enum Message {
     RequestPause,
     RequestPlay,
     RequestDBusInfoUpdate,
+    UpdateBalance,
     DBusInfoUpdate(Option<ServiceInfo>),
     BalanceChanged(u8),
+    UpdateLeft(u8),
+    UpdateRight(u8),
+    SliderIndexNext,
+    SliderIndexPre,
 }
 
 async fn get_metadata_initial() -> Option<ServiceInfo> {
@@ -86,6 +174,7 @@ impl MultiApplication for LalaMusicBar {
                 service_data: None,
                 left: aximer::get_left().unwrap_or(0),
                 right: aximer::get_right().unwrap_or(0),
+                bar_index: SliderIndex::Balance,
             },
             Command::perform(get_metadata_initial(), Message::DBusInfoUpdate),
         )
@@ -168,6 +257,19 @@ impl MultiApplication for LalaMusicBar {
                 }
                 self.set_balance(balance)
             }
+            Message::UpdateBalance => {
+                self.update_balance();
+            }
+            Message::UpdateLeft(percent) => {
+                aximer::set_left(percent as i64);
+                self.update_balance();
+            }
+            Message::UpdateRight(percent) => {
+                aximer::set_right(percent as i64);
+                self.update_balance();
+            }
+            Message::SliderIndexNext => self.bar_index = self.bar_index.next(),
+            Message::SliderIndexPre => self.bar_index = self.bar_index.pre(),
         }
         Command::none()
     }
@@ -234,19 +336,12 @@ impl MultiApplication for LalaMusicBar {
             .width(Length::Fill)
             .center_x();
 
-        let show_text = format!("balance {}%", self.balance_percent());
-        let balance_slider = row![
-            text(&show_text),
-            Space::with_width(Length::Fixed(10.)),
-            slider(0..=100, self.balance_percent(), Message::BalanceChanged),
-            Space::with_width(Length::Fixed(10.)),
-            button("R").on_press(Message::BalanceChanged(50))
-        ];
+        let sound_slider = self.sound_slider();
         let col = row![
             title,
             Space::with_width(Length::Fill),
             buttons,
-            balance_slider,
+            sound_slider,
             Space::with_width(Length::Fixed(10.)),
         ]
         .spacing(10);
@@ -260,7 +355,11 @@ impl MultiApplication for LalaMusicBar {
     }
 
     fn subscription(&self) -> iced::Subscription<Self::Message> {
-        iced::time::every(std::time::Duration::from_secs(1)).map(|_| Message::RequestDBusInfoUpdate)
+        iced::subscription::Subscription::batch([
+            iced::time::every(std::time::Duration::from_secs(1))
+                .map(|_| Message::RequestDBusInfoUpdate),
+            iced::time::every(std::time::Duration::from_secs(30)).map(|_| Message::UpdateBalance),
+        ])
     }
 
     fn theme(&self) -> Self::Theme {
