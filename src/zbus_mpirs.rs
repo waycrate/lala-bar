@@ -296,8 +296,8 @@ trait FreedestopDBus {
     fn name_owner_changed(
         &self,
         name: String,
-        older_owner: String,
         new_owner: String,
+        older_owner: String,
     ) -> Result<()>;
     fn list_names(&self) -> Result<Vec<String>>;
 }
