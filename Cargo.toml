@@ -9,7 +9,7 @@ edition = "2021"
 iced = { version = "0.12", features = ["tokio", "debug", "image", "advanced"] }
 #iced_native = "0.12"
 iced_runtime = "0.12"
-iced_layershell = "0.3.0-beta2"
+iced_layershell = "0.3.0"
 tokio = { version = "1.39", features = ["full"] }
 iced_futures = "0.12.0"
 env_logger = "0.11.5"
