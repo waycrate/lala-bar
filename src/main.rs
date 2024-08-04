@@ -359,7 +359,7 @@ impl MultiApplication for LalaMusicBar {
         iced::subscription::Subscription::batch([
             iced::time::every(std::time::Duration::from_secs(1))
                 .map(|_| Message::RequestDBusInfoUpdate),
-            iced::time::every(std::time::Duration::from_secs(30)).map(|_| Message::UpdateBalance),
+            iced::time::every(std::time::Duration::from_secs(5)).map(|_| Message::UpdateBalance),
         ])
     }
 
