@@ -21,7 +21,7 @@ jobs:
             - uses: actions/checkout@v4
             - uses: dtolnay/rust-toolchain@stable
             - name: Install Deps
-              run: sudo apt install -y libxkbcommon-dev
+              run: sudo apt install -y libxkbcommon-dev libalsaplayer-dev
             - name: Run fmt check
               run: cargo fmt --all -- --check
             - name: Run clippy check
@@ -40,7 +40,7 @@ jobs:
             - uses: actions/checkout@v4
             - uses: dtolnay/rust-toolchain@stable
             - name: Install Deps
-              run: sudo apt install -y libxkbcommon-dev libwayland-dev
+              run: sudo apt install -y libxkbcommon-dev libwayland-dev libalsaplayer-dev
             - uses: softprops/action-gh-release@v2
               with:
                 draft: false
