@@ -20,7 +20,7 @@ const PLAYCTLD: &str = "org.mpris.MediaPlayer2.playerctld";
 #[derive(Debug, Clone)]
 pub struct Metadata {
     mpris_trackid: OwnedObjectPath,
-    mpris_arturl: String,
+    pub mpris_arturl: String,
     pub xesam_title: String,
     xesam_album: String,
     xesam_artist: Vec<String>,

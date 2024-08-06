@@ -1,4 +1,4 @@
-use iced::widget::{button, container, row, slider, text, Space};
+use iced::widget::{button, container, image, row, slider, text, Space};
 use iced::{executor, Event, Font};
 use iced::{Command, Element, Length, Theme};
 use iced_layershell::actions::{
@@ -186,6 +186,11 @@ impl LalaMusicBar {
             .as_ref()
             .map(|data| data.metadata.xesam_title.as_str())
             .unwrap_or("No Video here");
+        let art_url = self
+            .service_data
+            .as_ref()
+            .and_then(|data| url::Url::parse(&data.metadata.mpris_arturl).ok())
+            .and_then(|url| url.to_file_path().ok());
         let title = container(
             text(title)
                 .size(20)
@@ -244,15 +249,29 @@ impl LalaMusicBar {
             .center_x();
 
         let sound_slider = self.sound_slider();
-        let col = row![
-            button("L").on_press(Message::ToggleLauncher),
-            title,
-            Space::with_width(Length::Fill),
-            buttons,
-            sound_slider,
-            Space::with_width(Length::Fixed(10.)),
-        ]
-        .spacing(10);
+        let col = if let Some(art_url) = art_url {
+            row![
+                button("L").on_press(Message::ToggleLauncher),
+                Space::with_width(Length::Fixed(5.)),
+                image(image::Handle::from_path(art_url)),
+                title,
+                Space::with_width(Length::Fill),
+                buttons,
+                sound_slider,
+                Space::with_width(Length::Fixed(10.)),
+            ]
+            .spacing(10)
+        } else {
+            row![
+                button("L").on_press(Message::ToggleLauncher),
+                title,
+                Space::with_width(Length::Fill),
+                buttons,
+                sound_slider,
+                Space::with_width(Length::Fixed(10.)),
+            ]
+            .spacing(10)
+        };
 
         container(col)
             .width(Length::Fill)
