@@ -17,7 +17,7 @@ pub struct Launcher {
     text: String,
     apps: Vec<App>,
     scrollpos: usize,
-    pub shoud_delete: bool,
+    pub should_delete: bool,
 }
 
 impl Launcher {
@@ -26,7 +26,7 @@ impl Launcher {
             text: "".to_string(),
             apps: all_apps(),
             scrollpos: 0,
-            shoud_delete: false,
+            should_delete: false,
         }
     }
 
@@ -57,7 +57,7 @@ impl Launcher {
                     .find(|(index, _)| *index == self.scrollpos);
                 if let Some((_, (_, app))) = index {
                     app.launch();
-                    self.shoud_delete = true;
+                    self.should_delete = true;
                     Command::single(Action::Window(WindowAction::Close(id)))
                 } else {
                     Command::none()
@@ -70,7 +70,7 @@ impl Launcher {
             }
             Message::Launch(index) => {
                 self.apps[index].launch();
-                self.shoud_delete = true;
+                self.should_delete = true;
                 Command::single(Action::Window(WindowAction::Close(id)))
             }
             Message::IcedEvent(event) => {
@@ -104,7 +104,7 @@ impl Launcher {
                             self.scrollpos += 1;
                         }
                         keyboard::Key::Named(Named::Escape) => {
-                            self.shoud_delete = true;
+                            self.should_delete = true;
                             return Command::single(Action::Window(WindowAction::Close(id)));
                         }
                         _ => {}

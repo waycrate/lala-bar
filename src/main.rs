@@ -340,7 +340,7 @@ impl MultiApplication for LalaMusicBar {
                 if let Some(launcher) = self.launcher.as_mut() {
                     if let Some(id) = self.launcherid {
                         let cmd = launcher.update(message, id);
-                        if launcher.shoud_delete {
+                        if launcher.should_delete {
                             self.launcher.take();
                         }
                         return cmd;
