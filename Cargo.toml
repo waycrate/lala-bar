@@ -6,10 +6,16 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-iced = { version = "0.12", features = ["tokio", "debug", "image", "advanced"] }
+iced = { version = "0.12", features = [
+	"tokio",
+	"debug",
+	"image",
+	"advanced",
+	"svg",
+] }
 #iced_native = "0.12"
 iced_runtime = "0.12"
-iced_layershell = "0.3.0"
+iced_layershell = { git = "https://github.com/waycrate/exwlshelleventloop", package = "iced_layershell" }
 tokio = { version = "1.39", features = ["full"] }
 iced_futures = "0.12.0"
 env_logger = "0.11.5"
@@ -23,3 +29,7 @@ zbus = { version = "4.4.0", default-features = false, features = ["tokio"] }
 tracing-subscriber = "0.3.18"
 anyhow = "1.0.86"
 alsa = "0.9.0"
+
+gio = "0.20.0"
+regex = "1.10.5"
+xdg = "2.5.2"
