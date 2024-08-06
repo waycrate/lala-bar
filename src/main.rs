@@ -179,6 +179,90 @@ async fn get_metadata() -> Option<ServiceInfo> {
     infos.first().cloned()
 }
 
+impl LalaMusicBar {
+    fn main_view(&self) -> Element<Message> {
+        let title = self
+            .service_data
+            .as_ref()
+            .map(|data| data.metadata.xesam_title.as_str())
+            .unwrap_or("No Video here");
+        let title = container(
+            text(title)
+                .size(20)
+                .font(Font {
+                    weight: iced::font::Weight::Bold,
+                    ..Default::default()
+                })
+                .shaping(text::Shaping::Advanced)
+                .style(iced::theme::Text::Color(iced::Color::WHITE)),
+        )
+        .width(Length::Fill)
+        .center_x();
+        let can_play = self.service_data.as_ref().is_some_and(|data| data.can_play);
+        let can_pause = self
+            .service_data
+            .as_ref()
+            .is_some_and(|data| data.can_pause);
+        let can_go_next = self
+            .service_data
+            .as_ref()
+            .is_some_and(|data| data.can_go_next);
+        let can_go_pre = self
+            .service_data
+            .as_ref()
+            .is_some_and(|data| data.can_go_previous);
+        let mut button_pre = button("<|");
+        if can_go_pre {
+            button_pre = button_pre.on_press(Message::RequestPre);
+        }
+        let mut button_next = button("|>");
+        if can_go_next {
+            button_next = button_next.on_press(Message::RequestNext);
+        }
+        let button_play = {
+            match self.service_data {
+                Some(ref data) => {
+                    if data.playback_status == "Playing" {
+                        let mut btn = button(text("Pause"));
+                        if can_pause {
+                            btn = btn.on_press(Message::RequestPause);
+                        }
+                        btn
+                    } else {
+                        let mut btn = button(text("Play"));
+                        if can_play {
+                            btn = btn.on_press(Message::RequestPlay);
+                        }
+                        btn
+                    }
+                }
+                None => button(text("Nothing todo")),
+            }
+        };
+        let buttons = container(row![button_pre, button_play, button_next].spacing(5))
+            .width(Length::Fill)
+            .center_x();
+
+        let sound_slider = self.sound_slider();
+        let col = row![
+            button("L").on_press(Message::ToggleLauncher),
+            title,
+            Space::with_width(Length::Fill),
+            buttons,
+            sound_slider,
+            Space::with_width(Length::Fixed(10.)),
+        ]
+        .spacing(10);
+
+        container(col)
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .center_x()
+            .center_y()
+            .into()
+    }
+}
+
 impl MultiApplication for LalaMusicBar {
     type Message = Message;
     type Flags = ();
@@ -357,85 +441,7 @@ impl MultiApplication for LalaMusicBar {
                 return launcher.view();
             }
         }
-        let title = self
-            .service_data
-            .as_ref()
-            .map(|data| data.metadata.xesam_title.as_str())
-            .unwrap_or("No Video here");
-        let title = container(
-            text(title)
-                .size(20)
-                .font(Font {
-                    weight: iced::font::Weight::Bold,
-                    ..Default::default()
-                })
-                .shaping(text::Shaping::Advanced)
-                .style(iced::theme::Text::Color(iced::Color::WHITE)),
-        )
-        .width(Length::Fill)
-        .center_x();
-        let can_play = self.service_data.as_ref().is_some_and(|data| data.can_play);
-        let can_pause = self
-            .service_data
-            .as_ref()
-            .is_some_and(|data| data.can_pause);
-        let can_go_next = self
-            .service_data
-            .as_ref()
-            .is_some_and(|data| data.can_go_next);
-        let can_go_pre = self
-            .service_data
-            .as_ref()
-            .is_some_and(|data| data.can_go_previous);
-        let mut button_pre = button("<|");
-        if can_go_pre {
-            button_pre = button_pre.on_press(Message::RequestPre);
-        }
-        let mut button_next = button("|>");
-        if can_go_next {
-            button_next = button_next.on_press(Message::RequestNext);
-        }
-        let button_play = {
-            match self.service_data {
-                Some(ref data) => {
-                    if data.playback_status == "Playing" {
-                        let mut btn = button(text("Pause"));
-                        if can_pause {
-                            btn = btn.on_press(Message::RequestPause);
-                        }
-                        btn
-                    } else {
-                        let mut btn = button(text("Play"));
-                        if can_play {
-                            btn = btn.on_press(Message::RequestPlay);
-                        }
-                        btn
-                    }
-                }
-                None => button(text("Nothing todo")),
-            }
-        };
-        let buttons = container(row![button_pre, button_play, button_next].spacing(5))
-            .width(Length::Fill)
-            .center_x();
-
-        let sound_slider = self.sound_slider();
-        let col = row![
-            button("L").on_press(Message::ToggleLauncher),
-            title,
-            Space::with_width(Length::Fill),
-            buttons,
-            sound_slider,
-            Space::with_width(Length::Fixed(10.)),
-        ]
-        .spacing(10);
-
-        container(col)
-            .width(Length::Fill)
-            .height(Length::Fill)
-            .center_x()
-            .center_y()
-            .into()
+        self.main_view()
     }
 
     fn subscription(&self) -> iced::Subscription<Self::Message> {
