@@ -17,6 +17,9 @@ mod aximer;
 mod launcher;
 mod zbus_mpirs;
 
+type LaLaShellIdAction = LayershellCustomActionsWithIdAndInfo<LauncherInfo>;
+type LalaShellAction = LayershellCustomActionsWithInfo<LauncherInfo>;
+
 pub fn main() -> Result<(), iced_layershell::Error> {
     env_logger::builder().format_timestamp(None).init();
 
@@ -420,9 +423,9 @@ impl MultiApplication for LalaMusicBar {
                 self.launcher = Some(Launcher::new());
                 return Command::batch(vec![
                     Command::single(
-                        LayershellCustomActionsWithIdAndInfo::new(
+                        LaLaShellIdAction::new(
                             iced::window::Id::MAIN,
-                            LayershellCustomActionsWithInfo::NewLayerShell((
+                            LalaShellAction::NewLayerShell((
                                 NewLayerShellSettings {
                                     size: Some((500, 700)),
                                     exclusize_zone: None,
