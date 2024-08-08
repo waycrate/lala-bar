@@ -15,7 +15,7 @@ iced = { version = "0.12", features = [
 ] }
 #iced_native = "0.12"
 iced_runtime = "0.12"
-iced_layershell = { git = "https://github.com/waycrate/exwlshelleventloop", package = "iced_layershell" }
+iced_layershell = "0.4.0-rc1"
 tokio = { version = "1.39", features = ["full"] }
 iced_futures = "0.12.0"
 env_logger = "0.11.5"

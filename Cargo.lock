@@ -1671,8 +1671,9 @@ dependencies = [
 
 [[package]]
 name = "iced_layershell"
-version = "0.4.0-dev"
-source = "git+https://github.com/waycrate/exwlshelleventloop#c7a00f20bc909278d8a68aa3acfd98ac31ca9188"
+version = "0.4.0-rc1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ace5190b78ae4b839bcb4085aa054c44b7ac89ae80ffe86cc65768c25d12d68f"
 dependencies = [
  "futures",
  "iced",
@@ -1982,8 +1983,9 @@ dependencies = [
 
 [[package]]
 name = "layershellev"
-version = "0.4.0-dev"
-source = "git+https://github.com/waycrate/exwlshelleventloop#c7a00f20bc909278d8a68aa3acfd98ac31ca9188"
+version = "0.4.0-rc1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "043232f79a51a9618163de3e658024992c6dab911ae71a269dc760a9da6ae205"
 dependencies = [
  "bitflags 2.6.0",
  "log",
@@ -3051,18 +3053,18 @@ checksum = "d369a96f978623eb3dc28807c4852d6cc617fed53da5d3c400feff1ef34a714a"
 
 [[package]]
 name = "serde"
-version = "1.0.204"
+version = "1.0.205"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc76f558e0cbb2a839d37354c575f1dc3fdc6546b5be373ba43d95f231bf7c12"
+checksum = "e33aedb1a7135da52b7c21791455563facbbcc43d0f0f66165b42c21b3dfb150"
 dependencies = [
  "serde_derive",
 ]
 
 [[package]]
 name = "serde_derive"
-version = "1.0.204"
+version = "1.0.205"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e0cd7e117be63d3c3678776753929474f3b04a43a080c744d6b0ae2a8c28e222"
+checksum = "692d6f5ac90220161d6774db30c662202721e64aed9058d2c394f451261420c1"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3953,8 +3955,9 @@ dependencies = [
 
 [[package]]
 name = "waycrate_xkbkeycode"
-version = "0.4.0-dev"
-source = "git+https://github.com/waycrate/exwlshelleventloop#c7a00f20bc909278d8a68aa3acfd98ac31ca9188"
+version = "0.4.0-rc1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d4792f051d3b0772685750b424522cf2c4ad11aa5690e670eb2e42986c4163d6"
 dependencies = [
  "bitflags 2.6.0",
  "log",
