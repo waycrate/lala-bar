@@ -21,10 +21,10 @@
 //! [D-Bus standard interfaces]: https://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces,
 use zbus::{interface, object_server::SignalContext, zvariant::OwnedValue};
 
-const NOTIFICATION_DELTED_BY_EXPIRED: u32 = 1;
-const NOTIFICATION_DELTED_BY_USER: u32 = 2;
+const NOTIFICATION_DELETED_BY_EXPIRED: u32 = 1;
+const NOTIFICATION_DELETED_BY_USER: u32 = 2;
 const NOTIFICATION_CLOSED_BY_DBUS: u32 = 3;
-const NOTIFICATION_COLSED_BY_UNKNOWN_REASON: u32 = 4;
+const NOTIFICATION_CLOSED_BY_UNKNOWN_REASON: u32 = 4;
 
 pub struct NotifyUnit {
     app_name: String,
@@ -36,7 +36,7 @@ pub struct NotifyUnit {
 }
 
 pub struct LaLaMako {
-    units: Vec<NotifyUnit>
+    units: Vec<NotifyUnit>,
 }
 
 #[interface(name = "org.freedesktop.Notifications")]
