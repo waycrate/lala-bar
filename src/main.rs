@@ -1,22 +1,36 @@
-use iced::widget::{button, container, row, slider, text, Space};
-use iced::{executor, Font};
+use iced::widget::{button, container, image, row, slider, svg, text, Space};
+use iced::{executor, Event, Font};
 use iced::{Command, Element, Length, Theme};
+use iced_layershell::actions::{
+    LayershellCustomActionsWithIdAndInfo, LayershellCustomActionsWithInfo,
+};
+use launcher::Launcher;
 use zbus_mpirs::ServiceInfo;
 
-use iced_layershell::reexport::{Anchor, Layer};
+use iced_layershell::reexport::{Anchor, KeyboardInteractivity, Layer, NewLayerShellSettings};
 use iced_layershell::settings::{LayerShellSettings, Settings};
 use iced_layershell::MultiApplication;
+use iced_runtime::command::Action;
+use iced_runtime::window::Action as WindowAction;
 
 mod aximer;
+mod launcher;
 mod zbus_mpirs;
+
+type LaLaShellIdAction = LayershellCustomActionsWithIdAndInfo<LauncherInfo>;
+type LalaShellAction = LayershellCustomActionsWithInfo<LauncherInfo>;
+
+const LAUNCHER_SVG: &[u8] = include_bytes!("../misc/launcher.svg");
+
+const RESET_SVG: &[u8] = include_bytes!("../misc/reset.svg");
 
 pub fn main() -> Result<(), iced_layershell::Error> {
     env_logger::builder().format_timestamp(None).init();
 
     LalaMusicBar::run(Settings {
         layer_settings: LayerShellSettings {
-            size: Some((0, 40)),
-            exclusize_zone: 40,
+            size: Some((0, 35)),
+            exclusize_zone: 35,
             anchor: Anchor::Bottom | Anchor::Left | Anchor::Right,
             layer: Layer::Top,
             ..Default::default()
@@ -25,12 +39,17 @@ pub fn main() -> Result<(), iced_layershell::Error> {
     })
 }
 
+#[derive(Debug, Clone, Copy)]
+struct LauncherInfo;
+
 #[derive(Default)]
 struct LalaMusicBar {
     service_data: Option<ServiceInfo>,
     left: i64,
     right: i64,
     bar_index: SliderIndex,
+    launcher: Option<launcher::Launcher>,
+    launcherid: Option<iced::window::Id>,
 }
 
 #[derive(Copy, Clone, Default)]
@@ -93,7 +112,14 @@ impl LalaMusicBar {
             Space::with_width(Length::Fixed(10.)),
             slider(0..=100, self.balance_percent(), Message::BalanceChanged),
             Space::with_width(Length::Fixed(10.)),
-            button("R").on_press(Message::BalanceChanged(50)),
+            button(
+                svg(svg::Handle::from_memory(RESET_SVG))
+                    .height(25.)
+                    .width(25.)
+            )
+            .height(31.)
+            .width(31.)
+            .on_press(Message::BalanceChanged(50)),
             Space::with_width(Length::Fixed(1.)),
             button(">").on_press(Message::SliderIndexNext)
         ]
@@ -149,6 +175,11 @@ enum Message {
     UpdateRight(u8),
     SliderIndexNext,
     SliderIndexPre,
+    ToggleLauncher,
+    SearchEditChanged(String),
+    SearchSubmit,
+    Launch(usize),
+    IcedEvent(Event),
 }
 
 async fn get_metadata_initial() -> Option<ServiceInfo> {
@@ -162,11 +193,120 @@ async fn get_metadata() -> Option<ServiceInfo> {
     infos.first().cloned()
 }
 
+impl LalaMusicBar {
+    fn main_view(&self) -> Element<Message> {
+        let title = self
+            .service_data
+            .as_ref()
+            .map(|data| data.metadata.xesam_title.as_str())
+            .unwrap_or("No Video here");
+        let art_url = self
+            .service_data
+            .as_ref()
+            .and_then(|data| url::Url::parse(&data.metadata.mpris_arturl).ok())
+            .and_then(|url| url.to_file_path().ok());
+        let title = container(
+            text(title)
+                .size(20)
+                .font(Font {
+                    weight: iced::font::Weight::Bold,
+                    ..Default::default()
+                })
+                .shaping(text::Shaping::Advanced)
+                .style(iced::theme::Text::Color(iced::Color::WHITE)),
+        )
+        .width(Length::Fill)
+        .center_x();
+        let can_play = self.service_data.as_ref().is_some_and(|data| data.can_play);
+        let can_pause = self
+            .service_data
+            .as_ref()
+            .is_some_and(|data| data.can_pause);
+        let can_go_next = self
+            .service_data
+            .as_ref()
+            .is_some_and(|data| data.can_go_next);
+        let can_go_pre = self
+            .service_data
+            .as_ref()
+            .is_some_and(|data| data.can_go_previous);
+        let mut button_pre = button("<|");
+        if can_go_pre {
+            button_pre = button_pre.on_press(Message::RequestPre);
+        }
+        let mut button_next = button("|>");
+        if can_go_next {
+            button_next = button_next.on_press(Message::RequestNext);
+        }
+        let button_play = {
+            match self.service_data {
+                Some(ref data) => {
+                    if data.playback_status == "Playing" {
+                        let mut btn = button(text("Pause"));
+                        if can_pause {
+                            btn = btn.on_press(Message::RequestPause);
+                        }
+                        btn
+                    } else {
+                        let mut btn = button(text("Play"));
+                        if can_play {
+                            btn = btn.on_press(Message::RequestPlay);
+                        }
+                        btn
+                    }
+                }
+                None => button(text("Nothing todo")),
+            }
+        };
+        let buttons = container(row![button_pre, button_play, button_next].spacing(5))
+            .width(Length::Fill)
+            .center_x();
+
+        let sound_slider = self.sound_slider();
+        let col = if let Some(art_url) = art_url {
+            row![
+                button("L").on_press(Message::ToggleLauncher),
+                Space::with_width(Length::Fixed(5.)),
+                image(image::Handle::from_path(art_url)),
+                title,
+                Space::with_width(Length::Fill),
+                buttons,
+                sound_slider,
+                Space::with_width(Length::Fixed(10.)),
+            ]
+            .spacing(10)
+        } else {
+            row![
+                button(
+                    svg(svg::Handle::from_memory(LAUNCHER_SVG))
+                        .width(25.)
+                        .height(25.)
+                )
+                .on_press(Message::ToggleLauncher),
+                title,
+                Space::with_width(Length::Fill),
+                buttons,
+                sound_slider,
+                Space::with_width(Length::Fixed(10.)),
+            ]
+            .spacing(10)
+        };
+
+        container(col)
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .center_x()
+            .center_y()
+            .into()
+    }
+}
+
 impl MultiApplication for LalaMusicBar {
     type Message = Message;
     type Flags = ();
     type Executor = executor::Default;
     type Theme = Theme;
+    type WindowInfo = LauncherInfo;
 
     fn new(_flags: Self::Flags) -> (Self, Command<Message>) {
         (
@@ -175,6 +315,8 @@ impl MultiApplication for LalaMusicBar {
                 left: aximer::get_left().unwrap_or(0),
                 right: aximer::get_right().unwrap_or(0),
                 bar_index: SliderIndex::Balance,
+                launcher: None,
+                launcherid: None,
             },
             Command::perform(get_metadata_initial(), Message::DBusInfoUpdate),
         )
@@ -182,6 +324,22 @@ impl MultiApplication for LalaMusicBar {
 
     fn namespace(&self) -> String {
         String::from("Mpirs_panel")
+    }
+
+    fn id_info(&self, id: iced_futures::core::window::Id) -> Option<&Self::WindowInfo> {
+        if self.launcherid.is_some_and(|tid| tid == id) {
+            Some(&LauncherInfo)
+        } else {
+            None
+        }
+    }
+
+    fn set_id_info(&mut self, id: iced_futures::core::window::Id, _info: Self::WindowInfo) {
+        self.launcherid = Some(id);
+    }
+
+    fn remove_id(&mut self, _id: iced_futures::core::window::Id) {
+        self.launcherid.take();
     }
 
     fn update(&mut self, message: Message) -> Command<Message> {
@@ -270,89 +428,58 @@ impl MultiApplication for LalaMusicBar {
             }
             Message::SliderIndexNext => self.bar_index = self.bar_index.next(),
             Message::SliderIndexPre => self.bar_index = self.bar_index.pre(),
+            Message::ToggleLauncher => {
+                if self.launcher.is_some() {
+                    if let Some(id) = self.launcherid {
+                        self.launcher.take();
+                        return Command::single(Action::Window(WindowAction::Close(id)));
+                    }
+                    return Command::none();
+                }
+                self.launcher = Some(Launcher::new());
+                return Command::batch(vec![
+                    Command::single(
+                        LaLaShellIdAction::new(
+                            iced::window::Id::MAIN,
+                            LalaShellAction::NewLayerShell((
+                                NewLayerShellSettings {
+                                    size: Some((500, 700)),
+                                    exclusize_zone: None,
+                                    anchor: Anchor::Left | Anchor::Bottom,
+                                    layer: Layer::Top,
+                                    margins: None,
+                                    keyboard_interactivity: KeyboardInteractivity::Exclusive,
+                                },
+                                LauncherInfo,
+                            )),
+                        )
+                        .into(),
+                    ),
+                    self.launcher.as_ref().unwrap().focus_input(),
+                ]);
+            }
+            _ => {
+                if let Some(launcher) = self.launcher.as_mut() {
+                    if let Some(id) = self.launcherid {
+                        let cmd = launcher.update(message, id);
+                        if launcher.should_delete {
+                            self.launcher.take();
+                        }
+                        return cmd;
+                    }
+                }
+            }
         }
         Command::none()
     }
 
-    fn view(&self, _id: iced::window::Id) -> Element<Message> {
-        let title = self
-            .service_data
-            .as_ref()
-            .map(|data| data.metadata.xesam_title.as_str())
-            .unwrap_or("No Video here");
-        let title = container(
-            text(title)
-                .size(20)
-                .font(Font {
-                    weight: iced::font::Weight::Bold,
-                    ..Default::default()
-                })
-                .shaping(text::Shaping::Advanced)
-                .style(iced::theme::Text::Color(iced::Color::WHITE)),
-        )
-        .width(Length::Fill)
-        .center_x();
-        let can_play = self.service_data.as_ref().is_some_and(|data| data.can_play);
-        let can_pause = self
-            .service_data
-            .as_ref()
-            .is_some_and(|data| data.can_pause);
-        let can_go_next = self
-            .service_data
-            .as_ref()
-            .is_some_and(|data| data.can_go_next);
-        let can_go_pre = self
-            .service_data
-            .as_ref()
-            .is_some_and(|data| data.can_go_previous);
-        let mut button_pre = button("<|");
-        if can_go_pre {
-            button_pre = button_pre.on_press(Message::RequestPre);
-        }
-        let mut button_next = button("|>");
-        if can_go_next {
-            button_next = button_next.on_press(Message::RequestNext);
-        }
-        let button_play = {
-            match self.service_data {
-                Some(ref data) => {
-                    if data.playback_status == "Playing" {
-                        let mut btn = button(text("Pause"));
-                        if can_pause {
-                            btn = btn.on_press(Message::RequestPause);
-                        }
-                        btn
-                    } else {
-                        let mut btn = button(text("Play"));
-                        if can_play {
-                            btn = btn.on_press(Message::RequestPlay);
-                        }
-                        btn
-                    }
-                }
-                None => button(text("Nothing todo")),
+    fn view(&self, id: iced::window::Id) -> Element<Message> {
+        if let Some(LauncherInfo) = self.id_info(id) {
+            if let Some(launcher) = &self.launcher {
+                return launcher.view();
             }
-        };
-        let buttons = container(row![button_pre, button_play, button_next].spacing(5))
-            .width(Length::Fill)
-            .center_x();
-
-        let sound_slider = self.sound_slider();
-        let col = row![
-            title,
-            Space::with_width(Length::Fill),
-            buttons,
-            sound_slider,
-            Space::with_width(Length::Fixed(10.)),
-        ]
-        .spacing(10);
-
-        container(col)
-            .width(Length::Fill)
-            .height(Length::Fill)
-            .center_x()
-            .center_y()
-            .into()
+        }
+        self.main_view()
     }
 
     fn subscription(&self) -> iced::Subscription<Self::Message> {
@@ -360,6 +487,7 @@ impl MultiApplication for LalaMusicBar {
             iced::time::every(std::time::Duration::from_secs(1))
                 .map(|_| Message::RequestDBusInfoUpdate),
             iced::time::every(std::time::Duration::from_secs(5)).map(|_| Message::UpdateBalance),
+            iced::event::listen().map(Message::IcedEvent),
         ])
     }
 
