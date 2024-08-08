@@ -1,4 +1,4 @@
-use iced::widget::{button, container, image, row, slider, text, Space};
+use iced::widget::{button, container, image, row, slider, svg, text, Space};
 use iced::{executor, Event, Font};
 use iced::{Command, Element, Length, Theme};
 use iced_layershell::actions::{
@@ -19,6 +19,10 @@ mod zbus_mpirs;
 
 type LaLaShellIdAction = LayershellCustomActionsWithIdAndInfo<LauncherInfo>;
 type LalaShellAction = LayershellCustomActionsWithInfo<LauncherInfo>;
+
+const LAUNCHER_SVG: &[u8] = include_bytes!("../misc/launcher.svg");
+
+const RESET_SVG: &[u8] = include_bytes!("../misc/reset.svg");
 
 pub fn main() -> Result<(), iced_layershell::Error> {
     env_logger::builder().format_timestamp(None).init();
@@ -108,7 +112,14 @@ impl LalaMusicBar {
             Space::with_width(Length::Fixed(10.)),
             slider(0..=100, self.balance_percent(), Message::BalanceChanged),
             Space::with_width(Length::Fixed(10.)),
-            button("R").on_press(Message::BalanceChanged(50)),
+            button(
+                svg(svg::Handle::from_memory(RESET_SVG))
+                    .height(25.)
+                    .width(25.)
+            )
+            .height(31.)
+            .width(31.)
+            .on_press(Message::BalanceChanged(50)),
             Space::with_width(Length::Fixed(1.)),
             button(">").on_press(Message::SliderIndexNext)
         ]
@@ -266,7 +277,12 @@ impl LalaMusicBar {
             .spacing(10)
         } else {
             row![
-                button("L").on_press(Message::ToggleLauncher),
+                button(
+                    svg(svg::Handle::from_memory(LAUNCHER_SVG))
+                        .width(25.)
+                        .height(25.)
+                )
+                .on_press(Message::ToggleLauncher),
                 title,
                 Space::with_width(Length::Fill),
                 buttons,
