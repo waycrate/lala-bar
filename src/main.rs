@@ -265,7 +265,12 @@ impl LalaMusicBar {
         let sound_slider = self.sound_slider();
         let col = if let Some(art_url) = art_url {
             row![
-                button("L").on_press(Message::ToggleLauncher),
+                button(
+                    svg(svg::Handle::from_memory(LAUNCHER_SVG))
+                        .width(25.)
+                        .height(25.)
+                )
+                .on_press(Message::ToggleLauncher),
                 Space::with_width(Length::Fixed(5.)),
                 image(image::Handle::from_path(art_url)),
                 title,
