@@ -16,6 +16,7 @@ use iced_runtime::window::Action as WindowAction;
 mod aximer;
 mod launcher;
 mod zbus_mpirs;
+mod notifications;
 
 type LaLaShellIdAction = LayershellCustomActionsWithIdAndInfo<LauncherInfo>;
 type LalaShellAction = LayershellCustomActionsWithInfo<LauncherInfo>;
