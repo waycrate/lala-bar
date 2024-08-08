@@ -25,8 +25,8 @@ pub fn main() -> Result<(), iced_layershell::Error> {
 
     LalaMusicBar::run(Settings {
         layer_settings: LayerShellSettings {
-            size: Some((0, 40)),
-            exclusize_zone: 40,
+            size: Some((0, 35)),
+            exclusize_zone: 35,
             anchor: Anchor::Bottom | Anchor::Left | Anchor::Right,
             layer: Layer::Top,
             ..Default::default()
