@@ -5,6 +5,7 @@ use iced_layershell::actions::{
     LayershellCustomActionsWithIdAndInfo, LayershellCustomActionsWithInfo,
 };
 use launcher::Launcher;
+use notifications::{start_server, NotifyMessage};
 use zbus_mpirs::ServiceInfo;
 
 use iced_layershell::reexport::{Anchor, KeyboardInteractivity, Layer, NewLayerShellSettings};
@@ -181,6 +182,7 @@ enum Message {
     SearchSubmit,
     Launch(usize),
     IcedEvent(Event),
+    Notify(NotifyMessage),
 }
 
 async fn get_metadata_initial() -> Option<ServiceInfo> {
@@ -464,6 +466,12 @@ impl MultiApplication for LalaMusicBar {
                     self.launcher.as_ref().unwrap().focus_input(),
                 ]);
             }
+            Message::Notify(NotifyMessage::UnitAdd(notify)) => {
+                println!("{notify:?}");
+            }
+            Message::Notify(NotifyMessage::UnitRemove(id)) => {
+
+            }
             _ => {
                 if let Some(launcher) = self.launcher.as_mut() {
                     if let Some(id) = self.launcherid {
@@ -494,6 +502,7 @@ impl MultiApplication for LalaMusicBar {
                 .map(|_| Message::RequestDBusInfoUpdate),
             iced::time::every(std::time::Duration::from_secs(5)).map(|_| Message::UpdateBalance),
             iced::event::listen().map(Message::IcedEvent),
+            iced::subscription::channel(std::any::TypeId::of::<()>(), 100, start_server),
         ])
     }
 

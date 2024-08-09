@@ -21,28 +21,55 @@
 //! [D-Bus standard interfaces]: https://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces,
 use zbus::{interface, object_server::SignalContext, zvariant::OwnedValue};
 
+use futures::{channel::mpsc::Sender, never::Never};
+use zbus::ConnectionBuilder;
+
+use super::Message;
+
+use std::future::pending;
+
+#[allow(unused)]
 const NOTIFICATION_DELETED_BY_EXPIRED: u32 = 1;
 const NOTIFICATION_DELETED_BY_USER: u32 = 2;
+
+#[allow(unused)]
 const NOTIFICATION_CLOSED_BY_DBUS: u32 = 3;
+#[allow(unused)]
 const NOTIFICATION_CLOSED_BY_UNKNOWN_REASON: u32 = 4;
 
-pub struct NotifyUnit {
-    app_name: String,
-    id: u32,
-    icon: String,
-    summery: String,
-    actions: Vec<String>,
-    timeout: i32,
+#[derive(Debug, Clone)]
+pub enum NotifyMessage {
+    UnitAdd(NotifyUnit),
+    UnitRemove(u32),
 }
 
-pub struct LaLaMako {
-    units: Vec<NotifyUnit>,
+#[derive(Debug, Clone)]
+pub struct NotifyUnit {
+    pub app_name: String,
+    pub id: u32,
+    pub icon: String,
+    pub summery: String,
+    pub body: String,
+    pub actions: Vec<String>,
+    pub timeout: i32,
 }
+
+pub struct LaLaMako(Sender<Message>);
 
 #[interface(name = "org.freedesktop.Notifications")]
 impl LaLaMako {
     // CloseNotification method
-    async fn close_notification(&mut self, id: u32) -> zbus::fdo::Result<()> {
+    async fn close_notification(
+        &mut self,
+        #[zbus(signal_context)] ctx: SignalContext<'_>,
+        id: u32,
+    ) -> zbus::fdo::Result<()> {
+        self.notification_closed(&ctx, id, NOTIFICATION_DELETED_BY_USER)
+            .await
+            .ok();
+        self.0
+            .try_send(Message::Notify(NotifyMessage::UnitRemove(id)))
+            .ok();
         Ok(())
     }
 
@@ -78,9 +105,20 @@ impl LaLaMako {
         summery: &str,
         body: &str,
         actions: Vec<&str>,
-        hints: std::collections::HashMap<&str, OwnedValue>,
+        _hints: std::collections::HashMap<&str, OwnedValue>,
         timeout: i32,
     ) -> zbus::fdo::Result<u32> {
+        self.0
+            .try_send(Message::Notify(NotifyMessage::UnitAdd(NotifyUnit {
+                app_name: app_name.to_string(),
+                id,
+                icon: icon.to_string(),
+                summery: summery.to_string(),
+                body: body.to_string(),
+                actions: actions.iter().map(|a| a.to_string()).collect(),
+                timeout,
+            })))
+            .ok();
         Ok(0)
     }
 
@@ -100,4 +138,19 @@ impl LaLaMako {
         id: u32,
         reason: u32,
     ) -> zbus::Result<()>;
+}
+
+pub async fn start_server(sender: Sender<Message>) -> Never {
+    let _conn = async {
+        ConnectionBuilder::session()?
+            .name("org.freedesktop.Notifications")?
+            .serve_at("/org/freedesktop/Notifications", LaLaMako(sender))?
+            .build()
+            .await
+    }
+    .await;
+
+    pending::<()>().await;
+
+    loop {}
 }
