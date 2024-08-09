@@ -5,7 +5,7 @@ use iced_layershell::actions::{
     LayershellCustomActionsWithIdAndInfo, LayershellCustomActionsWithInfo,
 };
 use launcher::Launcher;
-use notifications::{start_server, NotifyMessage};
+use notification_iced::{start_server, NotifyMessage};
 use zbus_mpirs::ServiceInfo;
 
 use iced_layershell::reexport::{Anchor, KeyboardInteractivity, Layer, NewLayerShellSettings};
@@ -16,15 +16,14 @@ use iced_runtime::window::Action as WindowAction;
 
 mod aximer;
 mod launcher;
-mod notifications;
 mod zbus_mpirs;
 
 type LaLaShellIdAction = LayershellCustomActionsWithIdAndInfo<LaLaInfo>;
 type LalaShellAction = LayershellCustomActionsWithInfo<LaLaInfo>;
 
-const LAUNCHER_SVG: &[u8] = include_bytes!("../misc/launcher.svg");
+const LAUNCHER_SVG: &[u8] = include_bytes!("../../misc/launcher.svg");
 
-const RESET_SVG: &[u8] = include_bytes!("../misc/reset.svg");
+const RESET_SVG: &[u8] = include_bytes!("../../misc/reset.svg");
 
 pub fn main() -> Result<(), iced_layershell::Error> {
     env_logger::builder().format_timestamp(None).init();
@@ -183,6 +182,12 @@ enum Message {
     Launch(usize),
     IcedEvent(Event),
     Notify(NotifyMessage),
+}
+
+impl From<NotifyMessage> for Message {
+    fn from(value: NotifyMessage) -> Self {
+        Self::Notify(value)
+    }
 }
 
 async fn get_metadata_initial() -> Option<ServiceInfo> {
@@ -469,7 +474,7 @@ impl MultiApplication for LalaMusicBar {
             Message::Notify(NotifyMessage::UnitAdd(notify)) => {
                 println!("{notify:?}");
             }
-            Message::Notify(NotifyMessage::UnitRemove(id)) => {}
+            Message::Notify(NotifyMessage::UnitRemove(_id)) => {}
             _ => {
                 if let Some(launcher) = self.launcher.as_mut() {
                     if let Some(id) = self.launcherid {

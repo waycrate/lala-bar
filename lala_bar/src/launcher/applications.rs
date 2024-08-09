@@ -10,7 +10,7 @@ use iced::{Element, Length};
 
 use super::Message;
 
-static DEFAULT_ICON: &[u8] = include_bytes!("../../misc/text-plain.svg");
+static DEFAULT_ICON: &[u8] = include_bytes!("../../../misc/text-plain.svg");
 
 #[allow(unused)]
 #[derive(Debug, Clone)]

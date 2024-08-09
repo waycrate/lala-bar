@@ -24,8 +24,6 @@ use zbus::{interface, object_server::SignalContext, zvariant::OwnedValue};
 use futures::{channel::mpsc::Sender, never::Never};
 use zbus::ConnectionBuilder;
 
-use super::Message;
-
 use std::future::pending;
 
 #[allow(unused)]
@@ -55,10 +53,10 @@ pub struct NotifyUnit {
 }
 
 #[derive(Debug)]
-pub struct LaLaMako(Sender<Message>);
+pub struct LaLaMako<T: From<NotifyMessage> + Send>(Sender<T>);
 
 #[interface(name = "org.freedesktop.Notifications")]
-impl LaLaMako {
+impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
     // CloseNotification method
     async fn close_notification(
         &mut self,
@@ -68,9 +66,7 @@ impl LaLaMako {
         self.notification_closed(&ctx, id, NOTIFICATION_DELETED_BY_USER)
             .await
             .ok();
-        self.0
-            .try_send(Message::Notify(NotifyMessage::UnitRemove(id)))
-            .ok();
+        self.0.try_send(NotifyMessage::UnitRemove(id).into()).ok();
         Ok(())
     }
 
@@ -110,15 +106,18 @@ impl LaLaMako {
         timeout: i32,
     ) -> zbus::fdo::Result<u32> {
         self.0
-            .try_send(Message::Notify(NotifyMessage::UnitAdd(NotifyUnit {
-                app_name: app_name.to_string(),
-                id,
-                icon: icon.to_string(),
-                summery: summery.to_string(),
-                body: body.to_string(),
-                actions: actions.iter().map(|a| a.to_string()).collect(),
-                timeout,
-            })))
+            .try_send(
+                NotifyMessage::UnitAdd(NotifyUnit {
+                    app_name: app_name.to_string(),
+                    id,
+                    icon: icon.to_string(),
+                    summery: summery.to_string(),
+                    body: body.to_string(),
+                    actions: actions.iter().map(|a| a.to_string()).collect(),
+                    timeout,
+                })
+                .into(),
+            )
             .ok();
         Ok(0)
     }
@@ -141,7 +140,7 @@ impl LaLaMako {
     ) -> zbus::Result<()>;
 }
 
-pub async fn start_server(sender: Sender<Message>) -> Never {
+pub async fn start_server<T: From<NotifyMessage> + Send + 'static>(sender: Sender<T>) -> Never {
     let _conn = async {
         ConnectionBuilder::session()?
             .name("org.freedesktop.Notifications")?

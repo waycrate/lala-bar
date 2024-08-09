@@ -1958,7 +1958,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "lala_musicbar"
+name = "lala-bar"
 version = "0.2.7"
 dependencies = [
  "alsa",
@@ -1971,7 +1971,7 @@ dependencies = [
  "iced_futures",
  "iced_layershell",
  "iced_runtime",
- "once_cell",
+ "notification_iced",
  "regex",
  "serde",
  "tokio",
@@ -2241,6 +2241,17 @@ dependencies = [
  "cfg_aliases 0.2.1",
  "libc",
  "memoffset",
+]
+
+[[package]]
+name = "notification_iced"
+version = "0.1.0"
+dependencies = [
+ "futures",
+ "futures-util",
+ "serde",
+ "url",
+ "zbus",
 ]
 
 [[package]]
