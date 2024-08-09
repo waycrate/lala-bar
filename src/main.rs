@@ -19,8 +19,8 @@ mod launcher;
 mod notifications;
 mod zbus_mpirs;
 
-type LaLaShellIdAction = LayershellCustomActionsWithIdAndInfo<LauncherInfo>;
-type LalaShellAction = LayershellCustomActionsWithInfo<LauncherInfo>;
+type LaLaShellIdAction = LayershellCustomActionsWithIdAndInfo<LaLaInfo>;
+type LalaShellAction = LayershellCustomActionsWithInfo<LaLaInfo>;
 
 const LAUNCHER_SVG: &[u8] = include_bytes!("../misc/launcher.svg");
 
@@ -42,7 +42,7 @@ pub fn main() -> Result<(), iced_layershell::Error> {
 }
 
 #[derive(Debug, Clone, Copy)]
-struct LauncherInfo;
+struct LaLaInfo;
 
 #[derive(Default)]
 struct LalaMusicBar {
@@ -314,7 +314,7 @@ impl MultiApplication for LalaMusicBar {
     type Flags = ();
     type Executor = executor::Default;
     type Theme = Theme;
-    type WindowInfo = LauncherInfo;
+    type WindowInfo = LaLaInfo;
 
     fn new(_flags: Self::Flags) -> (Self, Command<Message>) {
         (
@@ -334,15 +334,15 @@ impl MultiApplication for LalaMusicBar {
         String::from("Mpirs_panel")
     }
 
-    fn id_info(&self, id: iced_futures::core::window::Id) -> Option<&Self::WindowInfo> {
+    fn id_info(&self, id: iced::window::Id) -> Option<&Self::WindowInfo> {
         if self.launcherid.is_some_and(|tid| tid == id) {
-            Some(&LauncherInfo)
+            Some(&LaLaInfo)
         } else {
             None
         }
     }
 
-    fn set_id_info(&mut self, id: iced_futures::core::window::Id, _info: Self::WindowInfo) {
+    fn set_id_info(&mut self, id: iced::window::Id, _info: Self::WindowInfo) {
         self.launcherid = Some(id);
     }
 
@@ -458,7 +458,7 @@ impl MultiApplication for LalaMusicBar {
                                     margins: None,
                                     keyboard_interactivity: KeyboardInteractivity::Exclusive,
                                 },
-                                LauncherInfo,
+                                LaLaInfo,
                             )),
                         )
                         .into(),
@@ -469,9 +469,7 @@ impl MultiApplication for LalaMusicBar {
             Message::Notify(NotifyMessage::UnitAdd(notify)) => {
                 println!("{notify:?}");
             }
-            Message::Notify(NotifyMessage::UnitRemove(id)) => {
-
-            }
+            Message::Notify(NotifyMessage::UnitRemove(id)) => {}
             _ => {
                 if let Some(launcher) = self.launcher.as_mut() {
                     if let Some(id) = self.launcherid {
@@ -488,7 +486,7 @@ impl MultiApplication for LalaMusicBar {
     }
 
     fn view(&self, id: iced::window::Id) -> Element<Message> {
-        if let Some(LauncherInfo) = self.id_info(id) {
+        if let Some(LaLaInfo) = self.id_info(id) {
             if let Some(launcher) = &self.launcher {
                 return launcher.view();
             }

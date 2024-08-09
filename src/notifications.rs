@@ -54,6 +54,7 @@ pub struct NotifyUnit {
     pub timeout: i32,
 }
 
+#[derive(Debug)]
 pub struct LaLaMako(Sender<Message>);
 
 #[interface(name = "org.freedesktop.Notifications")]
