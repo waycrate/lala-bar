@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use iced::widget::{button, container, image, row, slider, svg, text, Space};
 use iced::{executor, Event, Font};
 use iced::{Command, Element, Length, Theme};
@@ -5,7 +7,7 @@ use iced_layershell::actions::{
     LayershellCustomActionsWithIdAndInfo, LayershellCustomActionsWithInfo,
 };
 use launcher::Launcher;
-use notification_iced::{start_server, NotifyMessage};
+use notification_iced::{start_server, NotifyMessage, NotifyUnit};
 use zbus_mpirs::ServiceInfo;
 
 use iced_layershell::reexport::{Anchor, KeyboardInteractivity, Layer, NewLayerShellSettings};
@@ -40,8 +42,11 @@ pub fn main() -> Result<(), iced_layershell::Error> {
     })
 }
 
-#[derive(Debug, Clone, Copy)]
-struct LaLaInfo;
+#[derive(Debug, Clone)]
+enum LaLaInfo {
+    Launcher,
+    Notify(NotifyUnit),
+}
 
 #[derive(Default)]
 struct LalaMusicBar {
@@ -51,6 +56,7 @@ struct LalaMusicBar {
     bar_index: SliderIndex,
     launcher: Option<launcher::Launcher>,
     launcherid: Option<iced::window::Id>,
+    notifications: HashMap<iced::window::Id, LaLaInfo>,
 }
 
 #[derive(Copy, Clone, Default)]
@@ -182,6 +188,7 @@ enum Message {
     Launch(usize),
     IcedEvent(Event),
     Notify(NotifyMessage),
+    RemoveNotify(iced::window::Id),
 }
 
 impl From<NotifyMessage> for Message {
@@ -330,6 +337,7 @@ impl MultiApplication for LalaMusicBar {
                 bar_index: SliderIndex::Balance,
                 launcher: None,
                 launcherid: None,
+                notifications: HashMap::new(),
             },
             Command::perform(get_metadata_initial(), Message::DBusInfoUpdate),
         )
@@ -341,18 +349,28 @@ impl MultiApplication for LalaMusicBar {
 
     fn id_info(&self, id: iced::window::Id) -> Option<&Self::WindowInfo> {
         if self.launcherid.is_some_and(|tid| tid == id) {
-            Some(&LaLaInfo)
+            Some(&LaLaInfo::Launcher)
         } else {
-            None
+            self.notifications.get(&id)
         }
     }
 
-    fn set_id_info(&mut self, id: iced::window::Id, _info: Self::WindowInfo) {
-        self.launcherid = Some(id);
+    fn set_id_info(&mut self, id: iced::window::Id, info: Self::WindowInfo) {
+        match info {
+            LaLaInfo::Launcher => {
+                self.launcherid = Some(id);
+            }
+            _ => {
+                self.notifications.insert(id, info);
+            }
+        }
     }
 
-    fn remove_id(&mut self, _id: iced_futures::core::window::Id) {
-        self.launcherid.take();
+    fn remove_id(&mut self, id: iced_futures::core::window::Id) {
+        if self.launcherid.is_some_and(|lid| lid == id) {
+            self.launcherid.take();
+        }
+        self.notifications.remove(&id);
     }
 
     fn update(&mut self, message: Message) -> Command<Message> {
@@ -463,7 +481,7 @@ impl MultiApplication for LalaMusicBar {
                                     margins: None,
                                     keyboard_interactivity: KeyboardInteractivity::Exclusive,
                                 },
-                                LaLaInfo,
+                                LaLaInfo::Launcher,
                             )),
                         )
                         .into(),
@@ -472,9 +490,42 @@ impl MultiApplication for LalaMusicBar {
                 ]);
             }
             Message::Notify(NotifyMessage::UnitAdd(notify)) => {
-                println!("{notify:?}");
+                return Command::single(
+                    LaLaShellIdAction::new(
+                        iced::window::Id::MAIN,
+                        LalaShellAction::NewLayerShell((
+                            NewLayerShellSettings {
+                                size: Some((300, 70)),
+                                exclusize_zone: None,
+                                anchor: Anchor::Right | Anchor::Top,
+                                layer: Layer::Top,
+                                margins: Some((10, 10, 10, 10)),
+                                keyboard_interactivity: KeyboardInteractivity::None,
+                            },
+                            LaLaInfo::Notify(notify),
+                        )),
+                    )
+                    .into(),
+                );
             }
-            Message::Notify(NotifyMessage::UnitRemove(_id)) => {}
+            Message::Notify(NotifyMessage::UnitRemove(removed_id)) => {
+                let commands: Vec<_> = self
+                    .notifications
+                    .iter()
+                    .filter(|(_, info)| {
+                        if let LaLaInfo::Notify(NotifyUnit { id, .. }) = info {
+                            return removed_id == *id;
+                        }
+                        false
+                    })
+                    .map(|(id, _)| Command::single(Action::Window(WindowAction::Close(*id))))
+                    .collect();
+
+                return Command::batch(commands);
+            }
+            Message::RemoveNotify(id) => {
+                return Command::single(Action::Window(WindowAction::Close(id)));
+            }
             _ => {
                 if let Some(launcher) = self.launcher.as_mut() {
                     if let Some(id) = self.launcherid {
@@ -491,9 +542,20 @@ impl MultiApplication for LalaMusicBar {
     }
 
     fn view(&self, id: iced::window::Id) -> Element<Message> {
-        if let Some(LaLaInfo) = self.id_info(id) {
-            if let Some(launcher) = &self.launcher {
-                return launcher.view();
+        if let Some(info) = self.id_info(id) {
+            match info {
+                LaLaInfo::Launcher => {
+                    if let Some(launcher) = &self.launcher {
+                        return launcher.view();
+                    }
+                }
+                LaLaInfo::Notify(notify) => {
+                    return button(text(notify.body.clone()).shaping(text::Shaping::Advanced))
+                        .width(Length::Fill)
+                        .height(Length::Fill)
+                        .on_press(Message::RemoveNotify(id))
+                        .into()
+                }
             }
         }
         self.main_view()
