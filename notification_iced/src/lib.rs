@@ -21,12 +21,10 @@
 //! [D-Bus standard interfaces]: https://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces,
 use zbus::{interface, object_server::SignalContext, zvariant::OwnedValue};
 
-use futures::{channel::mpsc::Sender, never::Never};
+use futures::channel::mpsc::Sender;
 use zbus::ConnectionBuilder;
 
 use zbus::zvariant::{SerializeDict, Type};
-
-use std::future::pending;
 
 pub const NOTIFICATION_DELETED_BY_EXPIRED: u32 = 1;
 pub const NOTIFICATION_DELETED_BY_USER: u32 = 2;
@@ -217,16 +215,4 @@ pub async fn start_connection<T: From<NotifyMessage> + Send + 'static>(
         )?
         .build()
         .await
-}
-
-pub async fn start_server<T: From<NotifyMessage> + Send + 'static>(
-    sender: Sender<T>,
-    capabilities: Vec<String>,
-    version: VersionInfo,
-) -> Never {
-    let _conn = start_connection(sender, capabilities, version).await;
-
-    pending::<()>().await;
-
-    unreachable!()
 }
