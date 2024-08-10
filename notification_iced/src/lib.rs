@@ -125,7 +125,7 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
         summery: &str,
         body: &str,
         actions: Vec<&str>,
-        mut hints: std::collections::HashMap<&str, OwnedValue>,
+        _hints: std::collections::HashMap<&str, OwnedValue>,
         timeout: i32,
     ) -> zbus::fdo::Result<u32> {
         self.sender

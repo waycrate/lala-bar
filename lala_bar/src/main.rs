@@ -361,7 +361,7 @@ impl LalaMusicBar {
                 for (_, unit) in self.notifications.iter_mut() {
                     if unit.counter > counter {
                         unit.counter -= 1;
-                        unit.upper -= 75;
+                        unit.upper -= 135;
                     }
                 }
             }
@@ -554,7 +554,7 @@ impl MultiApplication for LalaMusicBar {
             Message::Notify(NotifyMessage::UnitAdd(notify)) => {
                 let mut commands = vec![];
                 for (id, unit) in self.notifications.iter_mut() {
-                    unit.upper += 75;
+                    unit.upper += 135;
                     commands.push(Command::single(
                         LaLaShellIdAction::new(
                             *id,
@@ -569,7 +569,7 @@ impl MultiApplication for LalaMusicBar {
                         iced::window::Id::MAIN,
                         LalaShellAction::NewLayerShell((
                             NewLayerShellSettings {
-                                size: Some((300, 70)),
+                                size: Some((300, 130)),
                                 exclusive_zone: None,
                                 anchor: Anchor::Right | Anchor::Top,
                                 layer: Layer::Top,
@@ -637,7 +637,7 @@ impl MultiApplication for LalaMusicBar {
                 let mut commands = vec![];
                 for (id, unit) in self.notifications.iter_mut() {
                     if unit.upper > removed_pos {
-                        unit.upper -= 75;
+                        unit.upper -= 135;
                     }
                     commands.push(Command::single(
                         LaLaShellIdAction::new(
@@ -693,7 +693,7 @@ impl MultiApplication for LalaMusicBar {
                 let mut commands = vec![];
                 for (id, unit) in self.notifications.iter_mut() {
                     if unit.upper > removed_pos {
-                        unit.upper -= 75;
+                        unit.upper -= 135;
                     }
                     commands.push(Command::single(
                         LaLaShellIdAction::new(
@@ -727,7 +727,7 @@ impl MultiApplication for LalaMusicBar {
                     }
                 }
                 LaLaInfo::Notify(notify) => {
-                    let btnwidgets: Element<Message> = button(row![
+                    let btnwidgets: Element<Message> = button(column![
                         text(notify.summery.clone()).shaping(text::Shaping::Advanced),
                         text(notify.body.clone()).shaping(text::Shaping::Advanced)
                     ])
@@ -741,9 +741,16 @@ impl MultiApplication for LalaMusicBar {
                             btnwidgets,
                             Space::with_height(5.),
                             row![
-                                text_input("reply something", &notifywidget.inline_reply).on_input(
-                                    move |msg| Message::InlineReplyMsgUpdate((id.clone(), msg))
-                                ),
+                                text_input("reply something", &notifywidget.inline_reply)
+                                    .on_input(move |msg| Message::InlineReplyMsgUpdate((
+                                        id.clone(),
+                                        msg
+                                    )))
+                                    .on_submit(Message::InlineReply((
+                                        id,
+                                        notify.id,
+                                        notifywidget.inline_reply.clone()
+                                    ))),
                                 button("send").on_press(Message::InlineReply((
                                     id,
                                     notify.id,
