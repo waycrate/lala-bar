@@ -1672,7 +1672,7 @@ dependencies = [
 [[package]]
 name = "iced_layershell"
 version = "0.4.0-rc1"
-source = "git+https://github.com/waycrate/exwlshelleventloop#1e1a79d15d73cc677d52bf6fe100320a2962c454"
+source = "git+https://github.com/waycrate/exwlshelleventloop#634a487d3c3f6de142924773498e36f3c121051d"
 dependencies = [
  "futures",
  "iced",
@@ -1984,7 +1984,7 @@ dependencies = [
 [[package]]
 name = "layershellev"
 version = "0.4.0-rc1"
-source = "git+https://github.com/waycrate/exwlshelleventloop#1e1a79d15d73cc677d52bf6fe100320a2962c454"
+source = "git+https://github.com/waycrate/exwlshelleventloop#634a487d3c3f6de142924773498e36f3c121051d"
 dependencies = [
  "bitflags 2.6.0",
  "log",
@@ -3966,7 +3966,7 @@ dependencies = [
 [[package]]
 name = "waycrate_xkbkeycode"
 version = "0.4.0-rc1"
-source = "git+https://github.com/waycrate/exwlshelleventloop#1e1a79d15d73cc677d52bf6fe100320a2962c454"
+source = "git+https://github.com/waycrate/exwlshelleventloop#634a487d3c3f6de142924773498e36f3c121051d"
 dependencies = [
  "bitflags 2.6.0",
  "log",
@@ -4653,12 +4653,12 @@ checksum = "213b7324336b53d2414b2db8537e56544d981803139155afa84f76eeebb7a546"
 
 [[package]]
 name = "xdg-home"
-version = "1.2.0"
+version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ca91dcf8f93db085f3a0a29358cd0b9d670915468f4290e8b85d118a34211ab8"
+checksum = "ec1cdab258fb55c0da61328dc52c8764709b249011b2cad0454c72f0bf10a1f6"
 dependencies = [
  "libc",
- "windows-sys 0.52.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]

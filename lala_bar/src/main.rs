@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use iced::widget::{button, container, image, row, slider, svg, text, Space};
+use iced::widget::{button, column, container, image, row, slider, svg, text, Space};
 use iced::{executor, Font};
 use iced::{Command, Element, Length, Theme};
 use iced_layershell::actions::{
@@ -48,6 +48,12 @@ enum LaLaInfo {
     Notify(NotifyUnit),
 }
 
+#[derive(Debug, Clone)]
+struct NotifyUnitWidgetInfo {
+    uper: i32,
+    unit: NotifyUnit,
+}
+
 #[derive(Default)]
 struct LalaMusicBar {
     service_data: Option<ServiceInfo>,
@@ -56,7 +62,7 @@ struct LalaMusicBar {
     bar_index: SliderIndex,
     launcher: Option<launcher::Launcher>,
     launcherid: Option<iced::window::Id>,
-    notifications: HashMap<iced::window::Id, NotifyUnit>,
+    notifications: HashMap<iced::window::Id, NotifyUnitWidgetInfo>,
 }
 
 #[derive(Copy, Clone, Default)]
@@ -351,7 +357,7 @@ impl MultiApplication for LalaMusicBar {
         } else {
             self.notifications
                 .get(&id)
-                .map(|noficy| LaLaInfo::Notify(noficy.clone()))
+                .map(|NotifyUnitWidgetInfo { unit, .. }| LaLaInfo::Notify(unit.clone()))
         }
     }
 
@@ -361,12 +367,15 @@ impl MultiApplication for LalaMusicBar {
                 self.launcherid = Some(id);
             }
             LaLaInfo::Notify(nofify) => {
-                self.notifications.insert(id, nofify);
+                self.notifications.entry(id).or_insert(NotifyUnitWidgetInfo {
+                            uper: 10,
+                            unit: nofify,
+                        });
             }
         }
     }
 
-    fn remove_id(&mut self, id: iced_futures::core::window::Id) {
+    fn remove_id(&mut self, id: iced::window::Id) {
         if self.launcherid.is_some_and(|lid| lid == id) {
             self.launcherid.take();
         }
@@ -475,10 +484,10 @@ impl MultiApplication for LalaMusicBar {
                             LalaShellAction::NewLayerShell((
                                 NewLayerShellSettings {
                                     size: Some((500, 700)),
-                                    exclusize_zone: None,
+                                    exclusive_zone: None,
                                     anchor: Anchor::Left | Anchor::Bottom,
                                     layer: Layer::Top,
-                                    margins: None,
+                                    margin: None,
                                     keyboard_interactivity: KeyboardInteractivity::Exclusive,
                                     use_last_output: false,
                                 },
@@ -491,16 +500,28 @@ impl MultiApplication for LalaMusicBar {
                 ]);
             }
             Message::Notify(NotifyMessage::UnitAdd(notify)) => {
-                return Command::single(
+                let mut commands = vec![];
+                for (id, unit) in self.notifications.iter_mut() {
+                    unit.uper += 75;
+                    commands.push(Command::single(
+                        LaLaShellIdAction::new(
+                            *id,
+                            LalaShellAction::MarginChange((unit.uper, 10, 10, 10)),
+                        )
+                        .into(),
+                    ));
+                }
+
+                commands.push(Command::single(
                     LaLaShellIdAction::new(
                         iced::window::Id::MAIN,
                         LalaShellAction::NewLayerShell((
                             NewLayerShellSettings {
                                 size: Some((300, 70)),
-                                exclusize_zone: None,
+                                exclusive_zone: None,
                                 anchor: Anchor::Right | Anchor::Top,
                                 layer: Layer::Top,
-                                margins: Some((10, 10, 10, 10)),
+                                margin: Some((10, 10, 10, 10)),
                                 keyboard_interactivity: KeyboardInteractivity::None,
                                 use_last_output: true,
                             },
@@ -508,15 +529,16 @@ impl MultiApplication for LalaMusicBar {
                         )),
                     )
                     .into(),
-                );
+                ));
+                return Command::batch(commands);
             }
             Message::Notify(NotifyMessage::UnitRemove(removed_id)) => {
                 let mut commands: Vec<_> = self
                     .notifications
                     .iter()
                     .filter(|(_, info)| {
-                        let NotifyUnit { id, .. } = info;
-                        return removed_id == *id;
+                        let NotifyUnit { id, .. } = info.unit;
+                        removed_id == id
                     })
                     .map(|(id, _)| Command::single(Action::Window(WindowAction::Close(*id))))
                     .collect();
@@ -525,10 +547,32 @@ impl MultiApplication for LalaMusicBar {
                 return Command::batch(commands);
             }
             Message::RemoveNotify(id) => {
-                return Command::batch(vec![
+                let removed_pos = self
+                    .notifications
+                    .iter()
+                    .find(|(oid, _)| **oid == id)
+                    .map(|(_, info)| info.uper)
+                    .unwrap_or(0);
+
+                let mut commands = vec![];
+                for (id, unit) in self.notifications.iter_mut() {
+                    if unit.uper > removed_pos {
+                        unit.uper -= 75;
+                    }
+                    commands.push(Command::single(
+                        LaLaShellIdAction::new(
+                            *id,
+                            LalaShellAction::MarginChange((unit.uper, 10, 10, 10)),
+                        )
+                        .into(),
+                    ));
+                }
+                commands.append(&mut vec![
                     Command::single(Action::Window(WindowAction::Close(id))),
                     Command::perform(async {}, |_| Message::CheckOutput),
                 ]);
+
+                return Command::batch(commands);
             }
             Message::CheckOutput => {
                 if self.notifications.is_empty() {
@@ -565,11 +609,14 @@ impl MultiApplication for LalaMusicBar {
                     }
                 }
                 LaLaInfo::Notify(notify) => {
-                    return button(text(notify.body.clone()).shaping(text::Shaping::Advanced))
-                        .width(Length::Fill)
-                        .height(Length::Fill)
-                        .on_press(Message::RemoveNotify(id))
-                        .into()
+                    return button(column![
+                        text(notify.summery.clone()).shaping(text::Shaping::Advanced),
+                        text(notify.body.clone()).shaping(text::Shaping::Advanced)
+                    ])
+                    .width(Length::Fill)
+                    .height(Length::Fill)
+                    .on_press(Message::RemoveNotify(id))
+                    .into()
                 }
             }
         }

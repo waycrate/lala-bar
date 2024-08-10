@@ -152,5 +152,5 @@ pub async fn start_server<T: From<NotifyMessage> + Send + 'static>(sender: Sende
 
     pending::<()>().await;
 
-    loop {}
+    unreachable!()
 }
