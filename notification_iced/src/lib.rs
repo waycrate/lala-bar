@@ -19,7 +19,6 @@
 //!
 //! [Writing a client proxy]: https://dbus2.github.io/zbus/client.html
 //! [D-Bus standard interfaces]: https://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces,
-use serde::{Deserialize, Serialize};
 use zbus::{interface, object_server::SignalContext, zvariant::OwnedValue};
 
 use futures::{channel::mpsc::Sender, never::Never};
@@ -54,7 +53,15 @@ pub enum NotifyMessage {
 
 #[derive(Debug, Clone)]
 pub struct NotifyHint {
-    pub image_data: Option<ImageData>,
+    image_data: Option<ImageData>,
+}
+
+impl NotifyHint {
+    pub fn image_data(&self) -> Option<(i32, i32, Vec<u8>)> {
+        self.image_data
+            .as_ref()
+            .map(|data| (data.width, data.height, data.data.clone()))
+    }
 }
 
 #[derive(Debug, Clone)]

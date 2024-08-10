@@ -727,14 +727,35 @@ impl MultiApplication for LalaMusicBar {
                     }
                 }
                 LaLaInfo::Notify(notify) => {
-                    let btnwidgets: Element<Message> = button(column![
-                        text(notify.summery.clone()).shaping(text::Shaping::Advanced),
-                        text(notify.body.clone()).shaping(text::Shaping::Advanced)
-                    ])
-                    .width(Length::Fill)
-                    .height(Length::Fill)
-                    .on_press(Message::RemoveNotify(id))
-                    .into();
+                    let btnwidgets: Element<Message> =
+                        if let Some((width, height, pixels)) = notify.hint.image_data() {
+                            button(row![
+                                image(image::Handle::from_pixels(
+                                    width as u32,
+                                    height as u32,
+                                    pixels
+                                )),
+                                Space::with_width(4.),
+                                column![
+                                    text(notify.summery.clone()).shaping(text::Shaping::Advanced),
+                                    text(notify.body.clone()).shaping(text::Shaping::Advanced)
+                                ]
+                            ])
+                            .width(Length::Fill)
+                            .height(Length::Fill)
+                            .on_press(Message::RemoveNotify(id))
+                            .into()
+                        } else {
+                            button(column![
+                                text(notify.summery.clone()).shaping(text::Shaping::Advanced),
+                                text(notify.body.clone()).shaping(text::Shaping::Advanced)
+                            ])
+                            .width(Length::Fill)
+                            .height(Length::Fill)
+                            .on_press(Message::RemoveNotify(id))
+                            .into()
+                        };
+
                     let notifywidget = self.notifications.get(&id).unwrap();
                     if notify.inline_reply_support() {
                         return column![
