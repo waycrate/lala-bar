@@ -367,10 +367,12 @@ impl MultiApplication for LalaMusicBar {
                 self.launcherid = Some(id);
             }
             LaLaInfo::Notify(nofify) => {
-                self.notifications.entry(id).or_insert(NotifyUnitWidgetInfo {
-                            uper: 10,
-                            unit: nofify,
-                        });
+                self.notifications
+                    .entry(id)
+                    .or_insert(NotifyUnitWidgetInfo {
+                        uper: 10,
+                        unit: nofify,
+                    });
             }
         }
     }
