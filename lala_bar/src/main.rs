@@ -50,7 +50,7 @@ enum LaLaInfo {
 
 #[derive(Debug, Clone)]
 struct NotifyUnitWidgetInfo {
-    uper: i32,
+    upper: i32,
     counter: usize,
     unit: NotifyUnit,
 }
@@ -338,7 +338,7 @@ impl LalaMusicBar {
                 for (_, unit) in self.notifications.iter_mut() {
                     if unit.counter > counter {
                         unit.counter -= 1;
-                        unit.uper -= 75;
+                        unit.upper -= 75;
                     }
                 }
             }
@@ -393,7 +393,7 @@ impl MultiApplication for LalaMusicBar {
                     .entry(id)
                     .or_insert(NotifyUnitWidgetInfo {
                         counter: 0,
-                        uper: 10,
+                        upper: 10,
                         unit: nofify,
                     });
             }
@@ -527,11 +527,11 @@ impl MultiApplication for LalaMusicBar {
             Message::Notify(NotifyMessage::UnitAdd(notify)) => {
                 let mut commands = vec![];
                 for (id, unit) in self.notifications.iter_mut() {
-                    unit.uper += 75;
+                    unit.upper += 75;
                     commands.push(Command::single(
                         LaLaShellIdAction::new(
                             *id,
-                            LalaShellAction::MarginChange((unit.uper, 10, 10, 10)),
+                            LalaShellAction::MarginChange((unit.upper, 10, 10, 10)),
                         )
                         .into(),
                     ));
@@ -582,7 +582,7 @@ impl MultiApplication for LalaMusicBar {
                     commands.push(Command::single(
                         LaLaShellIdAction::new(
                             *id,
-                            LalaShellAction::MarginChange((unit.uper, 10, 10, 10)),
+                            LalaShellAction::MarginChange((unit.upper, 10, 10, 10)),
                         )
                         .into(),
                     ));
@@ -597,18 +597,18 @@ impl MultiApplication for LalaMusicBar {
                     .notifications
                     .iter()
                     .find(|(oid, _)| **oid == id)
-                    .map(|(_, info)| info.uper)
+                    .map(|(_, info)| info.upper)
                     .unwrap_or(0);
 
                 let mut commands = vec![];
                 for (id, unit) in self.notifications.iter_mut() {
-                    if unit.uper > removed_pos {
-                        unit.uper -= 75;
+                    if unit.upper > removed_pos {
+                        unit.upper -= 75;
                     }
                     commands.push(Command::single(
                         LaLaShellIdAction::new(
                             *id,
-                            LalaShellAction::MarginChange((unit.uper, 10, 10, 10)),
+                            LalaShellAction::MarginChange((unit.upper, 10, 10, 10)),
                         )
                         .into(),
                     ));

@@ -62,7 +62,7 @@ pub struct VersionInfo {
 
 #[derive(Debug)]
 pub struct LaLaMako<T: From<NotifyMessage> + Send> {
-    capablities: Vec<String>,
+    capabilities: Vec<String>,
     sender: Sender<T>,
     version: VersionInfo,
 }
@@ -86,7 +86,7 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
 
     /// GetCapabilities method
     fn get_capabilities(&self) -> Vec<String> {
-        self.capablities.clone()
+        self.capabilities.clone()
     }
 
     /// GetServerInformation method
@@ -155,7 +155,7 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
 
 pub async fn start_server<T: From<NotifyMessage> + Send + 'static>(
     sender: Sender<T>,
-    capablities: Vec<String>,
+    capabilities: Vec<String>,
     version: VersionInfo,
 ) -> Never {
     let _conn = async {
@@ -165,7 +165,7 @@ pub async fn start_server<T: From<NotifyMessage> + Send + 'static>(
                 "/org/freedesktop/Notifications",
                 LaLaMako {
                     sender,
-                    capablities,
+                    capabilities,
                     version,
                 },
             )?
