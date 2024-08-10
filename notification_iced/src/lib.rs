@@ -75,7 +75,7 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
         #[zbus(signal_context)] ctx: SignalContext<'_>,
         id: u32,
     ) -> zbus::fdo::Result<()> {
-        self.notification_closed(&ctx, id, NOTIFICATION_DELETED_BY_USER)
+        Self::notification_closed(&ctx, id, NOTIFICATION_DELETED_BY_USER)
             .await
             .ok();
         self.sender
@@ -136,8 +136,7 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
     }
 
     #[zbus(signal)]
-    async fn action_invoked(
-        &self,
+    pub async fn action_invoked(
         ctx: &SignalContext<'_>,
         id: u32,
         action_key: &str,
@@ -145,12 +144,39 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
 
     // NotificationClosed signal
     #[zbus(signal)]
-    async fn notification_closed(
-        &self,
+    pub async fn notification_closed(
         ctx: &SignalContext<'_>,
         id: u32,
         reason: u32,
     ) -> zbus::Result<()>;
+}
+
+pub const NOTIFICATION_SERVICE_PATH: &str = "/org/freedesktop/Notifications";
+pub const NOTIFICATION_SERVICE_NAME: &str = "/org/freedesktop/Notifications";
+pub const NOTIFICATION_SERVICE_INTERFACE: &str = "/org/freedesktop/Notifications";
+
+pub const ACTION_INVOKED: &str = "action_invoked";
+pub const NOTIFICATION_CLOSED: &str = "notification_closed";
+
+pub const DEFAULT_ACTION: &str = "default";
+
+pub async fn start_connection<T: From<NotifyMessage> + Send + 'static>(
+    sender: Sender<T>,
+    capabilities: Vec<String>,
+    version: VersionInfo,
+) -> Result<zbus::Connection, zbus::Error> {
+    ConnectionBuilder::session()?
+        .name("org.freedesktop.Notifications")?
+        .serve_at(
+            "/org/freedesktop/Notifications",
+            LaLaMako {
+                sender,
+                capabilities,
+                version,
+            },
+        )?
+        .build()
+        .await
 }
 
 pub async fn start_server<T: From<NotifyMessage> + Send + 'static>(
@@ -158,21 +184,7 @@ pub async fn start_server<T: From<NotifyMessage> + Send + 'static>(
     capabilities: Vec<String>,
     version: VersionInfo,
 ) -> Never {
-    let _conn = async {
-        ConnectionBuilder::session()?
-            .name("org.freedesktop.Notifications")?
-            .serve_at(
-                "/org/freedesktop/Notifications",
-                LaLaMako {
-                    sender,
-                    capabilities,
-                    version,
-                },
-            )?
-            .build()
-            .await
-    }
-    .await;
+    let _conn = start_connection(sender, capabilities, version).await;
 
     pending::<()>().await;
 

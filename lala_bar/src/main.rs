@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use futures::future::pending;
+use futures::StreamExt;
 use iced::widget::{button, column, container, image, row, slider, svg, text, Space};
 use iced::{executor, Font};
 use iced::{Command, Element, Length, Theme};
@@ -7,7 +9,10 @@ use iced_layershell::actions::{
     LayershellCustomActionsWithIdAndInfo, LayershellCustomActionsWithInfo,
 };
 use launcher::{LaunchMessage, Launcher};
-use notification_iced::{start_server, NotifyMessage, NotifyUnit, VersionInfo};
+use notification_iced::{
+    start_connection, LaLaMako, NotifyMessage, NotifyUnit, VersionInfo, DEFAULT_ACTION,
+    NOTIFICATION_SERVICE_PATH,
+};
 use zbus_mpirs::ServiceInfo;
 
 use iced_layershell::reexport::{Anchor, KeyboardInteractivity, Layer, NewLayerShellSettings};
@@ -15,6 +20,12 @@ use iced_layershell::settings::{LayerShellSettings, Settings};
 use iced_layershell::MultiApplication;
 use iced_runtime::command::Action;
 use iced_runtime::window::Action as WindowAction;
+
+use futures::channel::mpsc::{channel, Receiver, Sender};
+
+use tokio::sync::Mutex;
+
+use std::sync::Arc;
 
 mod aximer;
 mod launcher;
@@ -55,7 +66,13 @@ struct NotifyUnitWidgetInfo {
     unit: NotifyUnit,
 }
 
-#[derive(Default)]
+#[allow(unused)]
+#[derive(Debug)]
+enum NotifyCommand {
+    ActionInvoked { id: u32, action_key: String },
+    NotificationClosed { id: u32, reason: u32 },
+}
+
 struct LalaMusicBar {
     service_data: Option<ServiceInfo>,
     left: i64,
@@ -64,6 +81,8 @@ struct LalaMusicBar {
     launcher: Option<launcher::Launcher>,
     launcherid: Option<iced::window::Id>,
     notifications: HashMap<iced::window::Id, NotifyUnitWidgetInfo>,
+    sender: Sender<NotifyCommand>,
+    receiver: Arc<Mutex<Receiver<NotifyCommand>>>,
 }
 
 #[derive(Copy, Clone, Default)]
@@ -354,6 +373,7 @@ impl MultiApplication for LalaMusicBar {
     type WindowInfo = LaLaInfo;
 
     fn new(_flags: Self::Flags) -> (Self, Command<Message>) {
+        let (sender, receiver) = channel::<NotifyCommand>(100);
         (
             Self {
                 service_data: None,
@@ -363,6 +383,8 @@ impl MultiApplication for LalaMusicBar {
                 launcher: None,
                 launcherid: None,
                 notifications: HashMap::new(),
+                sender,
+                receiver: Arc::new(Mutex::new(receiver)),
             },
             Command::perform(get_metadata_initial(), Message::DBusInfoUpdate),
         )
@@ -593,6 +615,13 @@ impl MultiApplication for LalaMusicBar {
                 return Command::batch(commands);
             }
             Message::RemoveNotify(id) => {
+                let NotifyUnit { id: notify_id, .. } = self.notifications.get(&id).unwrap().unit;
+                self.sender
+                    .try_send(NotifyCommand::ActionInvoked {
+                        id: notify_id,
+                        action_key: DEFAULT_ACTION.to_string(),
+                    })
+                    .ok();
                 let removed_pos = self
                     .notifications
                     .iter()
@@ -670,14 +699,16 @@ impl MultiApplication for LalaMusicBar {
     }
 
     fn subscription(&self) -> iced::Subscription<Self::Message> {
+        let rv = self.receiver.clone();
         iced::subscription::Subscription::batch([
             iced::time::every(std::time::Duration::from_secs(1))
                 .map(|_| Message::RequestDBusInfoUpdate),
             iced::time::every(std::time::Duration::from_secs(5)).map(|_| Message::UpdateBalance),
             iced::event::listen()
                 .map(|event| Message::LauncherInfo(LaunchMessage::IcedEvent(event))),
-            iced::subscription::channel(std::any::TypeId::of::<()>(), 100, |sender| async {
-                start_server(
+            iced::subscription::channel(std::any::TypeId::of::<()>(), 100, |sender| async move {
+                let mut receiver = rv.lock().await;
+                let Ok(connection) = start_connection(
                     sender,
                     vec![
                         "body".to_owned(),
@@ -695,6 +726,44 @@ impl MultiApplication for LalaMusicBar {
                     },
                 )
                 .await
+                else {
+                    pending::<()>().await;
+                    unreachable!()
+                };
+                type LaLaMakoMusic = LaLaMako<Message>;
+                let Ok(lalaref) = connection
+                    .object_server()
+                    .interface::<_, LaLaMakoMusic>(NOTIFICATION_SERVICE_PATH)
+                    .await
+                else {
+                    pending::<()>().await;
+                    unreachable!()
+                };
+
+                while let Some(cmd) = receiver.next().await {
+                    match cmd {
+                        NotifyCommand::ActionInvoked { id, action_key } => {
+                            LaLaMakoMusic::action_invoked(
+                                lalaref.signal_context(),
+                                id,
+                                &action_key,
+                            )
+                            .await
+                            .ok();
+                        }
+                        NotifyCommand::NotificationClosed { id, reason } => {
+                            LaLaMakoMusic::notification_closed(
+                                lalaref.signal_context(),
+                                id,
+                                reason,
+                            )
+                            .await
+                            .ok();
+                        }
+                    }
+                }
+                pending::<()>().await;
+                unreachable!()
             }),
         ])
     }
