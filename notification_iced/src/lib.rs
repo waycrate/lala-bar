@@ -19,21 +19,32 @@
 //!
 //! [Writing a client proxy]: https://dbus2.github.io/zbus/client.html
 //! [D-Bus standard interfaces]: https://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces,
+use serde::{Deserialize, Serialize};
 use zbus::{interface, object_server::SignalContext, zvariant::OwnedValue};
 
 use futures::{channel::mpsc::Sender, never::Never};
 use zbus::ConnectionBuilder;
 
+use zbus::zvariant::{SerializeDict, Type};
+
 use std::future::pending;
 
-#[allow(unused)]
-const NOTIFICATION_DELETED_BY_EXPIRED: u32 = 1;
-const NOTIFICATION_DELETED_BY_USER: u32 = 2;
+pub const NOTIFICATION_DELETED_BY_EXPIRED: u32 = 1;
+pub const NOTIFICATION_DELETED_BY_USER: u32 = 2;
 
-#[allow(unused)]
-const NOTIFICATION_CLOSED_BY_DBUS: u32 = 3;
-#[allow(unused)]
-const NOTIFICATION_CLOSED_BY_UNKNOWN_REASON: u32 = 4;
+pub const NOTIFICATION_CLOSED_BY_DBUS: u32 = 3;
+pub const NOTIFICATION_CLOSED_BY_UNKNOWN_REASON: u32 = 4;
+
+#[derive(Type, Debug, SerializeDict, OwnedValue, Clone)]
+pub struct ImageData {
+    width: i32,
+    height: i32,
+    rowstride: i32,
+    has_alpha: bool,
+    bits_per_sample: i32,
+    channels: i32,
+    data: Vec<u8>,
+}
 
 #[derive(Debug, Clone)]
 pub enum NotifyMessage {
@@ -42,7 +53,9 @@ pub enum NotifyMessage {
 }
 
 #[derive(Debug, Clone)]
-pub struct NotifyHint {}
+pub struct NotifyHint {
+    pub image_data: Option<ImageData>,
+}
 
 #[derive(Debug, Clone)]
 pub struct NotifyUnit {
@@ -125,9 +138,11 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
         summery: &str,
         body: &str,
         actions: Vec<&str>,
-        _hints: std::collections::HashMap<&str, OwnedValue>,
+        mut hints: std::collections::HashMap<&str, OwnedValue>,
         timeout: i32,
     ) -> zbus::fdo::Result<u32> {
+        let image_data: Option<ImageData> =
+            hints.remove("image-data").and_then(|v| v.try_into().ok());
         self.sender
             .try_send(
                 NotifyMessage::UnitAdd(NotifyUnit {
@@ -138,7 +153,7 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
                     body: body.to_string(),
                     actions: actions.iter().map(|a| a.to_string()).collect(),
                     timeout,
-                    hint: NotifyHint {},
+                    hint: NotifyHint { image_data },
                 })
                 .into(),
             )

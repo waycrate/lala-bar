@@ -376,7 +376,6 @@ pub async fn init_mpirs() -> Result<()> {
                 .await
                 .ok();
             }
-            //println!("name: {:?}", get_mpirs_connections().await);
         }
         Ok::<(), anyhow::Error>(())
     });
