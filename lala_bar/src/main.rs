@@ -1,12 +1,12 @@
 use std::collections::HashMap;
 
 use iced::widget::{button, container, image, row, slider, svg, text, Space};
-use iced::{executor, Event, Font};
+use iced::{executor, Font};
 use iced::{Command, Element, Length, Theme};
 use iced_layershell::actions::{
     LayershellCustomActionsWithIdAndInfo, LayershellCustomActionsWithInfo,
 };
-use launcher::Launcher;
+use launcher::{LaunchMessage, Launcher};
 use notification_iced::{start_server, NotifyMessage, NotifyUnit};
 use zbus_mpirs::ServiceInfo;
 
@@ -56,7 +56,7 @@ struct LalaMusicBar {
     bar_index: SliderIndex,
     launcher: Option<launcher::Launcher>,
     launcherid: Option<iced::window::Id>,
-    notifications: HashMap<iced::window::Id, LaLaInfo>,
+    notifications: HashMap<iced::window::Id, NotifyUnit>,
 }
 
 #[derive(Copy, Clone, Default)]
@@ -183,12 +183,10 @@ enum Message {
     SliderIndexNext,
     SliderIndexPre,
     ToggleLauncher,
-    SearchEditChanged(String),
-    SearchSubmit,
-    Launch(usize),
-    IcedEvent(Event),
+    LauncherInfo(LaunchMessage),
     Notify(NotifyMessage),
     RemoveNotify(iced::window::Id),
+    CheckOutput,
 }
 
 impl From<NotifyMessage> for Message {
@@ -347,11 +345,13 @@ impl MultiApplication for LalaMusicBar {
         String::from("Mpirs_panel")
     }
 
-    fn id_info(&self, id: iced::window::Id) -> Option<&Self::WindowInfo> {
+    fn id_info(&self, id: iced::window::Id) -> Option<Self::WindowInfo> {
         if self.launcherid.is_some_and(|tid| tid == id) {
-            Some(&LaLaInfo::Launcher)
+            Some(LaLaInfo::Launcher)
         } else {
-            self.notifications.get(&id)
+            self.notifications
+                .get(&id)
+                .map(|noficy| LaLaInfo::Notify(noficy.clone()))
         }
     }
 
@@ -360,8 +360,8 @@ impl MultiApplication for LalaMusicBar {
             LaLaInfo::Launcher => {
                 self.launcherid = Some(id);
             }
-            _ => {
-                self.notifications.insert(id, info);
+            LaLaInfo::Notify(nofify) => {
+                self.notifications.insert(id, nofify);
             }
         }
     }
@@ -480,6 +480,7 @@ impl MultiApplication for LalaMusicBar {
                                     layer: Layer::Top,
                                     margins: None,
                                     keyboard_interactivity: KeyboardInteractivity::Exclusive,
+                                    use_last_output: false,
                                 },
                                 LaLaInfo::Launcher,
                             )),
@@ -501,6 +502,7 @@ impl MultiApplication for LalaMusicBar {
                                 layer: Layer::Top,
                                 margins: Some((10, 10, 10, 10)),
                                 keyboard_interactivity: KeyboardInteractivity::None,
+                                use_last_output: true,
                             },
                             LaLaInfo::Notify(notify),
                         )),
@@ -509,24 +511,37 @@ impl MultiApplication for LalaMusicBar {
                 );
             }
             Message::Notify(NotifyMessage::UnitRemove(removed_id)) => {
-                let commands: Vec<_> = self
+                let mut commands: Vec<_> = self
                     .notifications
                     .iter()
                     .filter(|(_, info)| {
-                        if let LaLaInfo::Notify(NotifyUnit { id, .. }) = info {
-                            return removed_id == *id;
-                        }
-                        false
+                        let NotifyUnit { id, .. } = info;
+                        return removed_id == *id;
                     })
                     .map(|(id, _)| Command::single(Action::Window(WindowAction::Close(*id))))
                     .collect();
+                commands.push(Command::perform(async {}, |_| Message::CheckOutput));
 
                 return Command::batch(commands);
             }
             Message::RemoveNotify(id) => {
-                return Command::single(Action::Window(WindowAction::Close(id)));
+                return Command::batch(vec![
+                    Command::single(Action::Window(WindowAction::Close(id))),
+                    Command::perform(async {}, |_| Message::CheckOutput),
+                ]);
             }
-            _ => {
+            Message::CheckOutput => {
+                if self.notifications.is_empty() {
+                    return Command::single(
+                        LaLaShellIdAction::new(
+                            iced::window::Id::MAIN,
+                            LalaShellAction::ForgetLastOutput,
+                        )
+                        .into(),
+                    );
+                }
+            }
+            Message::LauncherInfo(message) => {
                 if let Some(launcher) = self.launcher.as_mut() {
                     if let Some(id) = self.launcherid {
                         let cmd = launcher.update(message, id);
@@ -566,7 +581,8 @@ impl MultiApplication for LalaMusicBar {
             iced::time::every(std::time::Duration::from_secs(1))
                 .map(|_| Message::RequestDBusInfoUpdate),
             iced::time::every(std::time::Duration::from_secs(5)).map(|_| Message::UpdateBalance),
-            iced::event::listen().map(Message::IcedEvent),
+            iced::event::listen()
+                .map(|event| Message::LauncherInfo(LaunchMessage::IcedEvent(event))),
             iced::subscription::channel(std::any::TypeId::of::<()>(), 100, start_server),
         ])
     }
