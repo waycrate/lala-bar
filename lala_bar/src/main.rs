@@ -7,7 +7,7 @@ use iced_layershell::actions::{
     LayershellCustomActionsWithIdAndInfo, LayershellCustomActionsWithInfo,
 };
 use launcher::{LaunchMessage, Launcher};
-use notification_iced::{start_server, NotifyMessage, NotifyUnit};
+use notification_iced::{start_server, NotifyMessage, NotifyUnit, VersionInfo};
 use zbus_mpirs::ServiceInfo;
 
 use iced_layershell::reexport::{Anchor, KeyboardInteractivity, Layer, NewLayerShellSettings};
@@ -632,7 +632,26 @@ impl MultiApplication for LalaMusicBar {
             iced::time::every(std::time::Duration::from_secs(5)).map(|_| Message::UpdateBalance),
             iced::event::listen()
                 .map(|event| Message::LauncherInfo(LaunchMessage::IcedEvent(event))),
-            iced::subscription::channel(std::any::TypeId::of::<()>(), 100, start_server),
+            iced::subscription::channel(std::any::TypeId::of::<()>(), 100, |sender| async {
+                start_server(
+                    sender,
+                    vec![
+                        "body".to_owned(),
+                        "body-markup".to_owned(),
+                        "actions".to_owned(),
+                        "icon-static".to_owned(),
+                        "x-canonical-private-synchronous".to_owned(),
+                        "x-dunst-stack-tag".to_owned(),
+                    ],
+                    VersionInfo {
+                        name: "LaLaMako".to_owned(),
+                        vendor: "waycrate".to_owned(),
+                        version: env!("CARGO_PKG_VERSION").to_owned(),
+                        spec_version: env!("CARGO_PKG_VERSION_PATCH").to_owned(),
+                    },
+                )
+                .await
+            }),
         ])
     }
 

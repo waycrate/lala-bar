@@ -52,8 +52,20 @@ pub struct NotifyUnit {
     pub timeout: i32,
 }
 
+#[derive(Debug, Clone)]
+pub struct VersionInfo {
+    pub name: String,
+    pub vendor: String,
+    pub version: String,
+    pub spec_version: String,
+}
+
 #[derive(Debug)]
-pub struct LaLaMako<T: From<NotifyMessage> + Send>(Sender<T>);
+pub struct LaLaMako<T: From<NotifyMessage> + Send> {
+    capablities: Vec<String>,
+    sender: Sender<T>,
+    version: VersionInfo,
+}
 
 #[interface(name = "org.freedesktop.Notifications")]
 impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
@@ -66,29 +78,30 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
         self.notification_closed(&ctx, id, NOTIFICATION_DELETED_BY_USER)
             .await
             .ok();
-        self.0.try_send(NotifyMessage::UnitRemove(id).into()).ok();
+        self.sender
+            .try_send(NotifyMessage::UnitRemove(id).into())
+            .ok();
         Ok(())
     }
 
     /// GetCapabilities method
     fn get_capabilities(&self) -> Vec<String> {
-        vec![
-            "body".to_owned(),
-            "body-markup".to_owned(),
-            "actions".to_owned(),
-            "icon-static".to_owned(),
-            "x-canonical-private-synchronous".to_owned(),
-            "x-dunst-stack-tag".to_owned(),
-        ]
+        self.capablities.clone()
     }
 
     /// GetServerInformation method
     fn get_server_information(&self) -> (String, String, String, String) {
+        let VersionInfo {
+            name,
+            vendor,
+            version,
+            spec_version,
+        } = &self.version;
         (
-            "LaLaMako".to_owned(),
-            "waycrate".to_owned(),
-            env!("CARGO_PKG_VERSION").to_owned(),
-            env!("CARGO_PKG_VERSION_PATCH").to_owned(),
+            name.clone(),
+            vendor.clone(),
+            version.clone(),
+            spec_version.clone(),
         )
     }
 
@@ -105,7 +118,7 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
         _hints: std::collections::HashMap<&str, OwnedValue>,
         timeout: i32,
     ) -> zbus::fdo::Result<u32> {
-        self.0
+        self.sender
             .try_send(
                 NotifyMessage::UnitAdd(NotifyUnit {
                     app_name: app_name.to_string(),
@@ -140,11 +153,22 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
     ) -> zbus::Result<()>;
 }
 
-pub async fn start_server<T: From<NotifyMessage> + Send + 'static>(sender: Sender<T>) -> Never {
+pub async fn start_server<T: From<NotifyMessage> + Send + 'static>(
+    sender: Sender<T>,
+    capablities: Vec<String>,
+    version: VersionInfo,
+) -> Never {
     let _conn = async {
         ConnectionBuilder::session()?
             .name("org.freedesktop.Notifications")?
-            .serve_at("/org/freedesktop/Notifications", LaLaMako(sender))?
+            .serve_at(
+                "/org/freedesktop/Notifications",
+                LaLaMako {
+                    sender,
+                    capablities,
+                    version,
+                },
+            )?
             .build()
             .await
     }
