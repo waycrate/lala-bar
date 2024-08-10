@@ -51,6 +51,7 @@ enum LaLaInfo {
 #[derive(Debug, Clone)]
 struct NotifyUnitWidgetInfo {
     uper: i32,
+    counter: usize,
     unit: NotifyUnit,
 }
 
@@ -325,6 +326,26 @@ impl LalaMusicBar {
     }
 }
 
+impl LalaMusicBar {
+    fn counter_up(&mut self) {
+        for (_, unit) in self.notifications.iter_mut() {
+            unit.counter += 1;
+        }
+    }
+    fn counter_down(&mut self, ids: &Vec<iced::window::Id>) {
+        for id in ids {
+            if let Some(NotifyUnitWidgetInfo { counter, .. }) = self.notifications.remove(id) {
+                for (_, unit) in self.notifications.iter_mut() {
+                    if unit.counter > counter {
+                        unit.counter -= 1;
+                        unit.uper -= 75;
+                    }
+                }
+            }
+        }
+    }
+}
+
 impl MultiApplication for LalaMusicBar {
     type Message = Message;
     type Flags = ();
@@ -367,9 +388,11 @@ impl MultiApplication for LalaMusicBar {
                 self.launcherid = Some(id);
             }
             LaLaInfo::Notify(nofify) => {
+                self.counter_up();
                 self.notifications
                     .entry(id)
                     .or_insert(NotifyUnitWidgetInfo {
+                        counter: 0,
                         uper: 10,
                         unit: nofify,
                     });
@@ -535,6 +558,15 @@ impl MultiApplication for LalaMusicBar {
                 return Command::batch(commands);
             }
             Message::Notify(NotifyMessage::UnitRemove(removed_id)) => {
+                let removed_ids: Vec<iced::window::Id> = self
+                    .notifications
+                    .iter()
+                    .filter(|(_, info)| {
+                        let NotifyUnit { id, .. } = info.unit;
+                        removed_id == id
+                    })
+                    .map(|(id, _)| id.clone())
+                    .collect();
                 let mut commands: Vec<_> = self
                     .notifications
                     .iter()
@@ -544,6 +576,18 @@ impl MultiApplication for LalaMusicBar {
                     })
                     .map(|(id, _)| Command::single(Action::Window(WindowAction::Close(*id))))
                     .collect();
+
+                self.counter_down(&removed_ids);
+                for (id, unit) in self.notifications.iter() {
+                    commands.push(Command::single(
+                        LaLaShellIdAction::new(
+                            *id,
+                            LalaShellAction::MarginChange((unit.uper, 10, 10, 10)),
+                        )
+                        .into(),
+                    ));
+                }
+
                 commands.push(Command::perform(async {}, |_| Message::CheckOutput));
 
                 return Command::batch(commands);
