@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use futures::future::pending;
 use futures::StreamExt;
-use iced::widget::{button, column, container, image, row, slider, svg, text, Space};
+use iced::widget::{button, column, container, image, row, slider, svg, text, text_input, Space};
 use iced::{executor, Font};
 use iced::{Command, Element, Length, Theme};
 use iced_layershell::actions::{
@@ -63,6 +63,7 @@ enum LaLaInfo {
 struct NotifyUnitWidgetInfo {
     upper: i32,
     counter: usize,
+    inline_reply: String,
     unit: NotifyUnit,
 }
 
@@ -70,6 +71,7 @@ struct NotifyUnitWidgetInfo {
 #[derive(Debug)]
 enum NotifyCommand {
     ActionInvoked { id: u32, action_key: String },
+    InlineReply { id: u32, text: String },
     NotificationClosed { id: u32, reason: u32 },
 }
 
@@ -212,6 +214,8 @@ enum Message {
     LauncherInfo(LaunchMessage),
     Notify(NotifyMessage),
     RemoveNotify(iced::window::Id),
+    InlineReply((iced::window::Id, u32, String)),
+    InlineReplyMsgUpdate((iced::window::Id, String)),
     CheckOutput,
 }
 
@@ -416,6 +420,7 @@ impl MultiApplication for LalaMusicBar {
                     .or_insert(NotifyUnitWidgetInfo {
                         counter: 0,
                         upper: 10,
+                        inline_reply: String::new(),
                         unit: nofify,
                     });
             }
@@ -569,7 +574,7 @@ impl MultiApplication for LalaMusicBar {
                                 anchor: Anchor::Right | Anchor::Top,
                                 layer: Layer::Top,
                                 margin: Some((10, 10, 10, 10)),
-                                keyboard_interactivity: KeyboardInteractivity::None,
+                                keyboard_interactivity: KeyboardInteractivity::OnDemand,
                                 use_last_output: true,
                             },
                             LaLaInfo::Notify(notify),
@@ -671,6 +676,44 @@ impl MultiApplication for LalaMusicBar {
                     }
                 }
             }
+            Message::InlineReply((id, notify_id, text)) => {
+                self.sender
+                    .try_send(NotifyCommand::InlineReply {
+                        id: notify_id,
+                        text,
+                    })
+                    .ok();
+                let removed_pos = self
+                    .notifications
+                    .iter()
+                    .find(|(oid, _)| **oid == id)
+                    .map(|(_, info)| info.upper)
+                    .unwrap_or(0);
+
+                let mut commands = vec![];
+                for (id, unit) in self.notifications.iter_mut() {
+                    if unit.upper > removed_pos {
+                        unit.upper -= 75;
+                    }
+                    commands.push(Command::single(
+                        LaLaShellIdAction::new(
+                            *id,
+                            LalaShellAction::MarginChange((unit.upper, 10, 10, 10)),
+                        )
+                        .into(),
+                    ));
+                }
+                commands.append(&mut vec![
+                    Command::single(Action::Window(WindowAction::Close(id))),
+                    Command::perform(async {}, |_| Message::CheckOutput),
+                ]);
+
+                return Command::batch(commands);
+            }
+            Message::InlineReplyMsgUpdate((id, msg)) => {
+                let notify = self.notifications.get_mut(&id).unwrap();
+                notify.inline_reply = msg;
+            }
         }
         Command::none()
     }
@@ -684,14 +727,33 @@ impl MultiApplication for LalaMusicBar {
                     }
                 }
                 LaLaInfo::Notify(notify) => {
-                    return button(column![
+                    let btnwidgets: Element<Message> = button(row![
                         text(notify.summery.clone()).shaping(text::Shaping::Advanced),
                         text(notify.body.clone()).shaping(text::Shaping::Advanced)
                     ])
                     .width(Length::Fill)
                     .height(Length::Fill)
                     .on_press(Message::RemoveNotify(id))
-                    .into()
+                    .into();
+                    let notifywidget = self.notifications.get(&id).unwrap();
+                    if notify.inline_reply_support() {
+                        return column![
+                            btnwidgets,
+                            Space::with_height(5.),
+                            row![
+                                text_input("reply something", &notifywidget.inline_reply).on_input(
+                                    move |msg| Message::InlineReplyMsgUpdate((id.clone(), msg))
+                                ),
+                                button("send").on_press(Message::InlineReply((
+                                    id,
+                                    notify.id,
+                                    notifywidget.inline_reply.clone()
+                                ))),
+                            ]
+                        ]
+                        .into();
+                    }
+                    return btnwidgets;
                 }
             }
         }
@@ -717,6 +779,7 @@ impl MultiApplication for LalaMusicBar {
                         "icon-static".to_owned(),
                         "x-canonical-private-synchronous".to_owned(),
                         "x-dunst-stack-tag".to_owned(),
+                        "inline-reply".to_owned(),
                     ],
                     VersionInfo {
                         name: "LaLaMako".to_owned(),
@@ -747,6 +810,15 @@ impl MultiApplication for LalaMusicBar {
                                 lalaref.signal_context(),
                                 id,
                                 &action_key,
+                            )
+                            .await
+                            .ok();
+                        }
+                        NotifyCommand::InlineReply { id, text } => {
+                            LaLaMakoMusic::notification_replied(
+                                lalaref.signal_context(),
+                                id,
+                                &text,
                             )
                             .await
                             .ok();

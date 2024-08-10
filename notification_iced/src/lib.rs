@@ -42,6 +42,9 @@ pub enum NotifyMessage {
 }
 
 #[derive(Debug, Clone)]
+pub struct NotifyHint {}
+
+#[derive(Debug, Clone)]
 pub struct NotifyUnit {
     pub app_name: String,
     pub id: u32,
@@ -50,6 +53,13 @@ pub struct NotifyUnit {
     pub body: String,
     pub actions: Vec<String>,
     pub timeout: i32,
+    pub hint: NotifyHint,
+}
+
+impl NotifyUnit {
+    pub fn inline_reply_support(&self) -> bool {
+        self.actions.contains(&"inline-reply".to_owned())
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -115,7 +125,7 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
         summery: &str,
         body: &str,
         actions: Vec<&str>,
-        _hints: std::collections::HashMap<&str, OwnedValue>,
+        mut hints: std::collections::HashMap<&str, OwnedValue>,
         timeout: i32,
     ) -> zbus::fdo::Result<u32> {
         self.sender
@@ -128,6 +138,7 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
                     body: body.to_string(),
                     actions: actions.iter().map(|a| a.to_string()).collect(),
                     timeout,
+                    hint: NotifyHint {},
                 })
                 .into(),
             )
@@ -140,6 +151,13 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
         ctx: &SignalContext<'_>,
         id: u32,
         action_key: &str,
+    ) -> zbus::Result<()>;
+
+    #[zbus(signal)]
+    pub async fn notification_replied(
+        ctx: &SignalContext<'_>,
+        id: u32,
+        text: &str,
     ) -> zbus::Result<()>;
 
     // NotificationClosed signal
