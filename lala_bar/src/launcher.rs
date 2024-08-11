@@ -20,6 +20,14 @@ pub struct Launcher {
     pub should_delete: bool,
 }
 
+#[derive(Debug, Clone)]
+pub enum LaunchMessage {
+    SearchEditChanged(String),
+    SearchSubmit,
+    Launch(usize),
+    IcedEvent(Event),
+}
+
 impl Launcher {
     pub fn new() -> Self {
         Self {
@@ -34,11 +42,11 @@ impl Launcher {
         text_input::focus(INPUT_ID.clone())
     }
 
-    pub fn update(&mut self, message: Message, id: iced::window::Id) -> Command<Message> {
+    pub fn update(&mut self, message: LaunchMessage, id: iced::window::Id) -> Command<Message> {
         use iced::keyboard::key::Named;
         use iced_runtime::keyboard;
         match message {
-            Message::SearchSubmit => {
+            LaunchMessage::SearchSubmit => {
                 let re = regex::Regex::new(&self.text).ok();
                 let index = self
                     .apps
@@ -63,17 +71,17 @@ impl Launcher {
                     Command::none()
                 }
             }
-            Message::SearchEditChanged(edit) => {
+            LaunchMessage::SearchEditChanged(edit) => {
                 self.scrollpos = 0;
                 self.text = edit;
                 Command::none()
             }
-            Message::Launch(index) => {
+            LaunchMessage::Launch(index) => {
                 self.apps[index].launch();
                 self.should_delete = true;
                 Command::single(Action::Window(WindowAction::Close(id)))
             }
-            Message::IcedEvent(event) => {
+            LaunchMessage::IcedEvent(event) => {
                 let mut len = self.apps.len();
 
                 let re = regex::Regex::new(&self.text).ok();
@@ -112,7 +120,6 @@ impl Launcher {
                 }
                 text_input::focus(INPUT_ID.clone())
             }
-            _ => Command::none(),
         }
     }
 
@@ -120,8 +127,8 @@ impl Launcher {
         let re = regex::Regex::new(&self.text).ok();
         let text_ip: Element<Message> = text_input("put the launcher name", &self.text)
             .padding(10)
-            .on_input(Message::SearchEditChanged)
-            .on_submit(Message::SearchSubmit)
+            .on_input(|msg| Message::LauncherInfo(LaunchMessage::SearchEditChanged(msg)))
+            .on_submit(Message::LauncherInfo(LaunchMessage::SearchSubmit))
             .id(INPUT_ID.clone())
             .into();
         let bottom_vec: Vec<Element<Message>> = self

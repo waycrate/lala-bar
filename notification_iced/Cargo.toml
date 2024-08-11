@@ -1,0 +1,12 @@
+[package]
+name = "notification_iced"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+futures.workspace = true
+serde.workspace = true
+zbus.workspace = true
+futures-util.workspace = true
+url.workspace = true
+glob = "0.3.1"

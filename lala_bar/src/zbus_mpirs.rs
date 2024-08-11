@@ -4,7 +4,7 @@ use std::{
 };
 
 use futures_util::StreamExt;
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 
 use tokio::sync::Mutex;
 
@@ -144,8 +144,8 @@ async fn get_connection() -> zbus::Result<zbus::Connection> {
     }
 }
 
-pub static MPIRS_CONNECTIONS: Lazy<Arc<Mutex<Vec<ServiceInfo>>>> =
-    Lazy::new(|| Arc::new(Mutex::new(Vec::new())));
+pub static MPIRS_CONNECTIONS: LazyLock<Arc<Mutex<Vec<ServiceInfo>>>> =
+    LazyLock::new(|| Arc::new(Mutex::new(Vec::new())));
 
 async fn mpirs_is_ready_in<T: ToString>(path: T) -> bool {
     let conns = MPIRS_CONNECTIONS.lock().await;
@@ -376,7 +376,6 @@ pub async fn init_mpirs() -> Result<()> {
                 .await
                 .ok();
             }
-            //println!("name: {:?}", get_mpirs_connections().await);
         }
         Ok::<(), anyhow::Error>(())
     });

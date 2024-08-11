@@ -1,6 +1,8 @@
 use std::path::PathBuf;
 use std::str::FromStr;
 
+use super::LaunchMessage;
+
 use gio::{AppLaunchContext, DesktopAppInfo};
 
 use gio::prelude::*;
@@ -10,7 +12,7 @@ use iced::{Element, Length};
 
 use super::Message;
 
-static DEFAULT_ICON: &[u8] = include_bytes!("../../misc/text-plain.svg");
+static DEFAULT_ICON: &[u8] = include_bytes!("../../../misc/text-plain.svg");
 
 #[allow(unused)]
 #[derive(Debug, Clone)]
@@ -79,7 +81,7 @@ impl App {
             ]
             .spacing(10),
         )
-        .on_press(Message::Launch(index))
+        .on_press(Message::LauncherInfo(LaunchMessage::Launch(index)))
         .width(Length::Fill)
         .height(Length::Fixed(85.))
         .style(if selected {
