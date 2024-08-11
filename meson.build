@@ -1,5 +1,5 @@
 project(
-  'lala_musicbar',
+  'lala-bar',
   'rust',
   version: '0.2.6',
   license: 'MIT',
@@ -12,6 +12,7 @@ if get_option('debug')
   command = [
     cargo,
     'build',
+    '-p', meson.project_name(),
     '&&',
     'cp',
     meson.global_source_root() / 'target' / 'debug' / meson.project_name(),
@@ -21,6 +22,7 @@ else
   command = [
     cargo,
     'build',
+    '-p', meson.project_name(),
     '--release', '&&',
     'cp',
     meson.global_source_root() / 'target' / 'release' / meson.project_name(),
