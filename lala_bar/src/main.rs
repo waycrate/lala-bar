@@ -301,14 +301,47 @@ impl LalaMusicBar {
                     .into()
             })
             .collect();
-        column![
-            scrollable(column(btns).spacing(10.)).height(Length::Fill),
+        let mut view_elements: Vec<Element<Message>> = vec![];
+
+        if let Some(data) = &self.service_data {
+            if let Some(art_url) = url::Url::parse(&data.metadata.mpris_arturl)
+                .ok()
+                .and_then(|url| url.to_file_path().ok())
+            {
+                view_elements.push(
+                    container(image(image::Handle::from_path(art_url)).width(Length::Fill))
+                        .padding(10)
+                        .width(Length::Fill)
+                        .into(),
+                );
+                view_elements.push(Space::with_height(10.).into());
+                view_elements.push(
+                    container(
+                        text(&data.metadata.xesam_title)
+                            .size(20)
+                            .font(Font {
+                                weight: iced::font::Weight::Bold,
+                                ..Default::default()
+                            })
+                            .shaping(text::Shaping::Advanced)
+                            .style(iced::theme::Text::Color(iced::Color::WHITE)),
+                    )
+                    .into(),
+                );
+                view_elements.push(Space::with_height(10.).into());
+            }
+        }
+        view_elements.append(&mut vec![
+            scrollable(column(btns).spacing(10.))
+                .height(Length::Fill)
+                .into(),
             container(button(text("clear all")).on_press(Message::ClearAllNotifications))
                 .width(Length::Fill)
-                .center_x(),
-            Space::with_height(10.)
-        ]
-        .into()
+                .center_x()
+                .into(),
+            Space::with_height(10.).into(),
+        ]);
+        column(view_elements).into()
     }
 }
 
@@ -424,6 +457,7 @@ impl LalaMusicBar {
             .center_x();
 
         let sound_slider = self.sound_slider();
+        let panel_text = if self.right_panel.is_some() { ">" } else { "<" };
         let col = if let Some(art_url) = art_url {
             row![
                 button(
@@ -439,7 +473,7 @@ impl LalaMusicBar {
                 buttons,
                 sound_slider,
                 Space::with_width(Length::Fixed(10.)),
-                button(text("N")).on_press(Message::ToggleRightPanel)
+                button(text(panel_text)).on_press(Message::ToggleRightPanel)
             ]
             .spacing(10)
         } else {
@@ -455,7 +489,7 @@ impl LalaMusicBar {
                 buttons,
                 sound_slider,
                 Space::with_width(Length::Fixed(10.)),
-                button(text("N")).on_press(Message::ToggleRightPanel)
+                button(text(panel_text)).on_press(Message::ToggleRightPanel)
             ]
             .spacing(10)
         };
