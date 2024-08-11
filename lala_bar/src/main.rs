@@ -754,7 +754,7 @@ impl MultiApplication for LalaMusicBar {
                                 size: Some((300, 130)),
                                 exclusive_zone: None,
                                 anchor: Anchor::Right | Anchor::Top,
-                                layer: Layer::Top,
+                                layer: Layer::Overlay,
                                 margin: Some((10, 10, 10, 10)),
                                 keyboard_interactivity: KeyboardInteractivity::OnDemand,
                                 use_last_output: true,
