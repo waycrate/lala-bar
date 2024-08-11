@@ -630,18 +630,25 @@ impl MultiApplication for LalaMusicBar {
                     .map(|(id, _)| Command::single(Action::Window(WindowAction::Close(*id))))
                     .collect();
 
+                let mut removed_counters = vec![];
                 for id in removed_ids.iter() {
                     if let Some(NotifyUnitWidgetInfo { counter, .. }) =
                         self.notifications.remove(id)
                     {
-                        for (_, unit) in self.notifications.iter_mut() {
-                            if unit.counter > counter {
-                                unit.counter -= 1;
-                                unit.upper -= 135;
-                            }
+                        removed_counters.push(counter);
+                    }
+                }
+                removed_counters.sort();
+                removed_counters.reverse();
+                for counter in removed_counters {
+                    for (_, unit) in self.notifications.iter_mut() {
+                        if unit.counter > counter {
+                            unit.counter -= 1;
+                            unit.upper -= 135;
                         }
                     }
                 }
+
                 for (id, unit) in self.notifications.iter() {
                     commands.push(Command::single(
                         LaLaShellIdAction::new(
@@ -663,6 +670,12 @@ impl MultiApplication for LalaMusicBar {
                     )
                     .map(|NotifyUnitWidgetInfo { counter, .. }| *counter)
                     .collect();
+
+                if self.notifications.len() < 3 {
+                    for index in 0..self.notifications.len() {
+                        remove_hided_notifications_count.push(index);
+                    }
+                }
                 remove_hided_notifications_count.sort();
                 remove_hided_notifications_count.reverse();
 
@@ -670,7 +683,7 @@ impl MultiApplication for LalaMusicBar {
                     |NotifyUnitWidgetInfo {
                          unit: NotifyUnit { id, .. },
                          ..
-                     }| *id == removed_id,
+                     }| *id != removed_id,
                 );
 
                 for count in remove_hided_notifications_count {
