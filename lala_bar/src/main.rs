@@ -326,6 +326,8 @@ impl LalaMusicBar {
                             .shaping(text::Shaping::Advanced)
                             .style(iced::theme::Text::Color(iced::Color::WHITE)),
                     )
+                    .width(Length::Fill)
+                    .center_x()
                     .into(),
                 );
                 view_elements.push(Space::with_height(10.).into());
