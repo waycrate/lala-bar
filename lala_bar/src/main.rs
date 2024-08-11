@@ -12,7 +12,7 @@ use iced_layershell::actions::{
 };
 use launcher::{LaunchMessage, Launcher};
 use notification_iced::{
-    start_connection, ImageInfo, LaLaMako, NotifyMessage, NotifyUnit, VersionInfo, DEFAULT_ACTION,
+    start_connection, ImageInfo, LaLaMako, NotifyMessage, NotifyUnit, VersionInfo,
     NOTIFICATION_SERVICE_PATH,
 };
 use zbus_mpirs::ServiceInfo;
@@ -98,7 +98,13 @@ impl NotifyUnitWidgetInfo {
             ])
             .width(Length::Fill)
             .height(Length::Fill)
-            .on_press(Message::RemoveNotify(id, self.unit.id, counter, hidden))
+            .on_press(Message::RemoveNotify(
+                id,
+                self.unit.actions.clone(),
+                self.unit.id,
+                counter,
+                hidden,
+            ))
             .into(),
             Some(ImageInfo::Data {
                 width,
@@ -124,7 +130,13 @@ impl NotifyUnitWidgetInfo {
             ])
             .width(Length::Fill)
             .height(Length::Fill)
-            .on_press(Message::RemoveNotify(id, self.unit.id, counter, hidden))
+            .on_press(Message::RemoveNotify(
+                id,
+                self.unit.actions.clone(),
+                self.unit.id,
+                counter,
+                hidden,
+            ))
             .into(),
             Some(ImageInfo::Png(path)) | Some(ImageInfo::Jpg(path)) => button(row![
                 image(image::Handle::from_path(path)).height(Length::Fill),
@@ -142,7 +154,13 @@ impl NotifyUnitWidgetInfo {
             ])
             .width(Length::Fill)
             .height(Length::Fill)
-            .on_press(Message::RemoveNotify(id, self.unit.id, counter, hidden))
+            .on_press(Message::RemoveNotify(
+                id,
+                self.unit.actions.clone(),
+                self.unit.id,
+                counter,
+                hidden,
+            ))
             .into(),
             _ => button(column![
                 text(notify.summery.clone()).shaping(text::Shaping::Advanced),
@@ -150,7 +168,13 @@ impl NotifyUnitWidgetInfo {
             ])
             .width(Length::Fill)
             .height(Length::Fill)
-            .on_press(Message::RemoveNotify(id, self.unit.id, counter, hidden))
+            .on_press(Message::RemoveNotify(
+                id,
+                self.unit.actions.clone(),
+                self.unit.id,
+                counter,
+                hidden,
+            ))
             .into(),
         }
     }
@@ -326,7 +350,7 @@ enum Message {
     ToggleRightPanel,
     LauncherInfo(LaunchMessage),
     Notify(NotifyMessage),
-    RemoveNotify(Option<iced::window::Id>, u32, usize, bool),
+    RemoveNotify(Option<iced::window::Id>, Vec<String>, u32, usize, bool),
     InlineReply((iced::window::Id, u32, String)),
     InlineReplyMsgUpdate((iced::window::Id, String)),
     CheckOutput,
@@ -876,13 +900,15 @@ impl MultiApplication for LalaMusicBar {
 
                 return Command::batch(commands);
             }
-            Message::RemoveNotify(id, notify_id, counter, is_hidden) => {
-                self.sender
-                    .try_send(NotifyCommand::ActionInvoked {
-                        id: notify_id,
-                        action_key: DEFAULT_ACTION.to_string(),
-                    })
-                    .ok();
+            Message::RemoveNotify(id, actions, notify_id, counter, is_hidden) => {
+                for action in actions {
+                    self.sender
+                        .try_send(NotifyCommand::ActionInvoked {
+                            id: notify_id,
+                            action_key: action,
+                        })
+                        .ok();
+                }
 
                 let mut commands = vec![];
 
