@@ -11,11 +11,11 @@ use iced_layershell::actions::{
     LayershellCustomActionsWithIdAndInfo, LayershellCustomActionsWithInfo,
 };
 use launcher::{LaunchMessage, Launcher};
+use zbus_mpirs::ServiceInfo;
 use zbus_notification::{
     start_connection, ImageInfo, LaLaMako, NotifyMessage, NotifyUnit, VersionInfo, DEFAULT_ACTION,
     NOTIFICATION_SERVICE_PATH,
 };
-use zbus_mpirs::ServiceInfo;
 
 use iced_layershell::reexport::{Anchor, KeyboardInteractivity, Layer, NewLayerShellSettings};
 use iced_layershell::settings::{LayerShellSettings, Settings};
