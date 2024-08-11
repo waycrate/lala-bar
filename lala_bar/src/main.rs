@@ -295,6 +295,7 @@ impl LalaMusicBar {
         let btns: Vec<Element<Message>> = self
             .hidden_notifications
             .iter()
+            .rev()
             .map(|wdgetinfo| {
                 container(wdgetinfo.button(None, true))
                     .height(Length::Fixed(100.))
