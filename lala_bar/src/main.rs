@@ -652,7 +652,7 @@ impl MultiApplication for LalaMusicBar {
                     ));
                 }
 
-                let remove_hided_notifications_count: Vec<usize> = self
+                let mut remove_hided_notifications_count: Vec<usize> = self
                     .hidden_notifications
                     .iter()
                     .filter(
@@ -663,6 +663,8 @@ impl MultiApplication for LalaMusicBar {
                     )
                     .map(|NotifyUnitWidgetInfo { counter, .. }| *counter)
                     .collect();
+                remove_hided_notifications_count.sort();
+                remove_hided_notifications_count.reverse();
 
                 self.hidden_notifications.retain(
                     |NotifyUnitWidgetInfo {
