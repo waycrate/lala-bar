@@ -620,7 +620,11 @@ impl MultiApplication for LalaMusicBar {
                 return Command::batch(commands);
             }
             Message::RemoveNotify(id) => {
-                let NotifyUnit { id: notify_id, .. } = self.notifications.get(&id).unwrap().unit;
+                let NotifyUnitWidgetInfo {
+                    counter,
+                    unit: NotifyUnit { id: notify_id, .. },
+                    ..
+                } = self.notifications.get(&id).unwrap().clone();
                 self.sender
                     .try_send(NotifyCommand::ActionInvoked {
                         id: notify_id,
@@ -638,6 +642,9 @@ impl MultiApplication for LalaMusicBar {
                 for (id, unit) in self.notifications.iter_mut() {
                     if unit.upper > removed_pos {
                         unit.upper -= 135;
+                    }
+                    if unit.counter > counter {
+                        unit.counter -= 1;
                     }
                     commands.push(Command::single(
                         LaLaShellIdAction::new(
