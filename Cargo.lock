@@ -1677,8 +1677,9 @@ dependencies = [
 
 [[package]]
 name = "iced_layershell"
-version = "0.4.0-rc2"
-source = "git+https://github.com/waycrate/exwlshelleventloop#f64677fd8d31103192b4ba696f14aeda447c005b"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "22fc82ffb0235b92f0320c2b61f853af07d08f4a8e98cf5268377991bc321503"
 dependencies = [
  "futures",
  "iced",
@@ -1989,8 +1990,9 @@ dependencies = [
 
 [[package]]
 name = "layershellev"
-version = "0.4.0-rc2"
-source = "git+https://github.com/waycrate/exwlshelleventloop#f64677fd8d31103192b4ba696f14aeda447c005b"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f6efd8e67c8f00679252fdd2fa0f1593a3b721fc05e3d8a7c3a784dba3ff207f"
 dependencies = [
  "bitflags 2.6.0",
  "log",
@@ -3960,8 +3962,9 @@ dependencies = [
 
 [[package]]
 name = "waycrate_xkbkeycode"
-version = "0.4.0-rc2"
-source = "git+https://github.com/waycrate/exwlshelleventloop#f64677fd8d31103192b4ba696f14aeda447c005b"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4f097fec295da6c970aa3b66f51a0b64fb772b1cc014c1dc6f8b6340ffb6ce0e"
 dependencies = [
  "bitflags 2.6.0",
  "log",
