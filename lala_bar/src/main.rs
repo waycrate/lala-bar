@@ -96,6 +96,7 @@ impl NotifyUnitWidgetInfo {
                     text(notify.body.clone()).shaping(text::Shaping::Advanced)
                 ]
             ])
+            .style(iced::theme::Button::Secondary)
             .width(Length::Fill)
             .height(Length::Fill)
             .on_press(Message::RemoveNotify(id, self.unit.id, counter, hidden))
@@ -124,6 +125,7 @@ impl NotifyUnitWidgetInfo {
             ])
             .width(Length::Fill)
             .height(Length::Fill)
+            .style(iced::theme::Button::Secondary)
             .on_press(Message::RemoveNotify(id, self.unit.id, counter, hidden))
             .into(),
             Some(ImageInfo::Png(path)) | Some(ImageInfo::Jpg(path)) => button(row![
@@ -142,6 +144,7 @@ impl NotifyUnitWidgetInfo {
             ])
             .width(Length::Fill)
             .height(Length::Fill)
+            .style(iced::theme::Button::Secondary)
             .on_press(Message::RemoveNotify(id, self.unit.id, counter, hidden))
             .into(),
             _ => button(column![
@@ -150,6 +153,7 @@ impl NotifyUnitWidgetInfo {
             ])
             .width(Length::Fill)
             .height(Length::Fill)
+            .style(iced::theme::Button::Secondary)
             .on_press(Message::RemoveNotify(id, self.unit.id, counter, hidden))
             .into(),
         }
