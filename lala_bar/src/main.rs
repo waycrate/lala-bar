@@ -10,7 +10,7 @@ use iced_layershell::actions::{
 };
 use launcher::{LaunchMessage, Launcher};
 use notification_iced::{
-    start_connection, LaLaMako, NotifyMessage, NotifyUnit, VersionInfo, DEFAULT_ACTION,
+    start_connection, ImageInfo, LaLaMako, NotifyMessage, NotifyUnit, VersionInfo, DEFAULT_ACTION,
     NOTIFICATION_SERVICE_PATH,
 };
 use zbus_mpirs::ServiceInfo;
@@ -888,34 +888,78 @@ impl MultiApplication for LalaMusicBar {
                     }
                 }
                 LaLaInfo::Notify(NotifyUnitWidgetInfo { unit: notify, .. }) => {
-                    let btnwidgets: Element<Message> =
-                        if let Some((width, height, pixels)) = notify.hint.image_data() {
-                            button(row![
-                                image(image::Handle::from_pixels(
-                                    width as u32,
-                                    height as u32,
-                                    pixels
-                                )),
-                                Space::with_width(4.),
-                                column![
-                                    text(notify.summery.clone()).shaping(text::Shaping::Advanced),
-                                    text(notify.body.clone()).shaping(text::Shaping::Advanced)
-                                ]
-                            ])
-                            .width(Length::Fill)
-                            .height(Length::Fill)
-                            .on_press(Message::RemoveNotify(id))
-                            .into()
-                        } else {
-                            button(column![
-                                text(notify.summery.clone()).shaping(text::Shaping::Advanced),
+                    let btnwidgets: Element<Message> = match notify.image() {
+                        Some(ImageInfo::Svg(path)) => button(row![
+                            svg(svg::Handle::from_path(path)).height(Length::Fill),
+                            Space::with_width(4.),
+                            column![
+                                text(notify.summery.clone())
+                                    .shaping(text::Shaping::Advanced)
+                                    .size(20)
+                                    .font(Font {
+                                        weight: iced::font::Weight::Bold,
+                                        ..Default::default()
+                                    }),
                                 text(notify.body.clone()).shaping(text::Shaping::Advanced)
-                            ])
-                            .width(Length::Fill)
-                            .height(Length::Fill)
-                            .on_press(Message::RemoveNotify(id))
-                            .into()
-                        };
+                            ]
+                        ])
+                        .width(Length::Fill)
+                        .height(Length::Fill)
+                        .on_press(Message::RemoveNotify(id))
+                        .into(),
+                        Some(ImageInfo::Data {
+                            width,
+                            height,
+                            pixels,
+                        }) => button(row![
+                            image(image::Handle::from_pixels(
+                                width as u32,
+                                height as u32,
+                                pixels
+                            )),
+                            Space::with_width(4.),
+                            column![
+                                text(notify.summery.clone())
+                                    .shaping(text::Shaping::Advanced)
+                                    .size(20)
+                                    .font(Font {
+                                        weight: iced::font::Weight::Bold,
+                                        ..Default::default()
+                                    }),
+                                text(notify.body.clone()).shaping(text::Shaping::Advanced)
+                            ]
+                        ])
+                        .width(Length::Fill)
+                        .height(Length::Fill)
+                        .on_press(Message::RemoveNotify(id))
+                        .into(),
+                        Some(ImageInfo::Png(path)) | Some(ImageInfo::Jpg(path)) => button(row![
+                            image(image::Handle::from_path(path)).height(Length::Fill),
+                            Space::with_width(4.),
+                            column![
+                                text(notify.summery.clone())
+                                    .shaping(text::Shaping::Advanced)
+                                    .size(20)
+                                    .font(Font {
+                                        weight: iced::font::Weight::Bold,
+                                        ..Default::default()
+                                    }),
+                                text(notify.body.clone()).shaping(text::Shaping::Advanced)
+                            ]
+                        ])
+                        .width(Length::Fill)
+                        .height(Length::Fill)
+                        .on_press(Message::RemoveNotify(id))
+                        .into(),
+                        _ => button(column![
+                            text(notify.summery.clone()).shaping(text::Shaping::Advanced),
+                            text(notify.body.clone()).shaping(text::Shaping::Advanced)
+                        ])
+                        .width(Length::Fill)
+                        .height(Length::Fill)
+                        .on_press(Message::RemoveNotify(id))
+                        .into(),
+                    };
 
                     let notifywidget = self.notifications.get(&id).unwrap();
                     if notify.inline_reply_support() {

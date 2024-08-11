@@ -19,7 +19,13 @@
 //!
 //! [Writing a client proxy]: https://dbus2.github.io/zbus/client.html
 //! [D-Bus standard interfaces]: https://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces,
+use std::collections::HashMap;
+use std::path::{Path, PathBuf};
+
+use glob::glob;
 use zbus::{interface, object_server::SignalContext, zvariant::OwnedValue};
+
+use std::sync::{Arc, LazyLock, RwLock};
 
 use futures::channel::mpsc::Sender;
 use zbus::ConnectionBuilder;
@@ -31,6 +37,9 @@ pub const NOTIFICATION_DELETED_BY_USER: u32 = 2;
 
 pub const NOTIFICATION_CLOSED_BY_DBUS: u32 = 3;
 pub const NOTIFICATION_CLOSED_BY_UNKNOWN_REASON: u32 = 4;
+
+static ICON_CACHE: LazyLock<Arc<RwLock<HashMap<String, ImageInfo>>>> =
+    LazyLock::new(|| Arc::new(RwLock::new(HashMap::new())));
 
 #[derive(Type, Debug, SerializeDict, OwnedValue, Clone)]
 pub struct ImageData {
@@ -49,16 +58,79 @@ pub enum NotifyMessage {
     UnitRemove(u32),
 }
 
+fn lazy_get_icon(icon: &str) -> Option<ImageInfo> {
+    let icon_cache = ICON_CACHE.read().unwrap();
+    if icon.contains(icon) {
+        return icon_cache.get(icon).cloned();
+    }
+    drop(icon_cache);
+    let mut icon_cache = ICON_CACHE.write().unwrap();
+    if let Some(path) = get_svg_icon("hicolor", icon) {
+        icon_cache.insert(icon.to_string(), ImageInfo::Svg(path.clone()));
+        return Some(ImageInfo::Svg(path));
+    }
+    if let Some(path) = get_png_icon("hicolor", icon) {
+        icon_cache.insert(icon.to_string(), ImageInfo::Png(path.clone()));
+        return Some(ImageInfo::Png(path));
+    }
+    if let Some(path) = get_jpeg_icon("hicolor", icon) {
+        icon_cache.insert(icon.to_string(), ImageInfo::Jpg(path.clone()));
+        return Some(ImageInfo::Jpg(path));
+    }
+    None
+}
+
+fn get_svg_icon(theme: &str, icon: &str) -> Option<PathBuf> {
+    glob(&format!("/usr/share/icons/{theme}/**/**/{icon}.svg"))
+        .ok()?
+        .next()?
+        .ok()
+}
+
+fn get_png_icon(theme: &str, icon: &str) -> Option<PathBuf> {
+    glob(&format!("/usr/share/icons/{theme}/**/**/{icon}.png"))
+        .ok()?
+        .next()?
+        .ok()
+}
+
+fn get_jpeg_icon(theme: &str, icon: &str) -> Option<PathBuf> {
+    glob(&format!("/usr/share/icons/{theme}/**/**/{icon}.jpg"))
+        .ok()?
+        .next()?
+        .ok()
+}
+
 #[derive(Debug, Clone)]
 pub struct NotifyHint {
     image_data: Option<ImageData>,
+    desktop_entry: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+pub enum ImageInfo {
+    Data {
+        width: i32,
+        height: i32,
+        pixels: Vec<u8>,
+    },
+    Svg(PathBuf),
+    Png(PathBuf),
+    Jpg(PathBuf),
 }
 
 impl NotifyHint {
-    pub fn image_data(&self) -> Option<(i32, i32, Vec<u8>)> {
-        self.image_data
+    fn desktop_image(&self) -> Option<ImageInfo> {
+        self.desktop_entry
             .as_ref()
-            .map(|data| (data.width, data.height, data.data.clone()))
+            .and_then(|icon| lazy_get_icon(icon))
+    }
+    fn hint_image(&self) -> Option<ImageInfo> {
+        self.image_data.as_ref().map(|data| ImageInfo::Data {
+            width: data.width,
+            height: data.height,
+            pixels: data.data.clone(),
+        })
     }
 }
 
@@ -77,6 +149,28 @@ pub struct NotifyUnit {
 impl NotifyUnit {
     pub fn inline_reply_support(&self) -> bool {
         self.actions.contains(&"inline-reply".to_owned())
+    }
+
+    pub fn image(&self) -> Option<ImageInfo> {
+        if let Some(hint_image) = self.hint.hint_image() {
+            return Some(hint_image);
+        }
+        if !self.icon.is_empty() {
+            let path = Path::new(&self.icon);
+            if path.exists() {
+                if self.icon.ends_with("svg") {
+                    return Some(ImageInfo::Svg(path.into()));
+                } else if self.icon.ends_with("jpg") {
+                    return Some(ImageInfo::Jpg(path.into()));
+                } else {
+                    return Some(ImageInfo::Png(path.into()));
+                }
+            }
+            if let Some(info) = lazy_get_icon(&self.icon) {
+                return Some(info);
+            }
+        }
+        self.hint.desktop_image()
     }
 }
 
@@ -148,6 +242,9 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
     ) -> zbus::fdo::Result<u32> {
         let image_data: Option<ImageData> =
             hints.remove("image-data").and_then(|v| v.try_into().ok());
+        let desktop_entry: Option<String> = hints
+            .remove("desktop-entry")
+            .and_then(|v| v.try_into().ok());
         self.sender
             .try_send(
                 NotifyMessage::UnitAdd(NotifyUnit {
@@ -158,7 +255,10 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
                     body: body.to_string(),
                     actions: actions.iter().map(|a| a.to_string()).collect(),
                     timeout,
-                    hint: NotifyHint { image_data },
+                    hint: NotifyHint {
+                        image_data,
+                        desktop_entry,
+                    },
                 })
                 .into(),
             )
