@@ -63,7 +63,7 @@ pub fn main() -> Result<(), iced_layershell::Error> {
 enum LaLaInfo {
     Launcher,
     Notify(NotifyUnitWidgetInfo),
-    HidenInfo,
+    HiddenInfo,
 }
 
 #[derive(Debug, Clone)]
@@ -91,7 +91,7 @@ struct LalaMusicBar {
     launcherid: Option<iced::window::Id>,
     hidenid: Option<iced::window::Id>,
     notifications: HashMap<iced::window::Id, NotifyUnitWidgetInfo>,
-    hidded_notifications: Vec<NotifyUnitWidgetInfo>,
+    hidden_notifications: Vec<NotifyUnitWidgetInfo>,
     sender: Sender<NotifyCommand>,
     receiver: Arc<Mutex<Receiver<NotifyCommand>>>,
 }
@@ -377,7 +377,7 @@ impl MultiApplication for LalaMusicBar {
                 launcherid: None,
                 hidenid: None,
                 notifications: HashMap::new(),
-                hidded_notifications: Vec::new(),
+                hidden_notifications: Vec::new(),
                 sender,
                 receiver: Arc::new(Mutex::new(receiver)),
             },
@@ -393,7 +393,7 @@ impl MultiApplication for LalaMusicBar {
         if self.launcherid.is_some_and(|tid| tid == id) {
             Some(LaLaInfo::Launcher)
         } else if self.hidenid.is_some_and(|tid| tid == id) {
-            Some(LaLaInfo::HidenInfo)
+            Some(LaLaInfo::HiddenInfo)
         } else {
             self.notifications.get(&id).cloned().map(LaLaInfo::Notify)
         }
@@ -407,7 +407,7 @@ impl MultiApplication for LalaMusicBar {
             LaLaInfo::Notify(notify) => {
                 self.notifications.entry(id).or_insert(notify);
             }
-            LaLaInfo::HidenInfo => {
+            LaLaInfo::HiddenInfo => {
                 self.hidenid = Some(id);
             }
         }
@@ -542,7 +542,7 @@ impl MultiApplication for LalaMusicBar {
             }
             Message::Notify(NotifyMessage::UnitAdd(notify)) => {
                 let mut commands = vec![];
-                for unit in self.hidded_notifications.iter_mut() {
+                for unit in self.hidden_notifications.iter_mut() {
                     unit.upper += 135;
                     unit.counter += 1;
                 }
@@ -551,7 +551,7 @@ impl MultiApplication for LalaMusicBar {
                     unit.upper += 135;
                     unit.counter += 1;
                     if unit.counter > 3 {
-                        self.hidded_notifications.push(unit.clone());
+                        self.hidden_notifications.push(unit.clone());
                         commands.push(Command::single(Action::Window(WindowAction::Close(*id))));
                     } else {
                         commands.push(Command::single(
@@ -588,7 +588,7 @@ impl MultiApplication for LalaMusicBar {
                     .into(),
                 ));
 
-                if !self.hidded_notifications.is_empty() && self.hidenid.is_none() {
+                if !self.hidden_notifications.is_empty() && self.hidenid.is_none() {
                     commands.push(Command::single(
                         LaLaShellIdAction::new(
                             iced::window::Id::MAIN,
@@ -602,7 +602,7 @@ impl MultiApplication for LalaMusicBar {
                                     keyboard_interactivity: KeyboardInteractivity::OnDemand,
                                     use_last_output: true,
                                 },
-                                LaLaInfo::HidenInfo,
+                                LaLaInfo::HiddenInfo,
                             )),
                         )
                         .into(),
@@ -653,7 +653,7 @@ impl MultiApplication for LalaMusicBar {
                 }
 
                 let remove_hided_notifications_count: Vec<usize> = self
-                    .hidded_notifications
+                    .hidden_notifications
                     .iter()
                     .filter(
                         |NotifyUnitWidgetInfo {
@@ -664,7 +664,7 @@ impl MultiApplication for LalaMusicBar {
                     .map(|NotifyUnitWidgetInfo { counter, .. }| *counter)
                     .collect();
 
-                self.hidded_notifications.retain(
+                self.hidden_notifications.retain(
                     |NotifyUnitWidgetInfo {
                          unit: NotifyUnit { id, .. },
                          ..
@@ -672,14 +672,14 @@ impl MultiApplication for LalaMusicBar {
                 );
 
                 for count in remove_hided_notifications_count {
-                    for unit in self.hidded_notifications.iter_mut() {
+                    for unit in self.hidden_notifications.iter_mut() {
                         if unit.counter > count {
                             unit.counter -= 1;
                             unit.upper -= 135;
                         }
                     }
                 }
-                for notify in self.hidded_notifications.iter() {
+                for notify in self.hidden_notifications.iter() {
                     if notify.counter <= 4 {
                         commands.push(Command::single(
                             LaLaShellIdAction::new(
@@ -702,10 +702,10 @@ impl MultiApplication for LalaMusicBar {
                     }
                 }
 
-                self.hidded_notifications
+                self.hidden_notifications
                     .retain(|NotifyUnitWidgetInfo { counter, .. }| *counter > 4);
 
-                if self.hidded_notifications.is_empty() && self.hidenid.is_some() {
+                if self.hidden_notifications.is_empty() && self.hidenid.is_some() {
                     let hidenid = self.hidenid.unwrap();
 
                     commands.push(Command::single(Action::Window(WindowAction::Close(
@@ -754,7 +754,7 @@ impl MultiApplication for LalaMusicBar {
                 }
 
                 let mut to_show_id = None;
-                for (index, notify) in self.hidded_notifications.iter_mut().enumerate() {
+                for (index, notify) in self.hidden_notifications.iter_mut().enumerate() {
                     notify.counter -= 1;
                     notify.upper -= 135;
                     if notify.counter == 3 {
@@ -781,10 +781,10 @@ impl MultiApplication for LalaMusicBar {
                 }
 
                 if let Some(index) = to_show_id {
-                    self.hidded_notifications.remove(index);
+                    self.hidden_notifications.remove(index);
                 }
 
-                if self.hidded_notifications.is_empty() && self.hidenid.is_some() {
+                if self.hidden_notifications.is_empty() && self.hidenid.is_some() {
                     let hidenid = self.hidenid.unwrap();
 
                     commands.push(Command::single(Action::Window(WindowAction::Close(
@@ -929,10 +929,10 @@ impl MultiApplication for LalaMusicBar {
                     }
                     return btnwidgets;
                 }
-                LaLaInfo::HidenInfo => {
+                LaLaInfo::HiddenInfo => {
                     return text(format!(
                         "hidden notifications {}",
-                        self.hidded_notifications.len()
+                        self.hidden_notifications.len()
                     ))
                     .into();
                 }
