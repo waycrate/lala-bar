@@ -64,7 +64,7 @@ pub fn main() -> Result<(), iced_layershell::Error> {
 #[derive(Debug, Clone)]
 enum LaLaInfo {
     Launcher,
-    Notify(NotifyUnitWidgetInfo),
+    Notify(Box<NotifyUnitWidgetInfo>),
     HiddenInfo,
     RightPanel,
 }
@@ -505,7 +505,10 @@ impl MultiApplication for LalaMusicBar {
         } else if self.right_panel.is_some_and(|tid| tid == id) {
             Some(LaLaInfo::RightPanel)
         } else {
-            self.notifications.get(&id).cloned().map(LaLaInfo::Notify)
+            self.notifications
+                .get(&id)
+                .cloned()
+                .map(|notifyw| LaLaInfo::Notify(Box::new(notifyw)))
         }
     }
 
@@ -515,7 +518,7 @@ impl MultiApplication for LalaMusicBar {
                 self.launcherid = Some(id);
             }
             LaLaInfo::Notify(notify) => {
-                self.notifications.entry(id).or_insert(notify);
+                self.notifications.entry(id).or_insert(*notify);
             }
             LaLaInfo::HiddenInfo => {
                 self.hidenid = Some(id);
@@ -718,12 +721,12 @@ impl MultiApplication for LalaMusicBar {
                                 keyboard_interactivity: KeyboardInteractivity::OnDemand,
                                 use_last_output: true,
                             },
-                            LaLaInfo::Notify(NotifyUnitWidgetInfo {
+                            LaLaInfo::Notify(Box::new(NotifyUnitWidgetInfo {
                                 counter: 0,
                                 upper: 10,
                                 inline_reply: String::new(),
                                 unit: notify,
-                            }),
+                            })),
                         )),
                     )
                     .into(),
@@ -759,7 +762,7 @@ impl MultiApplication for LalaMusicBar {
                         let NotifyUnit { id, .. } = info.unit;
                         removed_id == id
                     })
-                    .map(|(id, _)| id.clone())
+                    .map(|(id, _)| *id)
                     .collect();
                 let mut commands: Vec<_> = self
                     .notifications
@@ -850,7 +853,7 @@ impl MultiApplication for LalaMusicBar {
                                         keyboard_interactivity: KeyboardInteractivity::OnDemand,
                                         use_last_output: true,
                                     },
-                                    LaLaInfo::Notify(notify.clone()),
+                                    LaLaInfo::Notify(Box::new(notify.clone())),
                                 )),
                             )
                             .into(),
@@ -933,7 +936,7 @@ impl MultiApplication for LalaMusicBar {
                                         keyboard_interactivity: KeyboardInteractivity::OnDemand,
                                         use_last_output: true,
                                     },
-                                    LaLaInfo::Notify(notify.clone()),
+                                    LaLaInfo::Notify(Box::new(notify.clone())),
                                 )),
                             )
                             .into(),
@@ -1063,10 +1066,7 @@ impl MultiApplication for LalaMusicBar {
                             Space::with_height(5.),
                             row![
                                 text_input("reply something", &notifywidget.inline_reply)
-                                    .on_input(move |msg| Message::InlineReplyMsgUpdate((
-                                        id.clone(),
-                                        msg
-                                    )))
+                                    .on_input(move |msg| Message::InlineReplyMsgUpdate((id, msg)))
                                     .on_submit(Message::InlineReply((
                                         id,
                                         notify.id,
