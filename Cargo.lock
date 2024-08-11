@@ -1678,7 +1678,7 @@ dependencies = [
 [[package]]
 name = "iced_layershell"
 version = "0.4.0-rc2"
-source = "git+https://github.com/waycrate/exwlshelleventloop#3b1b2743818423e9fd57ef900da637d89f157d24"
+source = "git+https://github.com/waycrate/exwlshelleventloop#f64677fd8d31103192b4ba696f14aeda447c005b"
 dependencies = [
  "futures",
  "iced",
@@ -1990,7 +1990,7 @@ dependencies = [
 [[package]]
 name = "layershellev"
 version = "0.4.0-rc2"
-source = "git+https://github.com/waycrate/exwlshelleventloop#3b1b2743818423e9fd57ef900da637d89f157d24"
+source = "git+https://github.com/waycrate/exwlshelleventloop#f64677fd8d31103192b4ba696f14aeda447c005b"
 dependencies = [
  "bitflags 2.6.0",
  "log",
@@ -3973,7 +3973,7 @@ dependencies = [
 [[package]]
 name = "waycrate_xkbkeycode"
 version = "0.4.0-rc2"
-source = "git+https://github.com/waycrate/exwlshelleventloop#3b1b2743818423e9fd57ef900da637d89f157d24"
+source = "git+https://github.com/waycrate/exwlshelleventloop#f64677fd8d31103192b4ba696f14aeda447c005b"
 dependencies = [
  "bitflags 2.6.0",
  "log",

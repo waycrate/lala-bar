@@ -2,7 +2,9 @@ use std::collections::HashMap;
 
 use futures::future::pending;
 use futures::StreamExt;
-use iced::widget::{button, column, container, image, row, slider, svg, text, text_input, Space};
+use iced::widget::{
+    button, column, container, image, row, scrollable, slider, svg, text, text_input, Space,
+};
 use iced::{executor, Font};
 use iced::{Command, Element, Length, Theme};
 use iced_layershell::actions::{
@@ -64,6 +66,7 @@ enum LaLaInfo {
     Launcher,
     Notify(NotifyUnitWidgetInfo),
     HiddenInfo,
+    RightPanel,
 }
 
 #[derive(Debug, Clone)]
@@ -72,6 +75,85 @@ struct NotifyUnitWidgetInfo {
     counter: usize,
     inline_reply: String,
     unit: NotifyUnit,
+}
+
+impl NotifyUnitWidgetInfo {
+    fn button<'a>(&self, id: Option<iced::window::Id>, hidden: bool) -> Element<'a, Message> {
+        let notify = &self.unit;
+        let counter = self.counter;
+        match notify.image() {
+            Some(ImageInfo::Svg(path)) => button(row![
+                svg(svg::Handle::from_path(path)).height(Length::Fill),
+                Space::with_width(4.),
+                column![
+                    text(notify.summery.clone())
+                        .shaping(text::Shaping::Advanced)
+                        .size(20)
+                        .font(Font {
+                            weight: iced::font::Weight::Bold,
+                            ..Default::default()
+                        }),
+                    text(notify.body.clone()).shaping(text::Shaping::Advanced)
+                ]
+            ])
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .on_press(Message::RemoveNotify(id, self.unit.id, counter, hidden))
+            .into(),
+            Some(ImageInfo::Data {
+                width,
+                height,
+                pixels,
+            }) => button(row![
+                image(image::Handle::from_pixels(
+                    width as u32,
+                    height as u32,
+                    pixels
+                )),
+                Space::with_width(4.),
+                column![
+                    text(notify.summery.clone())
+                        .shaping(text::Shaping::Advanced)
+                        .size(20)
+                        .font(Font {
+                            weight: iced::font::Weight::Bold,
+                            ..Default::default()
+                        }),
+                    text(notify.body.clone()).shaping(text::Shaping::Advanced)
+                ]
+            ])
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .on_press(Message::RemoveNotify(id, self.unit.id, counter, hidden))
+            .into(),
+            Some(ImageInfo::Png(path)) | Some(ImageInfo::Jpg(path)) => button(row![
+                image(image::Handle::from_path(path)).height(Length::Fill),
+                Space::with_width(4.),
+                column![
+                    text(notify.summery.clone())
+                        .shaping(text::Shaping::Advanced)
+                        .size(20)
+                        .font(Font {
+                            weight: iced::font::Weight::Bold,
+                            ..Default::default()
+                        }),
+                    text(notify.body.clone()).shaping(text::Shaping::Advanced)
+                ]
+            ])
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .on_press(Message::RemoveNotify(id, self.unit.id, counter, hidden))
+            .into(),
+            _ => button(column![
+                text(notify.summery.clone()).shaping(text::Shaping::Advanced),
+                text(notify.body.clone()).shaping(text::Shaping::Advanced)
+            ])
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .on_press(Message::RemoveNotify(id, self.unit.id, counter, hidden))
+            .into(),
+        }
+    }
 }
 
 #[allow(unused)]
@@ -90,6 +172,7 @@ struct LalaMusicBar {
     launcher: Option<launcher::Launcher>,
     launcherid: Option<iced::window::Id>,
     hidenid: Option<iced::window::Id>,
+    right_panel: Option<iced::window::Id>,
     notifications: HashMap<iced::window::Id, NotifyUnitWidgetInfo>,
     hidden_notifications: Vec<NotifyUnitWidgetInfo>,
     sender: Sender<NotifyCommand>,
@@ -203,6 +286,26 @@ impl LalaMusicBar {
             SliderIndex::Balance => self.balance_bar(),
         }
     }
+
+    fn right_panel_view(&self) -> Element<Message> {
+        let btns: Vec<Element<Message>> = self
+            .hidden_notifications
+            .iter()
+            .map(|wdgetinfo| {
+                container(wdgetinfo.button(None, true))
+                    .height(Length::Fixed(100.))
+                    .into()
+            })
+            .collect();
+        column![
+            scrollable(column(btns).spacing(10.)).height(Length::Fill),
+            container(button(text("clear all")).on_press(Message::ClearAllNotifications))
+                .width(Length::Fill)
+                .center_x(),
+            Space::with_height(10.)
+        ]
+        .into()
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -220,12 +323,14 @@ enum Message {
     SliderIndexNext,
     SliderIndexPre,
     ToggleLauncher,
+    ToggleRightPanel,
     LauncherInfo(LaunchMessage),
     Notify(NotifyMessage),
-    RemoveNotify(iced::window::Id),
+    RemoveNotify(Option<iced::window::Id>, u32, usize, bool),
     InlineReply((iced::window::Id, u32, String)),
     InlineReplyMsgUpdate((iced::window::Id, String)),
     CheckOutput,
+    ClearAllNotifications,
 }
 
 impl From<NotifyMessage> for Message {
@@ -330,6 +435,7 @@ impl LalaMusicBar {
                 buttons,
                 sound_slider,
                 Space::with_width(Length::Fixed(10.)),
+                button(text("N")).on_press(Message::ToggleRightPanel)
             ]
             .spacing(10)
         } else {
@@ -345,6 +451,7 @@ impl LalaMusicBar {
                 buttons,
                 sound_slider,
                 Space::with_width(Length::Fixed(10.)),
+                button(text("N")).on_press(Message::ToggleRightPanel)
             ]
             .spacing(10)
         };
@@ -375,6 +482,7 @@ impl MultiApplication for LalaMusicBar {
                 bar_index: SliderIndex::Balance,
                 launcher: None,
                 launcherid: None,
+                right_panel: None,
                 hidenid: None,
                 notifications: HashMap::new(),
                 hidden_notifications: Vec::new(),
@@ -394,6 +502,8 @@ impl MultiApplication for LalaMusicBar {
             Some(LaLaInfo::Launcher)
         } else if self.hidenid.is_some_and(|tid| tid == id) {
             Some(LaLaInfo::HiddenInfo)
+        } else if self.right_panel.is_some_and(|tid| tid == id) {
+            Some(LaLaInfo::RightPanel)
         } else {
             self.notifications.get(&id).cloned().map(LaLaInfo::Notify)
         }
@@ -410,12 +520,16 @@ impl MultiApplication for LalaMusicBar {
             LaLaInfo::HiddenInfo => {
                 self.hidenid = Some(id);
             }
+            LaLaInfo::RightPanel => self.right_panel = Some(id),
         }
     }
 
     fn remove_id(&mut self, id: iced::window::Id) {
         if self.launcherid.is_some_and(|lid| lid == id) {
             self.launcherid.take();
+        }
+        if self.right_panel.is_some_and(|lid| lid == id) {
+            self.right_panel.take();
         }
         if self.hidenid.is_some_and(|lid| lid == id) {
             self.hidenid.take();
@@ -539,6 +653,33 @@ impl MultiApplication for LalaMusicBar {
                     ),
                     self.launcher.as_ref().unwrap().focus_input(),
                 ]);
+            }
+            Message::ToggleRightPanel => {
+                if self.right_panel.is_some() {
+                    if let Some(id) = self.right_panel {
+                        self.right_panel.take();
+                        return Command::single(Action::Window(WindowAction::Close(id)));
+                    }
+                    return Command::none();
+                }
+                return Command::single(
+                    LaLaShellIdAction::new(
+                        iced::window::Id::MAIN,
+                        LalaShellAction::NewLayerShell((
+                            NewLayerShellSettings {
+                                size: Some((300, 0)),
+                                exclusive_zone: Some(300),
+                                anchor: Anchor::Right | Anchor::Bottom | Anchor::Top,
+                                layer: Layer::Top,
+                                margin: None,
+                                keyboard_interactivity: KeyboardInteractivity::None,
+                                use_last_output: false,
+                            },
+                            LaLaInfo::RightPanel,
+                        )),
+                    )
+                    .into(),
+                );
             }
             Message::Notify(NotifyMessage::UnitAdd(notify)) => {
                 let mut commands = vec![];
@@ -732,47 +873,52 @@ impl MultiApplication for LalaMusicBar {
 
                 return Command::batch(commands);
             }
-            Message::RemoveNotify(id) => {
-                let NotifyUnitWidgetInfo {
-                    counter,
-                    unit: NotifyUnit { id: notify_id, .. },
-                    ..
-                } = self.notifications.get(&id).unwrap().clone();
+            Message::RemoveNotify(id, notify_id, counter, is_hidden) => {
                 self.sender
                     .try_send(NotifyCommand::ActionInvoked {
                         id: notify_id,
                         action_key: DEFAULT_ACTION.to_string(),
                     })
                     .ok();
-                let removed_pos = self
-                    .notifications
-                    .iter()
-                    .find(|(oid, _)| **oid == id)
-                    .map(|(_, info)| info.upper)
-                    .unwrap_or(0);
 
                 let mut commands = vec![];
-                for (id, unit) in self.notifications.iter_mut() {
-                    if unit.upper > removed_pos {
-                        unit.upper -= 135;
-                    }
-                    if unit.counter > counter {
-                        unit.counter -= 1;
-                    }
-                    commands.push(Command::single(
-                        LaLaShellIdAction::new(
-                            *id,
-                            LalaShellAction::MarginChange((unit.upper, 10, 10, 10)),
-                        )
-                        .into(),
-                    ));
-                }
 
+                if !is_hidden {
+                    let removed_pos = self
+                        .notifications
+                        .iter()
+                        .find(|(oid, _)| id.is_some_and(|id| id == **oid))
+                        .map(|(_, info)| info.upper)
+                        .unwrap_or(0);
+                    for (id, unit) in self.notifications.iter_mut() {
+                        if unit.upper > removed_pos {
+                            unit.upper -= 135;
+                        }
+                        if unit.counter > counter {
+                            unit.counter -= 1;
+                        }
+                        commands.push(Command::single(
+                            LaLaShellIdAction::new(
+                                *id,
+                                LalaShellAction::MarginChange((unit.upper, 10, 10, 10)),
+                            )
+                            .into(),
+                        ));
+                    }
+                }
                 let mut to_show_id = None;
+
+                let mut to_removed_index = None;
                 for (index, notify) in self.hidden_notifications.iter_mut().enumerate() {
+                    if counter > notify.counter {
+                        continue;
+                    }
+                    if counter == notify.counter {
+                        to_removed_index = Some(index);
+                    }
                     notify.counter -= 1;
                     notify.upper -= 135;
-                    if notify.counter == 3 {
+                    if notify.counter == 3 && !is_hidden {
                         to_show_id = Some(index);
                         commands.push(Command::single(
                             LaLaShellIdAction::new(
@@ -795,6 +941,12 @@ impl MultiApplication for LalaMusicBar {
                     }
                 }
 
+                if is_hidden {
+                    if let Some(index) = to_removed_index {
+                        self.hidden_notifications.remove(index);
+                    }
+                }
+
                 if let Some(index) = to_show_id {
                     self.hidden_notifications.remove(index);
                 }
@@ -807,10 +959,10 @@ impl MultiApplication for LalaMusicBar {
                     ))));
                 }
 
-                commands.append(&mut vec![
-                    Command::single(Action::Window(WindowAction::Close(id))),
-                    Command::perform(async {}, |_| Message::CheckOutput),
-                ]);
+                if let Some(id) = id {
+                    commands.push(Command::single(Action::Window(WindowAction::Close(id))));
+                }
+                commands.push(Command::perform(async {}, |_| Message::CheckOutput));
 
                 return Command::batch(commands);
             }
@@ -875,6 +1027,19 @@ impl MultiApplication for LalaMusicBar {
                 let notify = self.notifications.get_mut(&id).unwrap();
                 notify.inline_reply = msg;
             }
+            Message::ClearAllNotifications => {
+                self.hidden_notifications.clear();
+                let mut commands = self
+                    .notifications
+                    .keys()
+                    .map(|id| Command::single(Action::Window(WindowAction::Close(*id))))
+                    .collect::<Vec<_>>();
+
+                if let Some(id) = self.hidenid {
+                    commands.push(Command::single(Action::Window(WindowAction::Close(id))));
+                }
+                return Command::batch(commands);
+            }
         }
         Command::none()
     }
@@ -887,80 +1052,10 @@ impl MultiApplication for LalaMusicBar {
                         return launcher.view();
                     }
                 }
-                LaLaInfo::Notify(NotifyUnitWidgetInfo { unit: notify, .. }) => {
-                    let btnwidgets: Element<Message> = match notify.image() {
-                        Some(ImageInfo::Svg(path)) => button(row![
-                            svg(svg::Handle::from_path(path)).height(Length::Fill),
-                            Space::with_width(4.),
-                            column![
-                                text(notify.summery.clone())
-                                    .shaping(text::Shaping::Advanced)
-                                    .size(20)
-                                    .font(Font {
-                                        weight: iced::font::Weight::Bold,
-                                        ..Default::default()
-                                    }),
-                                text(notify.body.clone()).shaping(text::Shaping::Advanced)
-                            ]
-                        ])
-                        .width(Length::Fill)
-                        .height(Length::Fill)
-                        .on_press(Message::RemoveNotify(id))
-                        .into(),
-                        Some(ImageInfo::Data {
-                            width,
-                            height,
-                            pixels,
-                        }) => button(row![
-                            image(image::Handle::from_pixels(
-                                width as u32,
-                                height as u32,
-                                pixels
-                            )),
-                            Space::with_width(4.),
-                            column![
-                                text(notify.summery.clone())
-                                    .shaping(text::Shaping::Advanced)
-                                    .size(20)
-                                    .font(Font {
-                                        weight: iced::font::Weight::Bold,
-                                        ..Default::default()
-                                    }),
-                                text(notify.body.clone()).shaping(text::Shaping::Advanced)
-                            ]
-                        ])
-                        .width(Length::Fill)
-                        .height(Length::Fill)
-                        .on_press(Message::RemoveNotify(id))
-                        .into(),
-                        Some(ImageInfo::Png(path)) | Some(ImageInfo::Jpg(path)) => button(row![
-                            image(image::Handle::from_path(path)).height(Length::Fill),
-                            Space::with_width(4.),
-                            column![
-                                text(notify.summery.clone())
-                                    .shaping(text::Shaping::Advanced)
-                                    .size(20)
-                                    .font(Font {
-                                        weight: iced::font::Weight::Bold,
-                                        ..Default::default()
-                                    }),
-                                text(notify.body.clone()).shaping(text::Shaping::Advanced)
-                            ]
-                        ])
-                        .width(Length::Fill)
-                        .height(Length::Fill)
-                        .on_press(Message::RemoveNotify(id))
-                        .into(),
-                        _ => button(column![
-                            text(notify.summery.clone()).shaping(text::Shaping::Advanced),
-                            text(notify.body.clone()).shaping(text::Shaping::Advanced)
-                        ])
-                        .width(Length::Fill)
-                        .height(Length::Fill)
-                        .on_press(Message::RemoveNotify(id))
-                        .into(),
-                    };
+                LaLaInfo::Notify(unitwidgetinfo) => {
+                    let btnwidgets: Element<Message> = unitwidgetinfo.button(Some(id), false);
 
+                    let notify = &unitwidgetinfo.unit;
                     let notifywidget = self.notifications.get(&id).unwrap();
                     if notify.inline_reply_support() {
                         return column![
@@ -994,6 +1089,9 @@ impl MultiApplication for LalaMusicBar {
                         self.hidden_notifications.len()
                     ))
                     .into();
+                }
+                LaLaInfo::RightPanel => {
+                    return self.right_panel_view();
                 }
             }
         }
