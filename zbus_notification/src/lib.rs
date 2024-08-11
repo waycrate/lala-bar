@@ -101,21 +101,27 @@ fn get_jpeg_icon(theme: &str, icon: &str) -> Option<PathBuf> {
         .ok()
 }
 
+/// storage the hint of notification
 #[derive(Debug, Clone)]
 pub struct NotifyHint {
     image_data: Option<ImageData>,
     desktop_entry: Option<String>,
 }
 
+/// contain the info about image
 #[derive(Debug, Clone)]
 pub enum ImageInfo {
+    /// raw data of image
     Data {
         width: i32,
         height: i32,
         pixels: Vec<u8>,
     },
+    /// svg path
     Svg(PathBuf),
+    /// png path
     Png(PathBuf),
+    /// jpeg path
     Jpg(PathBuf),
 }
 
@@ -266,6 +272,7 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
         Ok(0)
     }
 
+    /// Invoke Action
     #[zbus(signal)]
     pub async fn action_invoked(
         ctx: &SignalContext<'_>,
@@ -273,6 +280,7 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
         action_key: &str,
     ) -> zbus::Result<()>;
 
+    /// Notification Reply
     #[zbus(signal)]
     pub async fn notification_replied(
         ctx: &SignalContext<'_>,
@@ -280,7 +288,7 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
         text: &str,
     ) -> zbus::Result<()>;
 
-    // NotificationClosed signal
+    /// NotificationClosed signal
     #[zbus(signal)]
     pub async fn notification_closed(
         ctx: &SignalContext<'_>,
@@ -298,6 +306,7 @@ pub const NOTIFICATION_CLOSED: &str = "notification_closed";
 
 pub const DEFAULT_ACTION: &str = "default";
 
+/// start a connection
 pub async fn start_connection<T: From<NotifyMessage> + Send + 'static>(
     sender: Sender<T>,
     capabilities: Vec<String>,

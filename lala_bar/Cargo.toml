@@ -1,7 +1,12 @@
 [package]
 name = "lala-bar"
-version = "0.2.7"
-edition = "2021"
+version.workspace = true
+edition.workspace = true
+description = "a bar on layershell with iced-rs"
+authors.workspace = true
+license.workspace = true
+keywords = ["sway", "waybar"]
+readme.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -34,4 +39,4 @@ regex = "1.10.5"
 xdg = "2.5.2"
 url.workspace = true
 futures.workspace = true
-notification_iced.workspace = true
+zbus_notification.workspace = true

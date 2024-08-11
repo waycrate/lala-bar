@@ -1,0 +1,18 @@
+[package]
+name = "zbus_notification"
+version.workspace = true
+edition.workspace = true
+description = "zbus binding for org.freedesktop.Notification"
+authors.workspace = true
+license.workspace = true
+readme = "README.md"
+keywords = ["zbus", "Notification"]
+
+
+[dependencies]
+futures.workspace = true
+serde.workspace = true
+zbus.workspace = true
+futures-util.workspace = true
+url.workspace = true
+glob = "0.3.1"

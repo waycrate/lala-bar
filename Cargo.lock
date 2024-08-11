@@ -1976,7 +1976,6 @@ dependencies = [
  "iced_futures",
  "iced_layershell",
  "iced_runtime",
- "notification_iced",
  "regex",
  "serde",
  "tokio",
@@ -1985,6 +1984,7 @@ dependencies = [
  "url",
  "xdg",
  "zbus",
+ "zbus_notification",
 ]
 
 [[package]]
@@ -2245,18 +2245,6 @@ dependencies = [
  "cfg_aliases 0.2.1",
  "libc",
  "memoffset",
-]
-
-[[package]]
-name = "notification_iced"
-version = "0.1.0"
-dependencies = [
- "futures",
- "futures-util",
- "glob",
- "serde",
- "url",
- "zbus",
 ]
 
 [[package]]
@@ -4786,6 +4774,18 @@ dependencies = [
  "serde",
  "static_assertions",
  "zvariant",
+]
+
+[[package]]
+name = "zbus_notification"
+version = "0.2.7"
+dependencies = [
+ "futures",
+ "futures-util",
+ "glob",
+ "serde",
+ "url",
+ "zbus",
 ]
 
 [[package]]

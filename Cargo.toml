@@ -1,13 +1,17 @@
 [workspace]
 resolver = "2"
-members = ["./lala_bar", "./notification_iced"]
+members = ["./lala_bar", "./zbus_notification"]
 
 [workspace.package]
-version = "0.1.0"
-
+version = "0.2.7"
+edition = "2021"
+authors = ["Decodertalkers <aakari@tutanota.com>"]
+license = "MIT"
+repository = "https://github.com/Decodetalkers/lala-bar"
+readme = "README.md"
 
 [workspace.dependencies]
-notification_iced = { version = "0.1.0", path = "notification_iced"}
+zbus_notification = { version = "0.2.7", path = "zbus_notification"}
 futures = "0.3.30"
 serde = { version = "1.0.204", features = ["derive"] }
 url = "2.5.2"

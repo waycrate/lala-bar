@@ -11,7 +11,7 @@ use iced_layershell::actions::{
     LayershellCustomActionsWithIdAndInfo, LayershellCustomActionsWithInfo,
 };
 use launcher::{LaunchMessage, Launcher};
-use notification_iced::{
+use zbus_notification::{
     start_connection, ImageInfo, LaLaMako, NotifyMessage, NotifyUnit, VersionInfo, DEFAULT_ACTION,
     NOTIFICATION_SERVICE_PATH,
 };
