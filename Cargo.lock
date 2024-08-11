@@ -1965,7 +1965,7 @@ dependencies = [
 
 [[package]]
 name = "lala-bar"
-version = "0.2.7"
+version = "0.2.8"
 dependencies = [
  "alsa",
  "anyhow",
@@ -4781,7 +4781,7 @@ dependencies = [
 
 [[package]]
 name = "zbus_notification"
-version = "0.2.7"
+version = "0.2.8"
 dependencies = [
  "futures",
  "futures-util",
