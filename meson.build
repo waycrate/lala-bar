@@ -41,14 +41,14 @@ global_conf = configuration_data()
 global_conf.set('bin_install_dir', bindir)
 
 systemd_service_file = configure_file(
-  input: './misc/lala-musicbar.service.in',
-  output: 'lala-musicbar.service',
+  input: './misc/lala-bar.service.in',
+  output: 'lala-bar.service',
   configuration: global_conf,
 )
 
 custom_target(
-  'lala_musicbar',
-  output: 'lala_musicbar',
+  'lala-bar',
+  output: 'lala-bar',
   build_by_default: true,
   install: true,
   install_dir: bindir,

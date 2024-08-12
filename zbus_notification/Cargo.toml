@@ -7,7 +7,7 @@ authors.workspace = true
 license.workspace = true
 readme = "README.md"
 keywords = ["zbus", "Notification"]
-
+repository.workspace = true
 
 [dependencies]
 futures.workspace = true

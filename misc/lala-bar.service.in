@@ -6,7 +6,7 @@ Wants=graphical-session.target
 
 [Service]
 Type=simple
-ExecStart=@bin_install_dir@/lala_musicbar
+ExecStart=@bin_install_dir@/lala-bar
 Restart=on-failure
 
 [Install]

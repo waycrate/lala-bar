@@ -42,9 +42,9 @@ const UNIT_MARGIN: i32 = 135;
 
 const EXTRAINF_MARGIN: i32 = BEGINNING_UP_MARGIN + 4 * UNIT_MARGIN;
 
-const LAUNCHER_SVG: &[u8] = include_bytes!("../../misc/launcher.svg");
+const LAUNCHER_SVG: &[u8] = include_bytes!("../asserts/launcher.svg");
 
-const RESET_SVG: &[u8] = include_bytes!("../../misc/reset.svg");
+const RESET_SVG: &[u8] = include_bytes!("../asserts/reset.svg");
 
 pub fn main() -> Result<(), iced_layershell::Error> {
     env_logger::builder().format_timestamp(None).init();
