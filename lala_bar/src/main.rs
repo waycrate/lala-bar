@@ -3,7 +3,8 @@ use std::collections::HashMap;
 use futures::future::pending;
 use futures::StreamExt;
 use iced::widget::{
-    button, column, container, image, row, scrollable, slider, svg, text, text_input, Space,
+    button, checkbox, column, container, image, row, scrollable, slider, svg, text, text_input,
+    Space,
 };
 use iced::{executor, Font};
 use iced::{Command, Element, Length, Theme};
@@ -181,6 +182,7 @@ struct LalaMusicBar {
     hidden_notifications: Vec<NotifyUnitWidgetInfo>,
     sender: Sender<NotifyCommand>,
     receiver: Arc<Mutex<Receiver<NotifyCommand>>>,
+    quite_mode: bool,
 }
 
 #[derive(Copy, Clone, Default)]
@@ -338,6 +340,11 @@ impl LalaMusicBar {
             scrollable(column(btns).spacing(10.))
                 .height(Length::Fill)
                 .into(),
+            container(checkbox("quite mode", self.quite_mode).on_toggle(Message::QuiteMode))
+                .width(Length::Fill)
+                .center_x()
+                .into(),
+            Space::with_height(10.).into(),
             container(button(text("clear all")).on_press(Message::ClearAllNotifications))
                 .width(Length::Fill)
                 .center_x()
@@ -371,6 +378,7 @@ enum Message {
     InlineReplyMsgUpdate((iced::window::Id, String)),
     CheckOutput,
     ClearAllNotifications,
+    QuiteMode(bool),
 }
 
 impl From<NotifyMessage> for Message {
@@ -529,6 +537,7 @@ impl MultiApplication for LalaMusicBar {
                 hidden_notifications: Vec::new(),
                 sender,
                 receiver: Arc::new(Mutex::new(receiver)),
+                quite_mode: false,
             },
             Command::perform(get_metadata_initial(), Message::DBusInfoUpdate),
         )
@@ -726,12 +735,20 @@ impl MultiApplication for LalaMusicBar {
                 );
             }
             Message::Notify(NotifyMessage::UnitAdd(notify)) => {
-                let mut commands = vec![];
                 for unit in self.hidden_notifications.iter_mut() {
                     unit.upper += 135;
                     unit.counter += 1;
                 }
-
+                if self.quite_mode {
+                    self.hidden_notifications.push(NotifyUnitWidgetInfo {
+                        counter: 0,
+                        upper: 10,
+                        inline_reply: String::new(),
+                        unit: notify,
+                    });
+                    return Command::none();
+                }
+                let mut commands = vec![];
                 for (id, unit) in self.notifications.iter_mut() {
                     unit.upper += 135;
                     unit.counter += 1;
@@ -784,7 +801,7 @@ impl MultiApplication for LalaMusicBar {
                                     anchor: Anchor::Right | Anchor::Top,
                                     layer: Layer::Top,
                                     margin: Some((EXTRAINF_MARGIN, 10, 10, 10)),
-                                    keyboard_interactivity: KeyboardInteractivity::OnDemand,
+                                    keyboard_interactivity: KeyboardInteractivity::None,
                                     use_last_output: true,
                                 },
                                 LaLaInfo::HiddenInfo,
@@ -794,6 +811,81 @@ impl MultiApplication for LalaMusicBar {
                     ));
                 }
                 return Command::batch(commands);
+            }
+            Message::QuiteMode(quite) => {
+                self.quite_mode = quite;
+                let mut commands = vec![];
+                if quite {
+                    // change to quite
+                    let mut values: Vec<&NotifyUnitWidgetInfo> =
+                        self.notifications.values().collect();
+                    values.sort_by(|a, b| b.counter.partial_cmp(&a.counter).unwrap());
+
+                    for value in values {
+                        self.hidden_notifications.push(value.clone());
+                    }
+                    for id in self.notifications.keys() {
+                        commands.push(Command::single(Action::Window(WindowAction::Close(*id))));
+                    }
+                    if let Some(id) = self.hidenid {
+                        commands.push(Command::single(Action::Window(WindowAction::Close(id))));
+                    }
+                } else {
+                    for count in 0..4 {
+                        if let Some(index) = self
+                            .hidden_notifications
+                            .iter()
+                            .position(|unit| unit.counter == count)
+                        {
+                            let unit = &self.hidden_notifications[index];
+                            commands.push(Command::single(
+                                LaLaShellIdAction::new(
+                                    iced::window::Id::MAIN,
+                                    LalaShellAction::NewLayerShell((
+                                        NewLayerShellSettings {
+                                            size: Some((300, 130)),
+                                            exclusive_zone: None,
+                                            anchor: Anchor::Right | Anchor::Top,
+                                            layer: Layer::Top,
+                                            margin: Some((unit.upper, 10, 10, 10)),
+                                            keyboard_interactivity: KeyboardInteractivity::OnDemand,
+                                            use_last_output: true,
+                                        },
+                                        LaLaInfo::Notify(Box::new(unit.clone())),
+                                    )),
+                                )
+                                .into(),
+                            ));
+                            self.hidden_notifications.remove(index);
+                        }
+                    }
+                    if !self.hidden_notifications.is_empty() && self.hidenid.is_none() {
+                        commands.push(Command::single(
+                            LaLaShellIdAction::new(
+                                iced::window::Id::MAIN,
+                                LalaShellAction::NewLayerShell((
+                                    NewLayerShellSettings {
+                                        size: Some((300, 25)),
+                                        exclusive_zone: None,
+                                        anchor: Anchor::Right | Anchor::Top,
+                                        layer: Layer::Top,
+                                        margin: Some((EXTRAINF_MARGIN, 10, 10, 10)),
+                                        keyboard_interactivity: KeyboardInteractivity::None,
+                                        use_last_output: true,
+                                    },
+                                    LaLaInfo::HiddenInfo,
+                                )),
+                            )
+                            .into(),
+                        ));
+                    }
+                }
+
+                if commands.is_empty() {
+                    return Command::none();
+                } else {
+                    return Command::batch(commands);
+                }
             }
             Message::Notify(NotifyMessage::UnitRemove(removed_id)) => {
                 let removed_ids: Vec<iced::window::Id> = self
