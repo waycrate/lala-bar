@@ -337,9 +337,14 @@ impl LalaMusicBar {
             }
         }
         view_elements.append(&mut vec![
-            scrollable(column(btns).spacing(10.))
-                .height(Length::Fill)
-                .into(),
+            Space::with_height(10.).into(),
+            scrollable(row!(
+                Space::with_width(10.),
+                column(btns).spacing(10.),
+                Space::with_width(10.)
+            ))
+            .height(Length::Fill)
+            .into(),
             container(checkbox("quite mode", self.quite_mode).on_toggle(Message::QuiteMode))
                 .width(Length::Fill)
                 .center_x()
