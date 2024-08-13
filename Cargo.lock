@@ -765,9 +765,9 @@ dependencies = [
 
 [[package]]
 name = "cpufeatures"
-version = "0.2.12"
+version = "0.2.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "53fe5e26ff1b7aef8bca9c6080520cfb8d9333c7568e1829cef191a9723e5504"
+checksum = "51e852e6dc9a5bed1fae92dd2375037bf2b768725bf3be87811edee3249d09ad"
 dependencies = [
  "libc",
 ]
@@ -1331,9 +1331,9 @@ checksum = "40ecd4077b5ae9fd2e9e169b102c6c330d0605168eb0e8bf79952b256dbefffd"
 
 [[package]]
 name = "gio"
-version = "0.20.0"
+version = "0.20.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "398e3da68749fdc32783cbf7521ec3f65c9cf946db8c7774f8460af49e52c6e2"
+checksum = "dcacaa37401cad0a95aadd266bc39c72a131d454fc012f6dfd217f891d76cc52"
 dependencies = [
  "futures-channel",
  "futures-core",
@@ -1344,14 +1344,13 @@ dependencies = [
  "libc",
  "pin-project-lite",
  "smallvec",
- "thiserror",
 ]
 
 [[package]]
 name = "gio-sys"
-version = "0.20.0"
+version = "0.20.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e4feb96b31c32730ea3e1e89aecd2e4e37ecb1c473ad8f685e3430a159419f63"
+checksum = "5237611e97e9b86ab5768adc3eef853ae713ea797aa3835404acdfacffc9fb38"
 dependencies = [
  "glib-sys",
  "gobject-sys",
@@ -1379,9 +1378,9 @@ checksum = "151665d9be52f9bb40fc7966565d39666f2d1e69233571b71b87791c7e0528b3"
 
 [[package]]
 name = "glib"
-version = "0.20.0"
+version = "0.20.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fee90a615ce05be7a32932cfb8adf2c4bbb4700e80d37713c981fb24c0c56238"
+checksum = "b19429cb83fcbf1f00b31ae3a123fab5cd3761bdd15b0cc07905804742f0d0e4"
 dependencies = [
  "bitflags 2.6.0",
  "futures-channel",
@@ -1396,14 +1395,13 @@ dependencies = [
  "libc",
  "memchr",
  "smallvec",
- "thiserror",
 ]
 
 [[package]]
 name = "glib-macros"
-version = "0.20.0"
+version = "0.20.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4da558d8177c0c8c54368818b508a4244e1286fce2858cef4e547023f0cfa5ef"
+checksum = "960349f56469b75794157e93bf04f0bc8a622d0a6612d6a8f8d7eac41e0e1ee1"
 dependencies = [
  "heck",
  "proc-macro-crate",
@@ -1414,9 +1412,9 @@ dependencies = [
 
 [[package]]
 name = "glib-sys"
-version = "0.20.0"
+version = "0.20.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4958c26e5a01c9af00dea669a97369eccbec29a8e6d125c24ea2d85ee7467b60"
+checksum = "44edae63bea922f18f7e63977ee60a257ec27c4613aff1a6a9bb572ad0d88269"
 dependencies = [
  "libc",
  "system-deps",
@@ -1463,9 +1461,9 @@ dependencies = [
 
 [[package]]
 name = "gobject-sys"
-version = "0.20.0"
+version = "0.20.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c6908864f5ffff15b56df7e90346863904f49b949337ed0456b9287af61903b8"
+checksum = "fa3d1dcd8a1eb2e7c22be3d5e792b14b186f3524f79b25631730f9a8c169d49a"
 dependencies = [
  "glib-sys",
  "libc",
@@ -1678,7 +1676,7 @@ dependencies = [
 [[package]]
 name = "iced_layershell"
 version = "0.5.0-dev"
-source = "git+https://github.com/waycrate/exwlshelleventloop#5a513c890efce1d1d70c189ad8a413cee745caef"
+source = "git+https://github.com/waycrate/exwlshelleventloop#a14b84c13d7c061140e959266e73c84061f23e09"
 dependencies = [
  "futures",
  "iced",
@@ -1910,9 +1908,9 @@ dependencies = [
 
 [[package]]
 name = "js-sys"
-version = "0.3.69"
+version = "0.3.70"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "29c15563dc2726973df627357ce0c9ddddbea194836909d655df6a75d2cf296d"
+checksum = "1868808506b929d7b0cfa8f75951347aa71bb21144b7791bae35d9bccfcfe37a"
 dependencies = [
  "wasm-bindgen",
 ]
@@ -1990,7 +1988,7 @@ dependencies = [
 [[package]]
 name = "layershellev"
 version = "0.5.0-dev"
-source = "git+https://github.com/waycrate/exwlshelleventloop#5a513c890efce1d1d70c189ad8a413cee745caef"
+source = "git+https://github.com/waycrate/exwlshelleventloop#a14b84c13d7c061140e959266e73c84061f23e09"
 dependencies = [
  "bitflags 2.6.0",
  "log",
@@ -2168,9 +2166,9 @@ dependencies = [
 
 [[package]]
 name = "mio"
-version = "1.0.1"
+version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4569e456d394deccd22ce1c1913e6ea0e54519f577285001215d33557431afe4"
+checksum = "80e04d1dcff3aae0704555fe5fee3bcfaf3d1fdf8a7e521d5b9d2b42acb52cec"
 dependencies = [
  "hermit-abi 0.3.9",
  "libc",
@@ -3058,18 +3056,18 @@ checksum = "d369a96f978623eb3dc28807c4852d6cc617fed53da5d3c400feff1ef34a714a"
 
 [[package]]
 name = "serde"
-version = "1.0.206"
+version = "1.0.207"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b3e4cd94123dd520a128bcd11e34d9e9e423e7e3e50425cb1b4b1e3549d0284"
+checksum = "5665e14a49a4ea1b91029ba7d3bca9f299e1f7cfa194388ccc20f14743e784f2"
 dependencies = [
  "serde_derive",
 ]
 
 [[package]]
 name = "serde_derive"
-version = "1.0.206"
+version = "1.0.207"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fabfb6138d2383ea8208cf98ccf69cdfb1aff4088460681d84189aa259762f97"
+checksum = "6aea2634c86b0e8ef2cfdc0c340baede54ec27b1e46febd7f80dffb2aa44a00e"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3879,19 +3877,20 @@ checksum = "9c8d87e72b64a3b4db28d11ce29237c246188f4f51057d65a7eab63b7987e423"
 
 [[package]]
 name = "wasm-bindgen"
-version = "0.2.92"
+version = "0.2.93"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4be2531df63900aeb2bca0daaaddec08491ee64ceecbee5076636a3b026795a8"
+checksum = "a82edfc16a6c469f5f44dc7b571814045d60404b55a0ee849f9bcfa2e63dd9b5"
 dependencies = [
  "cfg-if",
+ "once_cell",
  "wasm-bindgen-macro",
 ]
 
 [[package]]
 name = "wasm-bindgen-backend"
-version = "0.2.92"
+version = "0.2.93"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "614d787b966d3989fa7bb98a654e369c762374fd3213d212cfc0251257e747da"
+checksum = "9de396da306523044d3302746f1208fa71d7532227f15e347e2d93e4145dd77b"
 dependencies = [
  "bumpalo",
  "log",
@@ -3904,9 +3903,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-futures"
-version = "0.4.42"
+version = "0.4.43"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "76bc14366121efc8dbb487ab05bcc9d346b3b5ec0eaa76e46594cabbe51762c0"
+checksum = "61e9300f63a621e96ed275155c108eb6f843b6a26d053f122ab69724559dc8ed"
 dependencies = [
  "cfg-if",
  "js-sys",
@@ -3916,9 +3915,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-macro"
-version = "0.2.92"
+version = "0.2.93"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1f8823de937b71b9460c0c34e25f3da88250760bec0ebac694b49997550d726"
+checksum = "585c4c91a46b072c92e908d99cb1dcdf95c5218eeb6f3bf1efa991ee7a68cccf"
 dependencies = [
  "quote",
  "wasm-bindgen-macro-support",
@@ -3926,9 +3925,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-macro-support"
-version = "0.2.92"
+version = "0.2.93"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e94f17b526d0a461a191c78ea52bbce64071ed5c04c9ffe424dcb38f74171bb7"
+checksum = "afc340c74d9005395cf9dd098506f7f44e38f2b4a21c6aaacf9a105ea5e1e836"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3939,9 +3938,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-shared"
-version = "0.2.92"
+version = "0.2.93"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "af190c94f2773fdb3729c55b007a722abb5384da03bc0986df4c289bf5567e96"
+checksum = "c62a0a307cb4a311d3a07867860911ca130c3494e8c2719593806c08bc5d0484"
 
 [[package]]
 name = "wasm-timer"
@@ -3961,7 +3960,7 @@ dependencies = [
 [[package]]
 name = "waycrate_xkbkeycode"
 version = "0.5.0-dev"
-source = "git+https://github.com/waycrate/exwlshelleventloop#5a513c890efce1d1d70c189ad8a413cee745caef"
+source = "git+https://github.com/waycrate/exwlshelleventloop#a14b84c13d7c061140e959266e73c84061f23e09"
 dependencies = [
  "bitflags 2.6.0",
  "log",
@@ -4636,9 +4635,9 @@ checksum = "ec107c4503ea0b4a98ef47356329af139c0a4f7750e621cf2973cd3385ebcb3d"
 
 [[package]]
 name = "xcursor"
-version = "0.3.7"
+version = "0.3.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f513f231f0810b04d988f0df4fb16ef0b6b25d23248f2c4b56b074e6b1b0ffe4"
+checksum = "0ef33da6b1660b4ddbfb3aef0ade110c8b8a781a3b6382fa5f2b5b040fd55f61"
 
 [[package]]
 name = "xdg"
