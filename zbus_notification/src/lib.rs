@@ -32,7 +32,6 @@ pub const NOTIFICATION_CLOSED_BY_UNKNOWN_REASON: u32 = 4;
 static ICON_CACHE: LazyLock<Arc<RwLock<HashMap<String, ImageInfo>>>> =
     LazyLock::new(|| Arc::new(RwLock::new(HashMap::new())));
 
-
 /// Describe the image information.
 #[derive(Type, Debug, SerializeDict, OwnedValue, Clone)]
 struct ImageData {
@@ -256,8 +255,12 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
         mut hints: std::collections::HashMap<&str, OwnedValue>,
         timeout: i32,
     ) -> zbus::fdo::Result<u32> {
-        let image_data: Option<ImageData> =
+        let mut image_data: Option<ImageData> =
             hints.remove("image-data").and_then(|v| v.try_into().ok());
+        if image_data.is_none() {
+            // why send data here...
+            image_data = hints.remove("icon_data").and_then(|v| v.try_into().ok());
+        }
         let desktop_entry: Option<String> = hints
             .remove("desktop-entry")
             .and_then(|v| v.try_into().ok());
