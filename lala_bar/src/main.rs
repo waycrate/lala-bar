@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::collections::HashMap;
 
 use futures::future::pending;
@@ -267,12 +268,16 @@ impl LalaMusicBar {
         let mut maybe_reshown_units = vec![];
 
         for (index, unit) in self.hidden_notifications.iter_mut().enumerate() {
-            if unit.counter > counter {
-                unit.upper -= 135;
-                unit.counter -= 1;
-            } else if unit.counter == counter {
-                removed_index = Some(index);
-                continue;
+            match unit.counter.cmp(&counter) {
+                Ordering::Greater => {
+                    unit.upper -= 135;
+                    unit.counter -= 1;
+                }
+                Ordering::Equal => {
+                    removed_index = Some(index);
+                    continue;
+                }
+                Ordering::Less => {}
             }
 
             if unit.counter < 4 {
@@ -1003,7 +1008,7 @@ impl MultiApplication for LalaMusicBar {
                             },
                         )| *id == removed_id,
                     )
-                    .map(|(id, _)| id.clone());
+                    .map(|(id, _)| *id);
                 let counter = if let Some(id) = id {
                     Some(self.notifications.get(&id).unwrap().counter)
                 } else {
