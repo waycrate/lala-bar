@@ -740,6 +740,24 @@ impl MultiApplication for LalaMusicBar {
                 );
             }
             Message::Notify(NotifyMessage::UnitAdd(notify)) => {
+                if let Some((_, onotify)) = self
+                    .notifications
+                    .iter_mut()
+                    .find(|(_, onotify)| onotify.unit.id == notify.id)
+                {
+                    onotify.unit = notify;
+                    return Command::none();
+                }
+
+                if let Some(onotify) = self
+                    .hidden_notifications
+                    .iter_mut()
+                    .find(|onotify| onotify.unit.id == notify.id)
+                {
+                    onotify.unit = notify;
+                    return Command::none();
+                }
+
                 for unit in self.hidden_notifications.iter_mut() {
                     unit.upper += 135;
                     unit.counter += 1;
