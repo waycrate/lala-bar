@@ -162,7 +162,7 @@ impl NotifyUnit {
 
     /// Get the image inside the unit
     /// It will use the image in hint first
-    /// Then use icon from the parm by notify
+    /// Then use icon from the param by notify
     /// Finally use the application icon
     pub fn image(&self) -> Option<ImageInfo> {
         if let Some(hint_image) = self.hint.hint_image() {
