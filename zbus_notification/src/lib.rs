@@ -45,11 +45,7 @@ struct Id(u32);
 static COUNT: AtomicU32 = AtomicU32::new(0);
 
 impl Id {
-    /// The reserved window [`Id`] for the first window in an Iced application.
-    pub const MAIN: Self = Id(0);
-
-    /// Creates a new unique window [`Id`].
-    pub fn unique() -> Id {
+    fn unique() -> Id {
         Id(COUNT.fetch_add(1, atomic::Ordering::Relaxed))
     }
 }
@@ -280,7 +276,7 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
         let id = if replaced_id == 0 {
             Id::unique()
         } else {
-            Id::MAIN
+            Id(replaced_id)
         };
         let mut image_data: Option<ImageData> =
             hints.remove("image-data").and_then(|v| v.try_into().ok());
