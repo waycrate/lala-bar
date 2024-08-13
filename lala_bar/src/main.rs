@@ -314,6 +314,12 @@ impl LalaMusicBar {
             }
         }
 
+        if self.hidden_notifications.is_empty() && self.hidenid.is_some() {
+            commands.push(Command::single(Action::Window(WindowAction::Close(
+                self.hidenid.unwrap(),
+            ))));
+        }
+
         commands.push(Command::perform(async {}, |_| Message::CheckOutput));
 
         Command::batch(commands)
