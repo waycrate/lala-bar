@@ -1,6 +1,6 @@
 [package]
 name = "zbus_notification"
-version.workspace = true
+version = "0.3.0"
 edition.workspace = true
 description = "zbus binding for org.freedesktop.Notification"
 authors.workspace = true

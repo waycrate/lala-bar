@@ -1675,8 +1675,9 @@ dependencies = [
 
 [[package]]
 name = "iced_layershell"
-version = "0.5.0-dev"
-source = "git+https://github.com/waycrate/exwlshelleventloop#a14b84c13d7c061140e959266e73c84061f23e09"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1476257d12e8ab45ab028ee060859dfae80c7c0627f62c7714db2cf74bc51a29"
 dependencies = [
  "futures",
  "iced",
@@ -1962,7 +1963,7 @@ dependencies = [
 
 [[package]]
 name = "lala-bar"
-version = "0.2.8"
+version = "0.3.0"
 dependencies = [
  "alsa",
  "anyhow",
@@ -1987,8 +1988,9 @@ dependencies = [
 
 [[package]]
 name = "layershellev"
-version = "0.5.0-dev"
-source = "git+https://github.com/waycrate/exwlshelleventloop#a14b84c13d7c061140e959266e73c84061f23e09"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ff6191a8c9fc99d4f0e2bfd5ee37378b84a49ad84def63ebf71ead993a2dcd18"
 dependencies = [
  "bitflags 2.6.0",
  "log",
@@ -3959,8 +3961,9 @@ dependencies = [
 
 [[package]]
 name = "waycrate_xkbkeycode"
-version = "0.5.0-dev"
-source = "git+https://github.com/waycrate/exwlshelleventloop#a14b84c13d7c061140e959266e73c84061f23e09"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4b3ce2bc859e5b3d1f5f29b90e0ddd03e6d92f46127c898c48832023261d7c7d"
 dependencies = [
  "bitflags 2.6.0",
  "log",
@@ -4777,7 +4780,7 @@ dependencies = [
 
 [[package]]
 name = "zbus_notification"
-version = "0.2.8"
+version = "0.3.0"
 dependencies = [
  "futures",
  "futures-util",
