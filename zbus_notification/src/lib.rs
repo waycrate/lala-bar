@@ -32,6 +32,28 @@ pub const NOTIFICATION_CLOSED_BY_UNKNOWN_REASON: u32 = 4;
 static ICON_CACHE: LazyLock<Arc<RwLock<HashMap<String, ImageInfo>>>> =
     LazyLock::new(|| Arc::new(RwLock::new(HashMap::new())));
 
+use std::hash::Hash;
+
+use std::sync::atomic::{self, AtomicU32};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+/// The id of the window.
+///
+/// Internally Iced reserves `window::Id::MAIN` for the first window spawned.
+struct Id(u32);
+
+static COUNT: AtomicU32 = AtomicU32::new(0);
+
+impl Id {
+    /// The reserved window [`Id`] for the first window in an Iced application.
+    pub const MAIN: Self = Id(0);
+
+    /// Creates a new unique window [`Id`].
+    pub fn unique() -> Id {
+        Id(COUNT.fetch_add(1, atomic::Ordering::Relaxed))
+    }
+}
+
 /// Describe the image information.
 #[derive(Type, Debug, SerializeDict, OwnedValue, Clone)]
 struct ImageData {
@@ -247,7 +269,7 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
     fn notify(
         &mut self,
         app_name: &str,
-        id: u32,
+        replaced_id: u32,
         icon: &str,
         summery: &str,
         body: &str,
@@ -255,6 +277,11 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
         mut hints: std::collections::HashMap<&str, OwnedValue>,
         timeout: i32,
     ) -> zbus::fdo::Result<u32> {
+        let id = if replaced_id == 0 {
+            Id::unique()
+        } else {
+            Id::MAIN
+        };
         let mut image_data: Option<ImageData> =
             hints.remove("image-data").and_then(|v| v.try_into().ok());
         if image_data.is_none() {
@@ -268,7 +295,7 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
             .try_send(
                 NotifyMessage::UnitAdd(NotifyUnit {
                     app_name: app_name.to_string(),
-                    id,
+                    id: id.0,
                     icon: icon.to_string(),
                     summery: summery.to_string(),
                     body: body.to_string(),
@@ -282,7 +309,7 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
                 .into(),
             )
             .ok();
-        Ok(0)
+        Ok(id.0)
     }
 
     /// Invoke Action
