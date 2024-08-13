@@ -80,7 +80,7 @@ struct NotifyUnitWidgetInfo {
 }
 
 impl NotifyUnitWidgetInfo {
-    fn button<'a>(&self, id: Option<iced::window::Id>) -> Element<'a, Message> {
+    fn notify_button<'a>(&self, id: Option<iced::window::Id>) -> Element<'a, Message> {
         let notify = &self.unit;
         let counter = self.counter;
         match notify.image() {
@@ -390,7 +390,7 @@ impl LalaMusicBar {
             .iter()
             .rev()
             .map(|wdgetinfo| {
-                container(wdgetinfo.button(None))
+                container(wdgetinfo.notify_button(None))
                     .height(Length::Fixed(100.))
                     .into()
             })
@@ -1128,7 +1128,7 @@ impl MultiApplication for LalaMusicBar {
                     }
                 }
                 LaLaInfo::Notify(unitwidgetinfo) => {
-                    let btnwidgets: Element<Message> = unitwidgetinfo.button(Some(id));
+                    let btnwidgets: Element<Message> = unitwidgetinfo.notify_button(Some(id));
 
                     let notify = &unitwidgetinfo.unit;
                     let notifywidget = self.notifications.get(&id).unwrap();
