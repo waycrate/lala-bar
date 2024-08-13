@@ -98,6 +98,19 @@ static ICONS_SIZE: &[&str] = &["256x256", "128x128"];
 static THEMES_LIST: &[&str] = &["breeze", "Adwaita"];
 
 fn get_icon_path_from_xdgicon(iconname: &str) -> Option<PathBuf> {
+    let top_icon_path =
+        xdg::BaseDirectories::with_prefix("icons").unwrap();
+
+    // NOTE: shit application icon place
+    if let Some(iconpath) = top_icon_path.find_data_file(format!("{iconname}.svg")) {
+        return Some(iconpath);
+    }
+
+    // NOTE: shit application icon place
+    if let Some(iconpath) = top_icon_path.find_data_file(format!("{iconname}.png")) {
+        return Some(iconpath);
+    }
+
     let scalable_icon_path =
         xdg::BaseDirectories::with_prefix("icons/hicolor/scalable/apps").unwrap();
     if let Some(iconpath) = scalable_icon_path.find_data_file(format!("{iconname}.svg")) {
