@@ -971,8 +971,8 @@ impl MultiApplication for LalaMusicBar {
                     .map(|NotifyUnitWidgetInfo { counter, .. }| *counter)
                     .collect();
 
-                if self.notifications.len() < 3 {
-                    for index in 0..self.notifications.len() {
+                if self.notifications.len() < 4 {
+                    for index in self.notifications.len()..4 {
                         remove_hided_notifications_count.push(index);
                     }
                 }
