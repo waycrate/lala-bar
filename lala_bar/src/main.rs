@@ -994,38 +994,40 @@ impl MultiApplication for LalaMusicBar {
                         }
                     }
                 }
-                for notify in self.hidden_notifications.iter() {
-                    if notify.counter <= 4 {
-                        commands.push(Command::single(
-                            LaLaShellIdAction::new(
-                                iced::window::Id::MAIN,
-                                LalaShellAction::NewLayerShell((
-                                    NewLayerShellSettings {
-                                        size: Some((300, 130)),
-                                        exclusive_zone: None,
-                                        anchor: Anchor::Right | Anchor::Top,
-                                        layer: Layer::Top,
-                                        margin: Some((notify.upper, 10, 10, 10)),
-                                        keyboard_interactivity: KeyboardInteractivity::OnDemand,
-                                        use_last_output: true,
-                                    },
-                                    LaLaInfo::Notify(Box::new(notify.clone())),
-                                )),
-                            )
-                            .into(),
-                        ));
+                if !self.quite_mode {
+                    for notify in self.hidden_notifications.iter() {
+                        if notify.counter <= 4 {
+                            commands.push(Command::single(
+                                LaLaShellIdAction::new(
+                                    iced::window::Id::MAIN,
+                                    LalaShellAction::NewLayerShell((
+                                        NewLayerShellSettings {
+                                            size: Some((300, 130)),
+                                            exclusive_zone: None,
+                                            anchor: Anchor::Right | Anchor::Top,
+                                            layer: Layer::Top,
+                                            margin: Some((notify.upper, 10, 10, 10)),
+                                            keyboard_interactivity: KeyboardInteractivity::OnDemand,
+                                            use_last_output: true,
+                                        },
+                                        LaLaInfo::Notify(Box::new(notify.clone())),
+                                    )),
+                                )
+                                .into(),
+                            ));
+                        }
                     }
-                }
 
-                self.hidden_notifications
-                    .retain(|NotifyUnitWidgetInfo { counter, .. }| *counter > 4);
+                    self.hidden_notifications
+                        .retain(|NotifyUnitWidgetInfo { counter, .. }| *counter > 4);
 
-                if self.hidden_notifications.is_empty() && self.hidenid.is_some() {
-                    let hidenid = self.hidenid.unwrap();
+                    if self.hidden_notifications.is_empty() && self.hidenid.is_some() {
+                        let hidenid = self.hidenid.unwrap();
 
-                    commands.push(Command::single(Action::Window(WindowAction::Close(
-                        hidenid,
-                    ))));
+                        commands.push(Command::single(Action::Window(WindowAction::Close(
+                            hidenid,
+                        ))));
+                    }
                 }
 
                 commands.push(Command::perform(async {}, |_| Message::CheckOutput));
