@@ -17,4 +17,4 @@ it is made with [iced_layershell](https://github.com/waycrate/exwlshelleventloop
 
 ## NOTE
 
-This is more like a daemon, to show how to use iced_layershell, and how to use zbus in iced. Although it is a daemon like program, it is already enough for me, because it realizes my dream.
+This is more like a demo, to show how to use iced_layershell, and how to use zbus in iced. Although it is a daemon like program, it is already enough for me, because it realizes my dream.
