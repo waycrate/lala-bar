@@ -600,9 +600,7 @@ impl MultiApplication for LalaMusicBar {
                 self.launcherid = Some(id);
             }
             LaLaInfo::Notify(notify) => {
-                self.showned_notifications
-                    .entry(id)
-                    .or_insert(notify.unit.id);
+                self.showned_notifications.insert(id, notify.unit.id);
             }
             LaLaInfo::HiddenInfo => {
                 self.hidenid = Some(id);
