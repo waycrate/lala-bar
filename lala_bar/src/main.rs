@@ -194,7 +194,11 @@ struct LalaMusicBar {
 
 impl LalaMusicBar {
     fn hidden_notifications(&self) -> impl Iterator<Item = &NotifyUnitWidgetInfo> {
-        let mut hiddened: Vec<&NotifyUnitWidgetInfo> = self.notifications.values().collect();
+        let mut hiddened: Vec<&NotifyUnitWidgetInfo> = self
+            .notifications
+            .values()
+            .filter(|info| info.counter >= MAX_SHOWN_NOTIFICATIONS_COUNT || self.quite_mode)
+            .collect();
         hiddened.sort_by(|a, b| a.counter.partial_cmp(&b.counter).unwrap());
 
         hiddened.into_iter()
