@@ -843,7 +843,8 @@ impl MultiApplication for LalaMusicBar {
                     },
                 );
                 if self.notifications.len() > MAX_SHOWN_NOTIFICATIONS_COUNT
-                    && self.hidenid.is_none() && !self.quite_mode
+                    && self.hidenid.is_none()
+                    && !self.quite_mode
                 {
                     commands.push(Command::single(
                         LaLaShellIdAction::new(
