@@ -87,7 +87,7 @@ impl NotifyUnitWidgetInfo {
             Some(ImageInfo::Svg(path)) => button(row![
                 svg(svg::Handle::from_path(path))
                     .height(Length::Fill)
-                    .width(Length::Fixed(130.)),
+                    .width(Length::Fixed(70.)),
                 Space::with_width(4.),
                 column![
                     text(notify.summery.clone())
