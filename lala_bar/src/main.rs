@@ -1035,13 +1035,15 @@ impl MultiApplication for LalaMusicBar {
                     }
                 }
 
-                if self.notifications.len() <= MAX_SHOWN_NOTIFICATIONS_COUNT {
+                // NOTE: we should delete to be deleted notification
+                if self.notifications.len() - 1 <= MAX_SHOWN_NOTIFICATIONS_COUNT {
                     if let Some(id) = self.hidenid {
                         commands.push(Command::single(Action::Window(WindowAction::Close(id))));
                     }
                 }
 
-                if self.notifications.is_empty() {
+                // NOTE: only removed notification remain
+                if self.notifications.len() == 1 {
                     commands.push(Command::perform(async {}, |_| Message::CheckOutput));
                 }
 
