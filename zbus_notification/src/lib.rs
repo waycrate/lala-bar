@@ -71,7 +71,7 @@ pub enum NotifyMessage {
 
 fn lazy_get_icon(icon: &str) -> Option<ImageInfo> {
     let icon_cache = ICON_CACHE.read().unwrap();
-    if icon.contains(icon) {
+    if icon_cache.contains_key(icon) {
         return icon_cache.get(icon).cloned();
     }
     drop(icon_cache);
@@ -88,6 +88,10 @@ fn lazy_get_icon(icon: &str) -> Option<ImageInfo> {
         icon_cache.insert(icon.to_string(), ImageInfo::Jpg(path.clone()));
         return Some(ImageInfo::Jpg(path));
     }
+    if let Some(path) = get_pixmap_icon(icon) {
+        icon_cache.insert(icon.to_string(), ImageInfo::Png(path.clone()));
+        return Some(ImageInfo::Png(path));
+    }
     None
 }
 
@@ -103,6 +107,15 @@ fn get_png_icon(theme: &str, icon: &str) -> Option<PathBuf> {
         .ok()?
         .next()?
         .ok()
+}
+
+fn get_pixmap_icon(icon: &str) -> Option<PathBuf> {
+    let path = Path::new(format!("/usr/share/pixmaps/{icon}.png").as_str()).to_owned();
+    if path.exists() {
+        Some(path)
+    } else {
+        None
+    }
 }
 
 fn get_jpeg_icon(theme: &str, icon: &str) -> Option<PathBuf> {
