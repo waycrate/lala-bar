@@ -190,8 +190,7 @@ impl LalaMusicBar {
     fn hidden_notifications(&self) -> impl Iterator<Item = &NotifyUnitWidgetInfo> {
         let mut hiddened: Vec<&NotifyUnitWidgetInfo> = self
             .notifications
-            .iter()
-            .map(|(_, info)| info)
+            .values()
             .filter(|info| info.counter >= MAX_SHOWN_NOTIFICATIONS_COUNT || self.quite_mode)
             .collect();
         hiddened.sort_by(|a, b| a.counter.partial_cmp(&b.counter).unwrap());
@@ -575,7 +574,7 @@ impl MultiApplication for LalaMusicBar {
         } else {
             let notify_id = self.showned_notifications.get(&id)?;
             self.notifications
-                .get(&notify_id)
+                .get(notify_id)
                 .cloned()
                 .map(|notifyw| LaLaInfo::Notify(Box::new(notifyw)))
         }
@@ -900,11 +899,10 @@ impl MultiApplication for LalaMusicBar {
                     }
                     if !self.quite_mode
                         && notify.counter == MAX_SHOWN_NOTIFICATIONS_COUNT - 1
-                        && self
+                        && !self
                             .showned_notifications
                             .iter()
-                            .find(|(_, v)| notify.unit.id == v)
-                            .is_none()
+                            .any(|(_, v)| &notify.unit.id == v)
                     {
                         commands.push(Command::single(
                             LaLaShellIdAction::new(
@@ -1003,7 +1001,7 @@ impl MultiApplication for LalaMusicBar {
                 let Some(notify_id) = self.showned_notifications.get(&id) else {
                     return Command::none();
                 };
-                let notify = self.notifications.get_mut(&notify_id).unwrap();
+                let notify = self.notifications.get_mut(notify_id).unwrap();
                 notify.inline_reply = msg;
             }
             Message::ClearAllNotifications => {
@@ -1036,7 +1034,7 @@ impl MultiApplication for LalaMusicBar {
 
                     let notify = &unitwidgetinfo.unit;
                     let realid = self.showned_notifications.get(&id).unwrap();
-                    let notifywidget = self.notifications.get(&realid).unwrap();
+                    let notifywidget = self.notifications.get(realid).unwrap();
                     if notify.inline_reply_support() {
                         return column![
                             btnwidgets,
