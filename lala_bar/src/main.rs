@@ -868,14 +868,64 @@ impl MultiApplication for LalaMusicBar {
             Message::QuiteMode(quite) => {
                 self.quite_mode = quite;
                 let mut commands = vec![];
-                for (id, _nid) in self.showned_notifications.iter() {
-                    commands.push(Command::single(Action::Window(WindowAction::Close(*id))));
+                if quite {
+                    for (id, _nid) in self.showned_notifications.iter() {
+                        commands.push(Command::single(Action::Window(WindowAction::Close(*id))));
+                    }
+                    if let Some(extra_id) = self.hidenid {
+                        commands.push(Command::single(Action::Window(WindowAction::Close(
+                            extra_id,
+                        ))));
+                    }
+                } else {
+                    for (_, notify) in self
+                        .notifications
+                        .iter()
+                        .filter(|(_, info)| info.counter < MAX_SHOWN_NOTIFICATIONS_COUNT)
+                    {
+                        commands.push(Command::single(
+                            LaLaShellIdAction::new(
+                                iced::window::Id::MAIN,
+                                LalaShellAction::NewLayerShell((
+                                    NewLayerShellSettings {
+                                        size: Some((300, 130)),
+                                        exclusive_zone: None,
+                                        anchor: Anchor::Right | Anchor::Top,
+                                        layer: Layer::Top,
+                                        margin: Some((notify.upper, 10, 10, 10)),
+                                        keyboard_interactivity: KeyboardInteractivity::OnDemand,
+                                        use_last_output: true,
+                                    },
+                                    LaLaInfo::Notify(Box::new(notify.clone())),
+                                )),
+                            )
+                            .into(),
+                        ));
+                    }
+                    if self.notifications.len() > MAX_SHOWN_NOTIFICATIONS_COUNT
+                        && self.hidenid.is_none()
+                    {
+                        commands.push(Command::single(
+                            LaLaShellIdAction::new(
+                                iced::window::Id::MAIN,
+                                LalaShellAction::NewLayerShell((
+                                    NewLayerShellSettings {
+                                        size: Some((300, 25)),
+                                        exclusive_zone: None,
+                                        anchor: Anchor::Right | Anchor::Top,
+                                        layer: Layer::Top,
+                                        margin: Some((EXTRAINF_MARGIN, 10, 10, 10)),
+                                        keyboard_interactivity: KeyboardInteractivity::None,
+                                        use_last_output: true,
+                                    },
+                                    LaLaInfo::HiddenInfo,
+                                )),
+                            )
+                            .into(),
+                        ));
+                    }
                 }
-                if let Some(extra_id) = self.hidenid {
-                    commands.push(Command::single(Action::Window(WindowAction::Close(
-                        extra_id,
-                    ))));
-                }
+
                 return Command::batch(commands);
             }
 
