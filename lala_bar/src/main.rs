@@ -805,7 +805,9 @@ impl MultiApplication for LalaMusicBar {
                     }
                 }
 
-                if self.showned_notifications.len() < MAX_SHOWN_NOTIFICATIONS_COUNT {
+                if self.showned_notifications.len() < MAX_SHOWN_NOTIFICATIONS_COUNT
+                    && !self.quite_mode
+                {
                     commands.push(Command::single(
                         LaLaShellIdAction::new(
                             iced::window::Id::MAIN,
@@ -841,7 +843,7 @@ impl MultiApplication for LalaMusicBar {
                     },
                 );
                 if self.notifications.len() > MAX_SHOWN_NOTIFICATIONS_COUNT
-                    && self.hidenid.is_none()
+                    && self.hidenid.is_none() && !self.quite_mode
                 {
                     commands.push(Command::single(
                         LaLaShellIdAction::new(
