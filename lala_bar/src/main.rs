@@ -182,6 +182,7 @@ struct LalaMusicBar {
     hidenid: Option<iced::window::Id>,
     right_panel: Option<iced::window::Id>,
     notifications: HashMap<u32, NotifyUnitWidgetInfo>,
+    cached_hidden_notifications: Vec<NotifyUnitWidgetInfo>,
     showned_notifications: HashMap<iced::window::Id, u32>,
     cached_notifications: HashMap<iced::window::Id, NotifyUnitWidgetInfo>,
     sender: Sender<NotifyCommand>,
@@ -191,14 +192,19 @@ struct LalaMusicBar {
 
 impl LalaMusicBar {
     fn hidden_notifications(&self) -> impl Iterator<Item = &NotifyUnitWidgetInfo> {
-        let mut hiddened: Vec<&NotifyUnitWidgetInfo> = self
+        self.cached_hidden_notifications.iter()
+    }
+
+    fn update_hidden_notifications(&mut self) {
+        let mut hiddened: Vec<NotifyUnitWidgetInfo> = self
             .notifications
             .values()
             .filter(|info| info.counter >= MAX_SHOWN_NOTIFICATIONS_COUNT || self.quite_mode)
+            .cloned()
             .collect();
         hiddened.sort_by(|a, b| a.counter.partial_cmp(&b.counter).unwrap());
 
-        hiddened.into_iter()
+        self.cached_hidden_notifications = hiddened.clone();
     }
 }
 
@@ -554,6 +560,7 @@ impl MultiApplication for LalaMusicBar {
                 right_panel: None,
                 hidenid: None,
                 notifications: HashMap::new(),
+                cached_hidden_notifications: Vec::new(),
                 showned_notifications: HashMap::new(),
                 cached_notifications: HashMap::new(),
                 sender,
@@ -873,6 +880,7 @@ impl MultiApplication for LalaMusicBar {
                         .into(),
                     ));
                 }
+                self.update_hidden_notifications();
                 return Command::batch(commands);
             }
 
@@ -936,6 +944,7 @@ impl MultiApplication for LalaMusicBar {
                         ));
                     }
                 }
+                self.update_hidden_notifications();
 
                 return Command::batch(commands);
             }
@@ -1016,6 +1025,8 @@ impl MultiApplication for LalaMusicBar {
                 if self.notifications.is_empty() {
                     commands.push(Command::perform(async {}, |_| Message::CheckOutput));
                 }
+
+                self.update_hidden_notifications();
 
                 return Command::batch(commands);
             }
