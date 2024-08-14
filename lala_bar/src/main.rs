@@ -1133,7 +1133,7 @@ impl MultiApplication for LalaMusicBar {
                 LaLaInfo::HiddenInfo => {
                     return text(format!(
                         "hidden notifications {}",
-                        self.hidden_notifications().count() as i32 - 4
+                        self.hidden_notifications().count()
                     ))
                     .into();
                 }
