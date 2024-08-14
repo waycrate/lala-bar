@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::collections::HashMap;
 
 use futures::future::pending;
@@ -79,7 +80,7 @@ struct NotifyUnitWidgetInfo {
 }
 
 impl NotifyUnitWidgetInfo {
-    fn button<'a>(&self, id: Option<iced::window::Id>, hidden: bool) -> Element<'a, Message> {
+    fn notify_button<'a>(&self, id: Option<iced::window::Id>) -> Element<'a, Message> {
         let notify = &self.unit;
         let counter = self.counter;
         match notify.image() {
@@ -100,7 +101,7 @@ impl NotifyUnitWidgetInfo {
             .style(iced::theme::Button::Secondary)
             .width(Length::Fill)
             .height(Length::Fill)
-            .on_press(Message::RemoveNotify(id, self.unit.id, counter, hidden))
+            .on_press(Message::RemoveNotify(id, self.unit.id, counter))
             .into(),
             Some(ImageInfo::Data {
                 width,
@@ -127,7 +128,7 @@ impl NotifyUnitWidgetInfo {
             .width(Length::Fill)
             .height(Length::Fill)
             .style(iced::theme::Button::Secondary)
-            .on_press(Message::RemoveNotify(id, self.unit.id, counter, hidden))
+            .on_press(Message::RemoveNotify(id, self.unit.id, counter))
             .into(),
             Some(ImageInfo::Png(path)) | Some(ImageInfo::Jpg(path)) => button(row![
                 image(image::Handle::from_path(path)).height(Length::Fill),
@@ -146,7 +147,7 @@ impl NotifyUnitWidgetInfo {
             .width(Length::Fill)
             .height(Length::Fill)
             .style(iced::theme::Button::Secondary)
-            .on_press(Message::RemoveNotify(id, self.unit.id, counter, hidden))
+            .on_press(Message::RemoveNotify(id, self.unit.id, counter))
             .into(),
             _ => button(column![
                 text(notify.summery.clone()).shaping(text::Shaping::Advanced),
@@ -155,7 +156,7 @@ impl NotifyUnitWidgetInfo {
             .width(Length::Fill)
             .height(Length::Fill)
             .style(iced::theme::Button::Secondary)
-            .on_press(Message::RemoveNotify(id, self.unit.id, counter, hidden))
+            .on_press(Message::RemoveNotify(id, self.unit.id, counter))
             .into(),
         }
     }
@@ -236,6 +237,96 @@ impl LalaMusicBar {
 }
 
 impl LalaMusicBar {
+    fn remove_notify_by_counter(
+        &mut self,
+        id: Option<iced::window::Id>,
+        counter: usize,
+    ) -> Command<Message> {
+        let mut commands = vec![];
+        if let Some(id) = id {
+            commands.push(Command::single(Action::Window(WindowAction::Close(id))));
+        }
+        for (nid, unit) in self.notifications.iter_mut() {
+            if unit.counter > counter {
+                unit.upper -= 135;
+                unit.counter -= 1;
+            }
+            if unit.counter == counter && id.is_none() {
+                commands.push(Command::single(Action::Window(WindowAction::Close(*nid))));
+            } else if !self.quite_mode {
+                commands.push(Command::single(
+                    LaLaShellIdAction::new(
+                        *nid,
+                        LalaShellAction::MarginChange((unit.upper, 10, 10, 10)),
+                    )
+                    .into(),
+                ));
+            }
+        }
+
+        let mut removed_index = None;
+        let mut maybe_reshown_units = vec![];
+
+        for (index, unit) in self.hidden_notifications.iter_mut().enumerate() {
+            match unit.counter.cmp(&counter) {
+                Ordering::Greater => {
+                    unit.upper -= 135;
+                    unit.counter -= 1;
+                }
+                Ordering::Equal => {
+                    removed_index = Some(index);
+                    continue;
+                }
+                Ordering::Less => {}
+            }
+
+            if unit.counter < 4 {
+                maybe_reshown_units.push(unit.clone());
+            }
+        }
+
+        if let Some(index) = removed_index {
+            self.hidden_notifications.remove(index);
+        }
+
+        if !self.quite_mode {
+            self.hidden_notifications
+                .retain(|NotifyUnitWidgetInfo { counter, .. }| *counter >= 4);
+            for notify in maybe_reshown_units {
+                commands.push(Command::single(
+                    LaLaShellIdAction::new(
+                        iced::window::Id::MAIN,
+                        LalaShellAction::NewLayerShell((
+                            NewLayerShellSettings {
+                                size: Some((300, 130)),
+                                exclusive_zone: None,
+                                anchor: Anchor::Right | Anchor::Top,
+                                layer: Layer::Top,
+                                margin: Some((notify.upper, 10, 10, 10)),
+                                keyboard_interactivity: KeyboardInteractivity::OnDemand,
+                                use_last_output: true,
+                            },
+                            LaLaInfo::Notify(Box::new(notify.clone())),
+                        )),
+                    )
+                    .into(),
+                ));
+            }
+        }
+
+        if self.hidden_notifications.is_empty() && self.hidenid.is_some() {
+            commands.push(Command::single(Action::Window(WindowAction::Close(
+                self.hidenid.unwrap(),
+            ))));
+        }
+
+        commands.push(Command::perform(async {}, |_| Message::CheckOutput));
+
+        Command::batch(commands)
+    }
+}
+
+impl LalaMusicBar {
     fn balance_bar(&self) -> Element<Message> {
         let show_text = format!("balance {}%", self.balance_percent());
         row![
@@ -299,7 +390,7 @@ impl LalaMusicBar {
             .iter()
             .rev()
             .map(|wdgetinfo| {
-                container(wdgetinfo.button(None, true))
+                container(wdgetinfo.notify_button(None))
                     .height(Length::Fixed(100.))
                     .into()
             })
@@ -378,7 +469,7 @@ enum Message {
     ToggleRightPanel,
     LauncherInfo(LaunchMessage),
     Notify(NotifyMessage),
-    RemoveNotify(Option<iced::window::Id>, u32, usize, bool),
+    RemoveNotify(Option<iced::window::Id>, u32, usize),
     InlineReply((iced::window::Id, u32, String)),
     InlineReplyMsgUpdate((iced::window::Id, String)),
     CheckOutput,
@@ -911,221 +1002,44 @@ impl MultiApplication for LalaMusicBar {
                 }
             }
             Message::Notify(NotifyMessage::UnitRemove(removed_id)) => {
-                let removed_ids: Vec<iced::window::Id> = self
+                let id = self
                     .notifications
                     .iter()
-                    .filter(|(_, info)| {
-                        let NotifyUnit { id, .. } = info.unit;
-                        removed_id == id
-                    })
-                    .map(|(id, _)| *id)
-                    .collect();
-                let mut commands: Vec<_> = self
-                    .notifications
-                    .iter()
-                    .filter(|(_, info)| {
-                        let NotifyUnit { id, .. } = info.unit;
-                        removed_id == id
-                    })
-                    .map(|(id, _)| Command::single(Action::Window(WindowAction::Close(*id))))
-                    .collect();
-
-                let mut removed_counters = vec![];
-                for id in removed_ids.iter() {
-                    if let Some(NotifyUnitWidgetInfo { counter, .. }) =
-                        self.notifications.remove(id)
-                    {
-                        removed_counters.push(counter);
-                    }
-                }
-                removed_counters.sort();
-                removed_counters.reverse();
-                for counter in removed_counters {
-                    for (_, unit) in self.notifications.iter_mut() {
-                        if unit.counter > counter {
-                            unit.counter -= 1;
-                            unit.upper -= 135;
-                        }
-                    }
-                }
-
-                for (id, unit) in self.notifications.iter() {
-                    commands.push(Command::single(
-                        LaLaShellIdAction::new(
-                            *id,
-                            LalaShellAction::MarginChange((unit.upper, 10, 10, 10)),
-                        )
-                        .into(),
-                    ));
-                }
-
-                let mut remove_hided_notifications_count: Vec<usize> = self
-                    .hidden_notifications
-                    .iter()
-                    .filter(
-                        |NotifyUnitWidgetInfo {
-                             unit: NotifyUnit { id, .. },
-                             ..
-                         }| *id == removed_id,
+                    .find(
+                        |(
+                            _,
+                            NotifyUnitWidgetInfo {
+                                unit: NotifyUnit { id, .. },
+                                ..
+                            },
+                        )| *id == removed_id,
                     )
-                    .map(|NotifyUnitWidgetInfo { counter, .. }| *counter)
-                    .collect();
-
-                if self.notifications.len() < 4 {
-                    for index in self.notifications.len()..4 {
-                        remove_hided_notifications_count.push(index);
-                    }
-                }
-                remove_hided_notifications_count.sort();
-                remove_hided_notifications_count.reverse();
-
-                self.hidden_notifications.retain(
-                    |NotifyUnitWidgetInfo {
-                         unit: NotifyUnit { id, .. },
-                         ..
-                     }| *id != removed_id,
-                );
-
-                for count in remove_hided_notifications_count {
-                    for unit in self.hidden_notifications.iter_mut() {
-                        if unit.counter > count {
-                            unit.counter -= 1;
-                            unit.upper -= 135;
-                        }
-                    }
-                }
-                if !self.quite_mode {
-                    for notify in self.hidden_notifications.iter() {
-                        if notify.counter <= 4 {
-                            commands.push(Command::single(
-                                LaLaShellIdAction::new(
-                                    iced::window::Id::MAIN,
-                                    LalaShellAction::NewLayerShell((
-                                        NewLayerShellSettings {
-                                            size: Some((300, 130)),
-                                            exclusive_zone: None,
-                                            anchor: Anchor::Right | Anchor::Top,
-                                            layer: Layer::Top,
-                                            margin: Some((notify.upper, 10, 10, 10)),
-                                            keyboard_interactivity: KeyboardInteractivity::OnDemand,
-                                            use_last_output: true,
-                                        },
-                                        LaLaInfo::Notify(Box::new(notify.clone())),
-                                    )),
-                                )
-                                .into(),
-                            ));
-                        }
-                    }
-
+                    .map(|(id, _)| *id);
+                let counter = if let Some(id) = id {
+                    Some(self.notifications.get(&id).unwrap().counter)
+                } else {
                     self.hidden_notifications
-                        .retain(|NotifyUnitWidgetInfo { counter, .. }| *counter > 4);
-
-                    if self.hidden_notifications.is_empty() && self.hidenid.is_some() {
-                        let hidenid = self.hidenid.unwrap();
-
-                        commands.push(Command::single(Action::Window(WindowAction::Close(
-                            hidenid,
-                        ))));
-                    }
+                        .iter()
+                        .find(
+                            |NotifyUnitWidgetInfo {
+                                 unit: NotifyUnit { id, .. },
+                                 ..
+                             }| *id == removed_id,
+                        )
+                        .map(|NotifyUnitWidgetInfo { counter, .. }| *counter)
+                };
+                if let Some(counter) = counter {
+                    return self.remove_notify_by_counter(id, counter);
                 }
-
-                commands.push(Command::perform(async {}, |_| Message::CheckOutput));
-
-                return Command::batch(commands);
             }
-            Message::RemoveNotify(id, notify_id, counter, is_hidden) => {
+            Message::RemoveNotify(id, notify_id, counter) => {
                 self.sender
                     .try_send(NotifyCommand::ActionInvoked {
                         id: notify_id,
                         action_key: DEFAULT_ACTION.to_string(),
                     })
                     .ok();
-
-                let mut commands = vec![];
-
-                if !is_hidden {
-                    let removed_pos = self
-                        .notifications
-                        .iter()
-                        .find(|(oid, _)| id.is_some_and(|id| id == **oid))
-                        .map(|(_, info)| info.upper)
-                        .unwrap_or(0);
-                    for (id, unit) in self.notifications.iter_mut() {
-                        if unit.upper > removed_pos {
-                            unit.upper -= 135;
-                        }
-                        if unit.counter > counter {
-                            unit.counter -= 1;
-                        }
-                        commands.push(Command::single(
-                            LaLaShellIdAction::new(
-                                *id,
-                                LalaShellAction::MarginChange((unit.upper, 10, 10, 10)),
-                            )
-                            .into(),
-                        ));
-                    }
-                }
-                let mut to_show_id = None;
-
-                let mut to_removed_index = None;
-                for (index, notify) in self.hidden_notifications.iter_mut().enumerate() {
-                    if counter > notify.counter {
-                        continue;
-                    }
-                    if counter == notify.counter {
-                        to_removed_index = Some(index);
-                    }
-                    notify.counter -= 1;
-                    notify.upper -= 135;
-                    if notify.counter == 3 && !is_hidden {
-                        to_show_id = Some(index);
-                        commands.push(Command::single(
-                            LaLaShellIdAction::new(
-                                iced::window::Id::MAIN,
-                                LalaShellAction::NewLayerShell((
-                                    NewLayerShellSettings {
-                                        size: Some((300, 130)),
-                                        exclusive_zone: None,
-                                        anchor: Anchor::Right | Anchor::Top,
-                                        layer: Layer::Top,
-                                        margin: Some((notify.upper, 10, 10, 10)),
-                                        keyboard_interactivity: KeyboardInteractivity::OnDemand,
-                                        use_last_output: true,
-                                    },
-                                    LaLaInfo::Notify(Box::new(notify.clone())),
-                                )),
-                            )
-                            .into(),
-                        ));
-                    }
-                }
-
-                if is_hidden {
-                    if let Some(index) = to_removed_index {
-                        self.hidden_notifications.remove(index);
-                    }
-                }
-
-                if let Some(index) = to_show_id {
-                    self.hidden_notifications.remove(index);
-                }
-
-                if self.hidden_notifications.is_empty() && self.hidenid.is_some() {
-                    let hidenid = self.hidenid.unwrap();
-
-                    commands.push(Command::single(Action::Window(WindowAction::Close(
-                        hidenid,
-                    ))));
-                }
-
-                if let Some(id) = id {
-                    commands.push(Command::single(Action::Window(WindowAction::Close(id))));
-                }
-                commands.push(Command::perform(async {}, |_| Message::CheckOutput));
-
-                return Command::batch(commands);
+                return self.remove_notify_by_counter(id, counter);
             }
             Message::CheckOutput => {
                 if self.notifications.is_empty() {
@@ -1214,7 +1128,7 @@ impl MultiApplication for LalaMusicBar {
                     }
                 }
                 LaLaInfo::Notify(unitwidgetinfo) => {
-                    let btnwidgets: Element<Message> = unitwidgetinfo.button(Some(id), false);
+                    let btnwidgets: Element<Message> = unitwidgetinfo.notify_button(Some(id));
 
                     let notify = &unitwidgetinfo.unit;
                     let notifywidget = self.notifications.get(&id).unwrap();
