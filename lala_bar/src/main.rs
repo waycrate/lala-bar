@@ -181,6 +181,7 @@ struct LalaMusicBar {
     right_panel: Option<iced::window::Id>,
     notifications: HashMap<u32, NotifyUnitWidgetInfo>,
     showned_notifications: HashMap<iced::window::Id, u32>,
+    cached_notifications: HashMap<iced::window::Id, NotifyUnitWidgetInfo>,
     sender: Sender<NotifyCommand>,
     receiver: Arc<Mutex<Receiver<NotifyCommand>>>,
     quite_mode: bool,
@@ -552,6 +553,7 @@ impl MultiApplication for LalaMusicBar {
                 hidenid: None,
                 notifications: HashMap::new(),
                 showned_notifications: HashMap::new(),
+                cached_notifications: HashMap::new(),
                 sender,
                 receiver: Arc::new(Mutex::new(receiver)),
                 quite_mode: false,
@@ -572,6 +574,9 @@ impl MultiApplication for LalaMusicBar {
         } else if self.right_panel.is_some_and(|tid| tid == id) {
             Some(LaLaInfo::RightPanel)
         } else {
+            if let Some(info) = self.cached_notifications.get(&id) {
+                return Some(LaLaInfo::Notify(Box::new(info.clone())));
+            }
             let notify_id = self.showned_notifications.get(&id)?;
             self.notifications
                 .get(notify_id)
@@ -608,6 +613,7 @@ impl MultiApplication for LalaMusicBar {
             self.hidenid.take();
         }
         self.showned_notifications.remove(&id);
+        self.cached_notifications.remove(&id);
     }
 
     fn update(&mut self, message: Message) -> Command<Message> {
@@ -934,12 +940,13 @@ impl MultiApplication for LalaMusicBar {
 
             Message::Notify(NotifyMessage::UnitRemove(removed_id)) => {
                 let mut commands = vec![];
-                if let Some(id) = self
+                if let Some((id, nid)) = self
                     .showned_notifications
                     .iter()
                     .find(|(_, nid)| **nid == removed_id)
-                    .map(|(id, _)| id)
                 {
+                    self.cached_notifications
+                        .insert(*id, self.notifications.get(nid).cloned().unwrap());
                     commands.push(Command::single(Action::Window(WindowAction::Close(*id))));
                 }
 
