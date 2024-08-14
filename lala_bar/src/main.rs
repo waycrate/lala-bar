@@ -997,6 +997,8 @@ impl MultiApplication for LalaMusicBar {
                     }
                     if !self.quite_mode
                         && notify.counter == MAX_SHOWN_NOTIFICATIONS_COUNT - 1
+                        && !notify.to_delete // NOTE: if is marked to deleted before
+                                             // it should be skipped
                         && !self
                             .showned_notifications
                             .iter()
