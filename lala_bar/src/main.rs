@@ -890,7 +890,10 @@ impl MultiApplication for LalaMusicBar {
                     commands.push(Command::single(Action::Window(WindowAction::Close(*id))));
                 }
 
-                let removed_unit = self.notifications.remove(&removed_id).unwrap();
+                let Some(removed_unit) = self.notifications.remove(&removed_id) else {
+                    // NOTE: already removed
+                    return Command::none();
+                };
 
                 for (_, notify) in self.notifications.iter_mut() {
                     if notify.counter > removed_unit.counter {
