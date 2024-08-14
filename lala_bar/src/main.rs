@@ -85,7 +85,9 @@ impl NotifyUnitWidgetInfo {
         let notify = &self.unit;
         match notify.image() {
             Some(ImageInfo::Svg(path)) => button(row![
-                svg(svg::Handle::from_path(path)).height(Length::Fill),
+                svg(svg::Handle::from_path(path))
+                    .height(Length::Fill)
+                    .width(Length::Fixed(130.)),
                 Space::with_width(4.),
                 column![
                     text(notify.summery.clone())
@@ -945,8 +947,10 @@ impl MultiApplication for LalaMusicBar {
                     .iter()
                     .find(|(_, nid)| **nid == removed_id)
                 {
-                    self.cached_notifications
-                        .insert(*id, self.notifications.get(nid).cloned().unwrap());
+                    if let Some(info) = self.notifications.get(nid) {
+                        self.cached_notifications.insert(*id, info.clone());
+                    }
+
                     commands.push(Command::single(Action::Window(WindowAction::Close(*id))));
                 }
 
