@@ -47,6 +47,8 @@ const LAUNCHER_SVG: &[u8] = include_bytes!("../assets/launcher.svg");
 
 const RESET_SVG: &[u8] = include_bytes!("../assets/reset.svg");
 
+const ERROR_SVG: &[u8] = include_bytes!("../assets/error.svg");
+
 const MAX_SHOWN_NOTIFICATIONS_COUNT: usize = 4;
 
 pub fn main() -> Result<(), iced_layershell::Error> {
@@ -70,6 +72,7 @@ enum LaLaInfo {
     Notify(Box<NotifyUnitWidgetInfo>),
     HiddenInfo,
     RightPanel,
+    ErrorHappened(iced::window::Id),
 }
 
 #[derive(Debug, Clone)]
@@ -182,7 +185,6 @@ struct LalaMusicBar {
     hidenid: Option<iced::window::Id>,
     right_panel: Option<iced::window::Id>,
     notifications: HashMap<u32, NotifyUnitWidgetInfo>,
-    cached_hidden_notifications: Vec<NotifyUnitWidgetInfo>,
     showned_notifications: HashMap<iced::window::Id, u32>,
     cached_notifications: HashMap<iced::window::Id, NotifyUnitWidgetInfo>,
     sender: Sender<NotifyCommand>,
@@ -192,19 +194,10 @@ struct LalaMusicBar {
 
 impl LalaMusicBar {
     fn hidden_notifications(&self) -> impl Iterator<Item = &NotifyUnitWidgetInfo> {
-        self.cached_hidden_notifications.iter()
-    }
-
-    fn update_hidden_notifications(&mut self) {
-        let mut hiddened: Vec<NotifyUnitWidgetInfo> = self
-            .notifications
-            .values()
-            .filter(|info| info.counter >= MAX_SHOWN_NOTIFICATIONS_COUNT || self.quite_mode)
-            .cloned()
-            .collect();
+        let mut hiddened: Vec<&NotifyUnitWidgetInfo> = self.notifications.values().collect();
         hiddened.sort_by(|a, b| a.counter.partial_cmp(&b.counter).unwrap());
 
-        self.cached_hidden_notifications = hiddened.clone();
+        hiddened.into_iter()
     }
 }
 
@@ -405,6 +398,7 @@ enum Message {
     CheckOutput,
     ClearAllNotifications,
     QuiteMode(bool),
+    CloseErrorNotification(iced::window::Id),
 }
 
 impl From<NotifyMessage> for Message {
@@ -560,7 +554,6 @@ impl MultiApplication for LalaMusicBar {
                 right_panel: None,
                 hidenid: None,
                 notifications: HashMap::new(),
-                cached_hidden_notifications: Vec::new(),
                 showned_notifications: HashMap::new(),
                 cached_notifications: HashMap::new(),
                 sender,
@@ -592,7 +585,7 @@ impl MultiApplication for LalaMusicBar {
                     .get(notify_id)
                     .cloned()
                     .map(|notifyw| LaLaInfo::Notify(Box::new(notifyw)))
-                    .expect(format!("it should can be found, {notify_id} is missing, please check the code!!").as_str()),
+                    .unwrap_or(LaLaInfo::ErrorHappened(id)),
             )
         }
     }
@@ -609,6 +602,7 @@ impl MultiApplication for LalaMusicBar {
                 self.hidenid = Some(id);
             }
             LaLaInfo::RightPanel => self.right_panel = Some(id),
+            _ => unreachable!(),
         }
     }
 
@@ -881,7 +875,6 @@ impl MultiApplication for LalaMusicBar {
                         .into(),
                     ));
                 }
-                self.update_hidden_notifications();
                 return Command::batch(commands);
             }
 
@@ -945,7 +938,6 @@ impl MultiApplication for LalaMusicBar {
                         ));
                     }
                 }
-                self.update_hidden_notifications();
 
                 return Command::batch(commands);
             }
@@ -1027,8 +1019,6 @@ impl MultiApplication for LalaMusicBar {
                     commands.push(Command::perform(async {}, |_| Message::CheckOutput));
                 }
 
-                self.update_hidden_notifications();
-
                 return Command::batch(commands);
             }
 
@@ -1096,6 +1086,9 @@ impl MultiApplication for LalaMusicBar {
                 }
                 return Command::batch(commands);
             }
+            Message::CloseErrorNotification(id) => {
+                return Command::single(Action::Window(WindowAction::Close(id)));
+            }
         }
         Command::none()
     }
@@ -1136,12 +1129,22 @@ impl MultiApplication for LalaMusicBar {
                 LaLaInfo::HiddenInfo => {
                     return text(format!(
                         "hidden notifications {}",
-                        self.hidden_notifications().count()
+                        self.hidden_notifications().count() as i32 - 4
                     ))
                     .into();
                 }
                 LaLaInfo::RightPanel => {
                     return self.right_panel_view();
+                }
+                LaLaInfo::ErrorHappened(id) => {
+                    tracing::error!("Error happened, for window id: {id:?}");
+                    return button(row![
+                        svg(svg::Handle::from_memory(ERROR_SVG))
+                            .height(Length::Fill)
+                            .width(Length::Fixed(70.)),
+                        Space::with_width(4.),
+                        text("Error Happened, LaLa cannot find notification for this window, it is a bug, and should be fixed")
+                    ]).on_press(Message::CloseErrorNotification(id)).into();
                 }
             }
         }
