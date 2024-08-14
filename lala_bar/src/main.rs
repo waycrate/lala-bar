@@ -1096,22 +1096,20 @@ impl MultiApplication for LalaMusicBar {
                     let btnwidgets: Element<Message> = unitwidgetinfo.notify_button();
 
                     let notify = &unitwidgetinfo.unit;
-                    let realid = self.showned_notifications.get(&id).unwrap();
-                    let notifywidget = self.notifications.get(realid).unwrap();
                     if notify.inline_reply_support() {
                         return column![
                             btnwidgets,
                             Space::with_height(5.),
                             row![
-                                text_input("reply something", &notifywidget.inline_reply)
+                                text_input("reply something", &unitwidgetinfo.inline_reply)
                                     .on_input(move |msg| Message::InlineReplyMsgUpdate((id, msg)))
                                     .on_submit(Message::InlineReply((
                                         notify.id,
-                                        notifywidget.inline_reply.clone()
+                                        unitwidgetinfo.inline_reply.clone()
                                     ))),
                                 button("send").on_press(Message::InlineReply((
                                     notify.id,
-                                    notifywidget.inline_reply.clone()
+                                    unitwidgetinfo.inline_reply.clone()
                                 ))),
                             ]
                         ]
