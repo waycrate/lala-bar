@@ -85,7 +85,7 @@ struct NotifyUnitWidgetInfo {
 }
 
 impl NotifyUnitWidgetInfo {
-    fn notify_button<'a>(&self, from_hidden_view: bool) -> Element<'a, Message> {
+    fn notify_button<'a>(&self) -> Element<'a, Message> {
         let notify = &self.unit;
         match notify.image() {
             Some(ImageInfo::Svg(path)) => button(row![
@@ -107,7 +107,7 @@ impl NotifyUnitWidgetInfo {
             .style(iced::theme::Button::Secondary)
             .width(Length::Fill)
             .height(Length::Fill)
-            .on_press(Message::RemoveNotify(self.unit.id, from_hidden_view))
+            .on_press(Message::RemoveNotify(self.unit.id))
             .into(),
             Some(ImageInfo::Data {
                 width,
@@ -134,7 +134,7 @@ impl NotifyUnitWidgetInfo {
             .width(Length::Fill)
             .height(Length::Fill)
             .style(iced::theme::Button::Secondary)
-            .on_press(Message::RemoveNotify(self.unit.id, from_hidden_view))
+            .on_press(Message::RemoveNotify(self.unit.id))
             .into(),
             Some(ImageInfo::Png(path)) | Some(ImageInfo::Jpg(path)) => button(row![
                 image(image::Handle::from_path(path)).height(Length::Fill),
@@ -153,7 +153,7 @@ impl NotifyUnitWidgetInfo {
             .width(Length::Fill)
             .height(Length::Fill)
             .style(iced::theme::Button::Secondary)
-            .on_press(Message::RemoveNotify(self.unit.id, from_hidden_view))
+            .on_press(Message::RemoveNotify(self.unit.id))
             .into(),
             _ => button(column![
                 text(notify.summery.clone()).shaping(text::Shaping::Advanced),
@@ -162,7 +162,7 @@ impl NotifyUnitWidgetInfo {
             .width(Length::Fill)
             .height(Length::Fill)
             .style(iced::theme::Button::Secondary)
-            .on_press(Message::RemoveNotify(self.unit.id, from_hidden_view))
+            .on_press(Message::RemoveNotify(self.unit.id))
             .into(),
         }
     }
@@ -318,7 +318,7 @@ impl LalaMusicBar {
         let btns: Vec<Element<Message>> = self
             .hidden_notifications()
             .map(|wdgetinfo| {
-                container(wdgetinfo.notify_button(true))
+                container(wdgetinfo.notify_button())
                     .height(Length::Fixed(100.))
                     .into()
             })
@@ -396,12 +396,8 @@ enum Message {
     ToggleLauncher,
     ToggleRightPanel,
     LauncherInfo(LaunchMessage),
-    /// NOTE: The bool value marked if it is from hidden_view
-    /// if it is from hidden_view, the notification should be removed immedietaly
-    Notify(NotifyMessage, bool),
-    /// NOTE: The bool value marked if it is from hidden_view
-    /// if it is from hidden_view, the notification should be removed immedietaly
-    RemoveNotify(u32, bool),
+    Notify(NotifyMessage),
+    RemoveNotify(u32),
     InlineReply((u32, String)),
     InlineReplyMsgUpdate((iced::window::Id, String)),
     CheckOutput,
@@ -412,7 +408,7 @@ enum Message {
 
 impl From<NotifyMessage> for Message {
     fn from(value: NotifyMessage) -> Self {
-        Self::Notify(value, false)
+        Self::Notify(value)
     }
 }
 
@@ -785,7 +781,7 @@ impl MultiApplication for LalaMusicBar {
                     .into(),
                 );
             }
-            Message::Notify(NotifyMessage::UnitAdd(notify), _) => {
+            Message::Notify(NotifyMessage::UnitAdd(notify)) => {
                 if let Some(onotify) = self.notifications.get_mut(&notify.id) {
                     onotify.unit = notify;
                     return Command::none();
@@ -966,7 +962,7 @@ impl MultiApplication for LalaMusicBar {
                 return Command::batch(commands);
             }
 
-            Message::Notify(NotifyMessage::UnitRemove(removed_id), from_hidden_view) => {
+            Message::Notify(NotifyMessage::UnitRemove(removed_id)) => {
                 let mut commands = vec![];
                 if let Some((id, nid)) = self
                     .showned_notifications
@@ -990,7 +986,7 @@ impl MultiApplication for LalaMusicBar {
                         // NOTE: already removed
                         return Command::none();
                     };
-                if from_hidden_view {
+                if self.quite_mode || removed_counter >= 4 {
                     self.notifications.remove(&removed_id);
                 }
 
@@ -1087,10 +1083,10 @@ impl MultiApplication for LalaMusicBar {
                     })
                     .ok();
                 return Command::perform(async {}, move |_| {
-                    Message::Notify(NotifyMessage::UnitRemove(notify_id), false)
+                    Message::Notify(NotifyMessage::UnitRemove(notify_id))
                 });
             }
-            Message::RemoveNotify(notify_id, from_hidden_view) => {
+            Message::RemoveNotify(notify_id) => {
                 self.sender
                     .try_send(NotifyCommand::ActionInvoked {
                         id: notify_id,
@@ -1098,7 +1094,7 @@ impl MultiApplication for LalaMusicBar {
                     })
                     .ok();
                 return Command::perform(async {}, move |_| {
-                    Message::Notify(NotifyMessage::UnitRemove(notify_id), from_hidden_view)
+                    Message::Notify(NotifyMessage::UnitRemove(notify_id))
                 });
             }
             Message::InlineReplyMsgUpdate((id, msg)) => {
@@ -1137,7 +1133,7 @@ impl MultiApplication for LalaMusicBar {
                     }
                 }
                 LaLaInfo::Notify(unitwidgetinfo) => {
-                    let btnwidgets: Element<Message> = unitwidgetinfo.notify_button(false);
+                    let btnwidgets: Element<Message> = unitwidgetinfo.notify_button();
 
                     let notify = &unitwidgetinfo.unit;
                     if notify.inline_reply_support() {
