@@ -587,10 +587,13 @@ impl MultiApplication for LalaMusicBar {
                 return Some(LaLaInfo::Notify(Box::new(info.clone())));
             }
             let notify_id = self.showned_notifications.get(&id)?;
-            self.notifications
-                .get(notify_id)
-                .cloned()
-                .map(|notifyw| LaLaInfo::Notify(Box::new(notifyw)))
+            Some(
+                self.notifications
+                    .get(notify_id)
+                    .cloned()
+                    .map(|notifyw| LaLaInfo::Notify(Box::new(notifyw)))
+                    .expect(format!("it should can be found, {notify_id} is missing, please check the code!!").as_str()),
+            )
         }
     }
 
