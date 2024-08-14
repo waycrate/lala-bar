@@ -77,6 +77,7 @@ enum LaLaInfo {
 
 #[derive(Debug, Clone)]
 struct NotifyUnitWidgetInfo {
+    to_delete: bool,
     upper: i32,
     counter: usize,
     inline_reply: String,
@@ -620,7 +621,19 @@ impl MultiApplication for LalaMusicBar {
         if self.hidenid.is_some_and(|lid| lid == id) {
             self.hidenid.take();
         }
-        self.showned_notifications.remove(&id);
+        'clear_nid: {
+            if let Some(nid) = self.showned_notifications.remove(&id) {
+                if let Some(NotifyUnitWidgetInfo {
+                    to_delete: false, ..
+                }) = self.notifications.get(&nid)
+                {
+                    break 'clear_nid;
+                }
+                // If the widget is marked to removed
+                // Then delete it
+                self.notifications.remove(&nid);
+            }
+        }
         self.cached_notifications.remove(&id);
     }
 
@@ -806,6 +819,7 @@ impl MultiApplication for LalaMusicBar {
                                             use_last_output: true,
                                         },
                                         LaLaInfo::Notify(Box::new(NotifyUnitWidgetInfo {
+                                            to_delete: false,
                                             counter: 0,
                                             upper: 10,
                                             inline_reply: String::new(),
@@ -836,6 +850,7 @@ impl MultiApplication for LalaMusicBar {
                                     use_last_output: true,
                                 },
                                 LaLaInfo::Notify(Box::new(NotifyUnitWidgetInfo {
+                                    to_delete: false,
                                     counter: 0,
                                     upper: 10,
                                     inline_reply: String::new(),
@@ -850,6 +865,7 @@ impl MultiApplication for LalaMusicBar {
                 self.notifications.insert(
                     notify.id,
                     NotifyUnitWidgetInfo {
+                        to_delete: false,
                         counter: 0,
                         upper: 10,
                         inline_reply: String::new(),
@@ -960,13 +976,19 @@ impl MultiApplication for LalaMusicBar {
                     commands.push(Command::single(Action::Window(WindowAction::Close(*id))));
                 }
 
-                let Some(removed_unit) = self.notifications.remove(&removed_id) else {
-                    // NOTE: already removed
-                    return Command::none();
-                };
+                let removed_counter =
+                    if let Some(removed_unit) = self.notifications.get_mut(&removed_id) {
+                        // NOTE: marked it as removable, but not now
+                        // Data should be removed by iced_layershell, not ourself
+                        removed_unit.to_delete = true;
+                        removed_unit.counter
+                    } else {
+                        // NOTE: already removed
+                        return Command::none();
+                    };
 
                 for (_, notify) in self.notifications.iter_mut() {
-                    if notify.counter > removed_unit.counter {
+                    if notify.counter > removed_counter {
                         notify.counter -= 1;
                         notify.upper -= 135;
                     }
