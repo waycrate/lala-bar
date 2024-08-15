@@ -9,6 +9,7 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 use glob::glob;
+use serde::{Deserialize, Serialize};
 use zbus::{interface, object_server::SignalContext, zvariant::OwnedValue};
 
 use std::sync::{Arc, LazyLock, RwLock};
@@ -130,6 +131,15 @@ fn get_jpeg_icon(theme: &str, icon: &str) -> Option<PathBuf> {
 pub struct NotifyHint {
     image_data: Option<ImageData>,
     desktop_entry: Option<String>,
+    urgency: Urgency,
+}
+
+#[derive(Deserialize, Serialize, Type, Debug, Clone, OwnedValue)]
+#[repr(u8)]
+pub enum Urgency {
+    Low = 0,
+    Normal = 1,
+    Critical = 2,
 }
 
 /// contain the info about image
@@ -161,6 +171,10 @@ impl NotifyHint {
             height: data.height,
             pixels: data.data.clone(),
         })
+    }
+
+    pub fn is_critical(&self) -> bool {
+        matches!(self.urgency, Urgency::Critical)
     }
 }
 
@@ -215,6 +229,10 @@ impl NotifyUnit {
             }
         }
         self.hint.desktop_image()
+    }
+
+    pub fn is_critical(&self) -> bool {
+        self.hint.is_critical()
     }
 }
 
@@ -300,6 +318,12 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
         let desktop_entry: Option<String> = hints
             .remove("desktop-entry")
             .and_then(|v| v.try_into().ok());
+
+        let urgency = hints
+            .remove("urgency")
+            .and_then(|v| v.try_into().ok())
+            .unwrap_or(Urgency::Low);
+
         self.sender
             .try_send(
                 NotifyMessage::UnitAdd(NotifyUnit {
@@ -313,6 +337,7 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
                     hint: NotifyHint {
                         image_data,
                         desktop_entry,
+                        urgency,
                     },
                 })
                 .into(),

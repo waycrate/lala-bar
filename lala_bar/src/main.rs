@@ -87,6 +87,11 @@ struct NotifyUnitWidgetInfo {
 impl NotifyUnitWidgetInfo {
     fn notify_button<'a>(&self) -> Element<'a, Message> {
         let notify = &self.unit;
+        let notify_theme = if notify.is_critical() {
+            iced::theme::Button::Primary
+        } else {
+            iced::theme::Button::Secondary
+        };
         match notify.image() {
             Some(ImageInfo::Svg(path)) => button(row![
                 svg(svg::Handle::from_path(path))
@@ -104,7 +109,7 @@ impl NotifyUnitWidgetInfo {
                     text(notify.body.clone()).shaping(text::Shaping::Advanced)
                 ]
             ])
-            .style(iced::theme::Button::Secondary)
+            .style(notify_theme)
             .width(Length::Fill)
             .height(Length::Fill)
             .on_press(Message::RemoveNotify(self.unit.id))
@@ -133,7 +138,7 @@ impl NotifyUnitWidgetInfo {
             ])
             .width(Length::Fill)
             .height(Length::Fill)
-            .style(iced::theme::Button::Secondary)
+            .style(notify_theme)
             .on_press(Message::RemoveNotify(self.unit.id))
             .into(),
             Some(ImageInfo::Png(path)) | Some(ImageInfo::Jpg(path)) => button(row![
@@ -161,7 +166,7 @@ impl NotifyUnitWidgetInfo {
             ])
             .width(Length::Fill)
             .height(Length::Fill)
-            .style(iced::theme::Button::Secondary)
+            .style(notify_theme)
             .on_press(Message::RemoveNotify(self.unit.id))
             .into(),
         }
@@ -805,6 +810,11 @@ impl MultiApplication for LalaMusicBar {
                         } else {
                             commands
                                 .push(Command::single(Action::Window(WindowAction::Close(*id))));
+                            let layer = if notify.is_critical() {
+                                Layer::Overlay
+                            } else {
+                                Layer::Top
+                            };
                             commands.push(Command::single(
                                 LaLaShellIdAction::new(
                                     iced::window::Id::MAIN,
@@ -813,7 +823,7 @@ impl MultiApplication for LalaMusicBar {
                                             size: Some((300, 130)),
                                             exclusive_zone: None,
                                             anchor: Anchor::Right | Anchor::Top,
-                                            layer: Layer::Top,
+                                            layer,
                                             margin: Some((10, 10, 10, 10)),
                                             keyboard_interactivity: KeyboardInteractivity::OnDemand,
                                             use_last_output: true,
@@ -836,6 +846,11 @@ impl MultiApplication for LalaMusicBar {
                 if self.showned_notifications.len() < MAX_SHOWN_NOTIFICATIONS_COUNT
                     && !self.quite_mode
                 {
+                    let layer = if notify.is_critical() {
+                        Layer::Overlay
+                    } else {
+                        Layer::Top
+                    };
                     commands.push(Command::single(
                         LaLaShellIdAction::new(
                             iced::window::Id::MAIN,
@@ -844,7 +859,7 @@ impl MultiApplication for LalaMusicBar {
                                     size: Some((300, 130)),
                                     exclusive_zone: None,
                                     anchor: Anchor::Right | Anchor::Top,
-                                    layer: Layer::Top,
+                                    layer,
                                     margin: Some((10, 10, 10, 10)),
                                     keyboard_interactivity: KeyboardInteractivity::OnDemand,
                                     use_last_output: true,
@@ -860,6 +875,18 @@ impl MultiApplication for LalaMusicBar {
                         )
                         .into(),
                     ));
+                }
+
+                // NOTE: support timeout
+                if notify.timeout != -1 {
+                    let timeout = notify.timeout as u64;
+                    let id = notify.id;
+                    commands.push(Command::perform(
+                        async move {
+                            tokio::time::sleep(std::time::Duration::from_secs(timeout)).await
+                        },
+                        move |_| Message::RemoveNotify(id),
+                    ))
                 }
 
                 self.notifications.insert(
@@ -911,11 +938,16 @@ impl MultiApplication for LalaMusicBar {
                         ))));
                     }
                 } else {
-                    for (_, notify) in self
+                    for (_, notify_info) in self
                         .notifications
                         .iter()
                         .filter(|(_, info)| info.counter < MAX_SHOWN_NOTIFICATIONS_COUNT)
                     {
+                        let layer = if notify_info.unit.is_critical() {
+                            Layer::Overlay
+                        } else {
+                            Layer::Top
+                        };
                         commands.push(Command::single(
                             LaLaShellIdAction::new(
                                 iced::window::Id::MAIN,
@@ -924,12 +956,12 @@ impl MultiApplication for LalaMusicBar {
                                         size: Some((300, 130)),
                                         exclusive_zone: None,
                                         anchor: Anchor::Right | Anchor::Top,
-                                        layer: Layer::Top,
-                                        margin: Some((notify.upper, 10, 10, 10)),
+                                        layer,
+                                        margin: Some((notify_info.upper, 10, 10, 10)),
                                         keyboard_interactivity: KeyboardInteractivity::OnDemand,
                                         use_last_output: true,
                                     },
-                                    LaLaInfo::Notify(Box::new(notify.clone())),
+                                    LaLaInfo::Notify(Box::new(notify_info.clone())),
                                 )),
                             )
                             .into(),
@@ -990,20 +1022,25 @@ impl MultiApplication for LalaMusicBar {
                     self.notifications.remove(&removed_id);
                 }
 
-                for (_, notify) in self.notifications.iter_mut() {
-                    if notify.counter > removed_counter {
-                        notify.counter -= 1;
-                        notify.upper -= 135;
+                for (_, notify_info) in self.notifications.iter_mut() {
+                    if notify_info.counter > removed_counter {
+                        notify_info.counter -= 1;
+                        notify_info.upper -= 135;
                     }
                     if !self.quite_mode
-                        && notify.counter == MAX_SHOWN_NOTIFICATIONS_COUNT - 1
-                        && !notify.to_delete // NOTE: if is marked to deleted before
+                        && notify_info.counter == MAX_SHOWN_NOTIFICATIONS_COUNT - 1
+                        && !notify_info.to_delete // NOTE: if is marked to deleted before
                                              // it should be skipped
                         && !self
                             .showned_notifications
                             .iter()
-                            .any(|(_, v)| &notify.unit.id == v)
+                            .any(|(_, v)| &notify_info.unit.id == v)
                     {
+                        let layer = if notify_info.unit.is_critical() {
+                            Layer::Overlay
+                        } else {
+                            Layer::Top
+                        };
                         commands.push(Command::single(
                             LaLaShellIdAction::new(
                                 iced::window::Id::MAIN,
@@ -1012,12 +1049,12 @@ impl MultiApplication for LalaMusicBar {
                                         size: Some((300, 130)),
                                         exclusive_zone: None,
                                         anchor: Anchor::Right | Anchor::Top,
-                                        layer: Layer::Top,
-                                        margin: Some((notify.upper, 10, 10, 10)),
+                                        layer,
+                                        margin: Some((notify_info.upper, 10, 10, 10)),
                                         keyboard_interactivity: KeyboardInteractivity::OnDemand,
                                         use_last_output: true,
                                     },
-                                    LaLaInfo::Notify(Box::new(notify.clone())),
+                                    LaLaInfo::Notify(Box::new(notify_info.clone())),
                                 )),
                             )
                             .into(),
