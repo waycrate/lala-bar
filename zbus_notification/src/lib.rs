@@ -66,7 +66,7 @@ struct ImageData {
 /// NotifyMessage about the add and remove
 #[derive(Debug, Clone)]
 pub enum NotifyMessage {
-    UnitAdd(NotifyUnit),
+    UnitAdd(Box<NotifyUnit>),
     UnitRemove(u32),
 }
 
@@ -326,7 +326,7 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
 
         self.sender
             .try_send(
-                NotifyMessage::UnitAdd(NotifyUnit {
+                NotifyMessage::UnitAdd(Box::new(NotifyUnit {
                     app_name: app_name.to_string(),
                     id: id.0,
                     icon: icon.to_string(),
@@ -339,7 +339,7 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
                         desktop_entry,
                         urgency,
                     },
-                })
+                }))
                 .into(),
             )
             .ok();

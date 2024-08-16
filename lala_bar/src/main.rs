@@ -262,6 +262,106 @@ impl LalaMusicBar {
 }
 
 impl LalaMusicBar {
+    // NOTE: not use signal to invoke remove, but use a common function
+    fn remove_notify(&mut self, removed_id: u32) -> Command<Message> {
+        let mut commands = vec![];
+        if let Some((id, nid)) = self
+            .showned_notifications
+            .iter()
+            .find(|(_, nid)| **nid == removed_id)
+        {
+            if let Some(info) = self.notifications.get(nid) {
+                self.cached_notifications.insert(*id, info.clone());
+            }
+
+            commands.push(Command::single(Action::Window(WindowAction::Close(*id))));
+        }
+
+        let removed_counter = if let Some(removed_unit) = self.notifications.get_mut(&removed_id) {
+            // NOTE: marked it as removable, but not now
+            // Data should be removed by iced_layershell, not ourself
+            removed_unit.to_delete = true;
+            removed_unit.counter
+        } else {
+            // NOTE: already removed
+            return Command::none();
+        };
+        if self.quite_mode || removed_counter >= 4 {
+            self.notifications.remove(&removed_id);
+        }
+
+        for (_, notify_info) in self.notifications.iter_mut() {
+            if notify_info.counter > removed_counter {
+                notify_info.counter -= 1;
+                notify_info.upper -= 135;
+            }
+            if !self.quite_mode
+                        && notify_info.counter == MAX_SHOWN_NOTIFICATIONS_COUNT - 1
+                        && !notify_info.to_delete // NOTE: if is marked to deleted before
+                                             // it should be skipped
+                        && !self
+                            .showned_notifications
+                            .iter()
+                            .any(|(_, v)| &notify_info.unit.id == v)
+            {
+                let layer = if notify_info.unit.is_critical() {
+                    Layer::Overlay
+                } else {
+                    Layer::Top
+                };
+                commands.push(Command::single(
+                    LaLaShellIdAction::new(
+                        iced::window::Id::MAIN,
+                        LalaShellAction::NewLayerShell((
+                            NewLayerShellSettings {
+                                size: Some((300, 130)),
+                                exclusive_zone: None,
+                                anchor: Anchor::Right | Anchor::Top,
+                                layer,
+                                margin: Some((notify_info.upper, 10, 10, 10)),
+                                keyboard_interactivity: KeyboardInteractivity::OnDemand,
+                                use_last_output: true,
+                            },
+                            LaLaInfo::Notify(Box::new(notify_info.clone())),
+                        )),
+                    )
+                    .into(),
+                ));
+            }
+        }
+
+        for (id, nid) in self.showned_notifications.iter() {
+            if *nid == removed_id {
+                continue;
+            }
+            if let Some(unit) = self.notifications.get(nid) {
+                commands.push(Command::single(
+                    LaLaShellIdAction::new(
+                        *id,
+                        LalaShellAction::MarginChange((unit.upper, 10, 10, 10)),
+                    )
+                    .into(),
+                ));
+            }
+        }
+
+        // NOTE: we should delete to be deleted notification
+        if self.notifications.len() - 1 <= MAX_SHOWN_NOTIFICATIONS_COUNT {
+            if let Some(id) = self.hidenid {
+                commands.push(Command::single(Action::Window(WindowAction::Close(id))));
+            }
+        }
+
+        // NOTE: only removed notification remain
+        if self.notifications.len() == 1 {
+            commands.push(Command::perform(async {}, |_| Message::CheckOutput));
+        }
+
+        Command::batch(commands)
+    }
+}
+
+impl LalaMusicBar {
     fn balance_bar(&self) -> Element<Message> {
         let show_text = format!("balance {}%", self.balance_percent());
         row![
@@ -788,7 +888,7 @@ impl MultiApplication for LalaMusicBar {
             }
             Message::Notify(NotifyMessage::UnitAdd(notify)) => {
                 if let Some(onotify) = self.notifications.get_mut(&notify.id) {
-                    onotify.unit = notify;
+                    onotify.unit = *notify;
                     return Command::none();
                 }
                 let mut commands = vec![];
@@ -833,7 +933,7 @@ impl MultiApplication for LalaMusicBar {
                                             counter: 0,
                                             upper: 10,
                                             inline_reply: String::new(),
-                                            unit: notify.clone(),
+                                            unit: *notify.clone(),
                                         })),
                                     )),
                                 )
@@ -869,7 +969,7 @@ impl MultiApplication for LalaMusicBar {
                                     counter: 0,
                                     upper: 10,
                                     inline_reply: String::new(),
-                                    unit: notify.clone(),
+                                    unit: *notify.clone(),
                                 })),
                             )),
                         )
@@ -896,7 +996,7 @@ impl MultiApplication for LalaMusicBar {
                         counter: 0,
                         upper: 10,
                         inline_reply: String::new(),
-                        unit: notify,
+                        unit: *notify,
                     },
                 );
                 if self.notifications.len() > MAX_SHOWN_NOTIFICATIONS_COUNT
@@ -995,101 +1095,7 @@ impl MultiApplication for LalaMusicBar {
             }
 
             Message::Notify(NotifyMessage::UnitRemove(removed_id)) => {
-                let mut commands = vec![];
-                if let Some((id, nid)) = self
-                    .showned_notifications
-                    .iter()
-                    .find(|(_, nid)| **nid == removed_id)
-                {
-                    if let Some(info) = self.notifications.get(nid) {
-                        self.cached_notifications.insert(*id, info.clone());
-                    }
-
-                    commands.push(Command::single(Action::Window(WindowAction::Close(*id))));
-                }
-
-                let removed_counter =
-                    if let Some(removed_unit) = self.notifications.get_mut(&removed_id) {
-                        // NOTE: marked it as removable, but not now
-                        // Data should be removed by iced_layershell, not ourself
-                        removed_unit.to_delete = true;
-                        removed_unit.counter
-                    } else {
-                        // NOTE: already removed
-                        return Command::none();
-                    };
-                if self.quite_mode || removed_counter >= 4 {
-                    self.notifications.remove(&removed_id);
-                }
-
-                for (_, notify_info) in self.notifications.iter_mut() {
-                    if notify_info.counter > removed_counter {
-                        notify_info.counter -= 1;
-                        notify_info.upper -= 135;
-                    }
-                    if !self.quite_mode
-                        && notify_info.counter == MAX_SHOWN_NOTIFICATIONS_COUNT - 1
-                        && !notify_info.to_delete // NOTE: if is marked to deleted before
-                                             // it should be skipped
-                        && !self
-                            .showned_notifications
-                            .iter()
-                            .any(|(_, v)| &notify_info.unit.id == v)
-                    {
-                        let layer = if notify_info.unit.is_critical() {
-                            Layer::Overlay
-                        } else {
-                            Layer::Top
-                        };
-                        commands.push(Command::single(
-                            LaLaShellIdAction::new(
-                                iced::window::Id::MAIN,
-                                LalaShellAction::NewLayerShell((
-                                    NewLayerShellSettings {
-                                        size: Some((300, 130)),
-                                        exclusive_zone: None,
-                                        anchor: Anchor::Right | Anchor::Top,
-                                        layer,
-                                        margin: Some((notify_info.upper, 10, 10, 10)),
-                                        keyboard_interactivity: KeyboardInteractivity::OnDemand,
-                                        use_last_output: true,
-                                    },
-                                    LaLaInfo::Notify(Box::new(notify_info.clone())),
-                                )),
-                            )
-                            .into(),
-                        ));
-                    }
-                }
-
-                for (id, nid) in self.showned_notifications.iter() {
-                    if *nid == removed_id {
-                        continue;
-                    }
-                    if let Some(unit) = self.notifications.get(nid) {
-                        commands.push(Command::single(
-                            LaLaShellIdAction::new(
-                                *id,
-                                LalaShellAction::MarginChange((unit.upper, 10, 10, 10)),
-                            )
-                            .into(),
-                        ));
-                    }
-                }
-
-                // NOTE: we should delete to be deleted notification
-                if self.notifications.len() - 1 <= MAX_SHOWN_NOTIFICATIONS_COUNT {
-                    if let Some(id) = self.hidenid {
-                        commands.push(Command::single(Action::Window(WindowAction::Close(id))));
-                    }
-                }
-
-                // NOTE: only removed notification remain
-                if self.notifications.len() == 1 {
-                    commands.push(Command::perform(async {}, |_| Message::CheckOutput));
-                }
-
-                return Command::batch(commands);
+                return self.remove_notify(removed_id)
             }
 
             Message::CheckOutput => {
@@ -1121,9 +1127,7 @@ impl MultiApplication for LalaMusicBar {
                         text,
                     })
                     .ok();
-                return Command::perform(async {}, move |_| {
-                    Message::Notify(NotifyMessage::UnitRemove(notify_id))
-                });
+                return self.remove_notify(notify_id);
             }
             Message::RemoveNotify(notify_id) => {
                 self.sender
@@ -1132,9 +1136,7 @@ impl MultiApplication for LalaMusicBar {
                         action_key: DEFAULT_ACTION.to_string(),
                     })
                     .ok();
-                return Command::perform(async {}, move |_| {
-                    Message::Notify(NotifyMessage::UnitRemove(notify_id))
-                });
+                return self.remove_notify(notify_id);
             }
             Message::InlineReplyMsgUpdate((id, msg)) => {
                 let Some(notify_id) = self.showned_notifications.get(&id) else {
