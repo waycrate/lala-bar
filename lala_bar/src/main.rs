@@ -520,12 +520,18 @@ impl From<NotifyMessage> for Message {
 async fn get_metadata_initial() -> Option<ServiceInfo> {
     zbus_mpirs::init_mpirs().await.ok();
     let infos = zbus_mpirs::MPIRS_CONNECTIONS.lock().await;
-    infos.first().cloned()
+    infos
+        .iter()
+        .find(|info| !info.metadata.xesam_title.is_empty())
+        .cloned()
 }
 
 async fn get_metadata() -> Option<ServiceInfo> {
     let infos = zbus_mpirs::MPIRS_CONNECTIONS.lock().await;
-    infos.first().cloned()
+    infos
+        .iter()
+        .find(|info| !info.metadata.xesam_title.is_empty())
+        .cloned()
 }
 
 impl LalaMusicBar {
