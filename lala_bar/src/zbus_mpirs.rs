@@ -40,8 +40,10 @@ impl Metadata {
         let title = value.remove("xesam:title").unwrap();
         let xesam_title: String = title.try_into().unwrap_or_default();
 
-        let artist = value.remove("xesam:artist").unwrap();
-        let xesam_artist: Vec<String> = artist.try_into().unwrap_or_default();
+        let mut xesam_artist = vec![];
+        if let Some(artist) = value.remove("xesam:artist") {
+            xesam_artist = artist.try_into().unwrap_or_default();
+        }
 
         let mut xesam_album = String::new();
         let album = value.remove("xesam:album");
