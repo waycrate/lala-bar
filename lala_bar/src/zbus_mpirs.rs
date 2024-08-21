@@ -36,11 +36,13 @@ impl Metadata {
 
         let trackid = value.remove("mpris:trackid");
         let mpris_trackid: OwnedObjectPath = trackid
-            .map(|id| id.try_into().unwrap_or_default())
+            .and_then(|id| id.try_into().ok())
             .unwrap_or_default();
 
-        let title = value.remove("xesam:title").unwrap();
-        let xesam_title: String = title.try_into().unwrap_or_default();
+        let title = value.remove("xesam:title");
+        let xesam_title: String = title
+            .and_then(|title| title.try_into().ok())
+            .unwrap_or_default();
 
         let mut xesam_artist = vec![];
         if let Some(artist) = value.remove("xesam:artist") {
