@@ -34,8 +34,10 @@ impl Metadata {
             mpris_arturl = art_url.try_into().unwrap_or_default()
         }
 
-        let trackid = value.remove("mpris:trackid").unwrap();
-        let mpris_trackid: OwnedObjectPath = trackid.try_into().unwrap_or_default();
+        let trackid = value.remove("mpris:trackid");
+        let mpris_trackid: OwnedObjectPath = trackid
+            .map(|id| id.try_into().unwrap_or_default())
+            .unwrap_or_default();
 
         let title = value.remove("xesam:title").unwrap();
         let xesam_title: String = title.try_into().unwrap_or_default();
