@@ -519,19 +519,24 @@ impl From<NotifyMessage> for Message {
 
 async fn get_metadata_initial() -> Option<ServiceInfo> {
     zbus_mpirs::init_mpirs().await.ok();
-    let infos = zbus_mpirs::MPIRS_CONNECTIONS.lock().await;
-    infos
-        .iter()
-        .find(|info| !info.metadata.xesam_title.is_empty())
-        .cloned()
+    get_metadata().await
 }
 
 async fn get_metadata() -> Option<ServiceInfo> {
     let infos = zbus_mpirs::MPIRS_CONNECTIONS.lock().await;
-    infos
+
+    let alive_infos: Vec<&ServiceInfo> = infos
         .iter()
-        .find(|info| !info.metadata.xesam_title.is_empty())
-        .cloned()
+        .filter(|info| !info.metadata.xesam_title.is_empty())
+        .collect();
+
+    if let Some(playingserver) = alive_infos
+        .iter()
+        .find(|info| info.playback_status == "Playing")
+    {
+        return Some((*playingserver).clone());
+    }
+    alive_infos.first().cloned().cloned()
 }
 
 impl LalaMusicBar {
