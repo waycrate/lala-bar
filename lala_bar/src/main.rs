@@ -43,11 +43,11 @@ const UNIT_MARGIN: i32 = 135;
 
 const EXTRAINF_MARGIN: i32 = BEGINNING_UP_MARGIN + 4 * UNIT_MARGIN;
 
-const LAUNCHER_SVG: &[u8] = include_bytes!("../assets/launcher.svg");
+const LAUNCHER_SVG: &[u8] = include_bytes!("../asserts/launcher.svg");
 
-const RESET_SVG: &[u8] = include_bytes!("../assets/reset.svg");
+const RESET_SVG: &[u8] = include_bytes!("../asserts/reset.svg");
 
-const ERROR_SVG: &[u8] = include_bytes!("../assets/error.svg");
+const ERROR_SVG: &[u8] = include_bytes!("../asserts/error.svg");
 
 const MAX_SHOWN_NOTIFICATIONS_COUNT: usize = 4;
 
