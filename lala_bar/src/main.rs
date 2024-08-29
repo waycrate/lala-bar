@@ -842,7 +842,6 @@ impl MultiApplication for LalaMusicBar {
             Message::ToggleLauncher => {
                 if self.launcher.is_some() {
                     if let Some(id) = self.launcherid {
-                        self.launcher.take();
                         return Command::single(Action::Window(WindowAction::Close(id)));
                     }
                     return Command::none();
