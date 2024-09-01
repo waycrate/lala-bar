@@ -1,7 +1,7 @@
 project(
   'lala-bar',
   'rust',
-  version: '0.3.9',
+  version: '0.3.10',
   license: 'MIT',
   meson_version: '>= 1.0',
 )
