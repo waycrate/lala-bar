@@ -730,6 +730,7 @@ impl MultiApplication for LalaMusicBar {
     fn remove_id(&mut self, id: iced::window::Id) {
         if self.launcherid.is_some_and(|lid| lid == id) {
             self.launcherid.take();
+            self.launcher.take();
         }
         if self.right_panel.is_some_and(|lid| lid == id) {
             self.right_panel.take();
@@ -1122,11 +1123,7 @@ impl MultiApplication for LalaMusicBar {
             Message::LauncherInfo(message) => {
                 if let Some(launcher) = self.launcher.as_mut() {
                     if let Some(id) = self.launcherid {
-                        let cmd = launcher.update(message, id);
-                        if launcher.should_delete {
-                            self.launcher.take();
-                        }
-                        return cmd;
+                        return launcher.update(message, id);
                     }
                 }
             }
