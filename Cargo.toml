@@ -3,7 +3,7 @@ resolver = "2"
 members = ["./lala_bar", "./zbus_notification"]
 
 [workspace.package]
-version = "0.3.8"
+version = "0.3.9"
 edition = "2021"
 authors = ["Decodertalkers <aakari@tutanota.com>"]
 license = "MIT"
