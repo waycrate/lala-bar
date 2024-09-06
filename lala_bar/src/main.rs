@@ -320,16 +320,20 @@ impl LalaMusicBar {
         if self.quite_mode || removed_counter >= 4 {
             self.notifications.remove(&removed_id);
         }
+        let notifications_count = self
+            .notifications
+            .iter()
+            .filter(|(_, v)| !v.to_delete)
+            .count();
 
         // NOTE: we should delete to be deleted notification
-        if self.notifications.len() - 1 <= MAX_SHOWN_NOTIFICATIONS_COUNT {
+        if notifications_count <= MAX_SHOWN_NOTIFICATIONS_COUNT {
             if let Some(id) = self.hidenid {
                 commands.push(Command::single(Action::Window(WindowAction::Close(id))));
             }
         }
 
-        // NOTE: only removed notification remain
-        if self.notifications.len() == 1 {
+        if notifications_count == 0 {
             commands.push(Command::perform(async {}, |_| Message::CheckOutput));
         }
 
