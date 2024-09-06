@@ -928,11 +928,6 @@ impl MultiApplication for LalaMusicBar {
                 if self.showned_notifications.len() < MAX_SHOWN_NOTIFICATIONS_COUNT
                     && !self.quite_mode
                 {
-                    let layer = if notify.is_critical() {
-                        Layer::Overlay
-                    } else {
-                        Layer::Top
-                    };
                     commands.push(Command::single(
                         LaLaShellIdAction::new(
                             iced::window::Id::MAIN,
@@ -941,7 +936,7 @@ impl MultiApplication for LalaMusicBar {
                                     size: Some((300, 130)),
                                     exclusive_zone: None,
                                     anchor: Anchor::Right | Anchor::Top,
-                                    layer,
+                                    layer: Layer::Top,
                                     margin: Some((10, 10, 10, 10)),
                                     keyboard_interactivity: KeyboardInteractivity::OnDemand,
                                     use_last_output: true,
@@ -981,6 +976,7 @@ impl MultiApplication for LalaMusicBar {
                         unit: *notify,
                     },
                 );
+
                 if self.notifications.len() > MAX_SHOWN_NOTIFICATIONS_COUNT
                     && self.hidenid.is_none()
                     && !self.quite_mode
