@@ -919,76 +919,6 @@ impl MultiApplication for LalaMusicBar {
                     notify.counter += 1;
                 }
 
-                for (id, nid) in self.showned_notifications.iter() {
-                    if let Some(unit) = self.notifications.get(nid) {
-                        if unit.counter < 4 {
-                            commands.push(Command::single(
-                                LaLaShellIdAction::new(
-                                    *id,
-                                    LalaShellAction::MarginChange((unit.upper, 10, 10, 10)),
-                                )
-                                .into(),
-                            ));
-                        } else {
-                            commands
-                                .push(Command::single(Action::Window(WindowAction::Close(*id))));
-                            commands.push(Command::single(
-                                LaLaShellIdAction::new(
-                                    iced::window::Id::MAIN,
-                                    LalaShellAction::NewLayerShell((
-                                        NewLayerShellSettings {
-                                            size: Some((300, 130)),
-                                            exclusive_zone: None,
-                                            anchor: Anchor::Right | Anchor::Top,
-                                            layer: Layer::Top,
-                                            margin: Some((10, 10, 10, 10)),
-                                            keyboard_interactivity: KeyboardInteractivity::OnDemand,
-                                            use_last_output: true,
-                                        },
-                                        LaLaInfo::Notify(Box::new(NotifyUnitWidgetInfo {
-                                            to_delete: false,
-                                            counter: 0,
-                                            upper: 10,
-                                            inline_reply: String::new(),
-                                            unit: *notify.clone(),
-                                        })),
-                                    )),
-                                )
-                                .into(),
-                            ));
-                        }
-                    }
-                }
-
-                if self.showned_notifications.len() < MAX_SHOWN_NOTIFICATIONS_COUNT
-                    && !self.quite_mode
-                {
-                    commands.push(Command::single(
-                        LaLaShellIdAction::new(
-                            iced::window::Id::MAIN,
-                            LalaShellAction::NewLayerShell((
-                                NewLayerShellSettings {
-                                    size: Some((300, 130)),
-                                    exclusive_zone: None,
-                                    anchor: Anchor::Right | Anchor::Top,
-                                    layer: Layer::Top,
-                                    margin: Some((10, 10, 10, 10)),
-                                    keyboard_interactivity: KeyboardInteractivity::OnDemand,
-                                    use_last_output: true,
-                                },
-                                LaLaInfo::Notify(Box::new(NotifyUnitWidgetInfo {
-                                    to_delete: false,
-                                    counter: 0,
-                                    upper: 10,
-                                    inline_reply: String::new(),
-                                    unit: *notify.clone(),
-                                })),
-                            )),
-                        )
-                        .into(),
-                    ));
-                }
-
                 // NOTE: support timeout
                 if notify.timeout != -1 {
                     let timeout = notify.timeout as u64;
@@ -1008,9 +938,75 @@ impl MultiApplication for LalaMusicBar {
                         counter: 0,
                         upper: 10,
                         inline_reply: String::new(),
-                        unit: *notify,
+                        unit: *notify.clone(),
                     },
                 );
+
+                if !self.quite_mode {
+                    let all_shown = self.showned_notifications.len() == 4;
+                    let mut showned_notifications_now: Vec<(&u32, &NotifyUnitWidgetInfo)> = self
+                        .notifications
+                        .iter()
+                        .filter(|(_, info)| info.counter < 4 && !info.to_delete)
+                        .collect();
+
+                    showned_notifications_now.sort_by(|(a, _), (b, _)| b.partial_cmp(a).unwrap());
+                    let mut showned_values: Vec<(&iced::window::Id, &mut u32)> =
+                        self.showned_notifications.iter_mut().collect();
+
+                    showned_values.sort_by(|(_, a), (_, b)| b.partial_cmp(a).unwrap());
+
+                    // NOTE: if all is shown, then do not add any commands
+                    if all_shown {
+                        let mut showned_values_iter = showned_values.iter_mut();
+
+                        for (nid, _unit) in showned_notifications_now {
+                            if let Some((_, onid)) = showned_values_iter.next() {
+                                (**onid) = *nid;
+                            }
+                        }
+                    } else {
+                        // NOTE: if not all shown, then do as the way before
+                        commands.push(Command::single(
+                            LaLaShellIdAction::new(
+                                iced::window::Id::MAIN,
+                                LalaShellAction::NewLayerShell((
+                                    NewLayerShellSettings {
+                                        size: Some((300, 130)),
+                                        exclusive_zone: None,
+                                        anchor: Anchor::Right | Anchor::Top,
+                                        layer: Layer::Top,
+                                        margin: Some((10, 10, 10, 10)),
+                                        keyboard_interactivity: KeyboardInteractivity::OnDemand,
+                                        use_last_output: true,
+                                    },
+                                    LaLaInfo::Notify(Box::new(NotifyUnitWidgetInfo {
+                                        to_delete: false,
+                                        counter: 0,
+                                        upper: 10,
+                                        inline_reply: String::new(),
+                                        unit: *notify.clone(),
+                                    })),
+                                )),
+                            )
+                            .into(),
+                        ));
+
+                        // NOTE: remove the new one
+                        let to_adjust_notification = &showned_notifications_now[1..];
+                        for ((_, unit), (id, _)) in
+                            to_adjust_notification.iter().zip(showned_values.iter())
+                        {
+                            commands.push(Command::single(
+                                LaLaShellIdAction::new(
+                                    **id,
+                                    LalaShellAction::MarginChange((unit.upper, 10, 10, 10)),
+                                )
+                                .into(),
+                            ));
+                        }
+                    }
+                }
 
                 if self.notifications.len() > MAX_SHOWN_NOTIFICATIONS_COUNT
                     && self.hidenid.is_none()
