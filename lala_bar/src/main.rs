@@ -429,7 +429,7 @@ impl LalaMusicBar {
                 .ok()
                 .and_then(|url| url.to_file_path().ok())
             {
-                // HACK: not render soem thing like "/tmp/.org.chromium.Chromium.hYbnBf"
+                // HACK: not render some thing like "/tmp/.org.chromium.Chromium.hYbnBf"
                 if art_url_str.ends_with("png")
                     || art_url_str.ends_with("jpeg")
                     || art_url_str.ends_with("jpg")
@@ -551,7 +551,7 @@ impl LalaMusicBar {
             .as_ref()
             .and_then(|data| {
                 let art_url_str = &data.metadata.mpris_arturl;
-                // HACK: not render soem thing like "/tmp/.org.chromium.Chromium.hYbnBf"
+                // HACK: not render some thing like "/tmp/.org.chromium.Chromium.hYbnBf"
                 if !art_url_str.ends_with("png")
                     && !art_url_str.ends_with("jpeg")
                     && !art_url_str.ends_with("jpg")

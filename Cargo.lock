@@ -1965,7 +1965,7 @@ dependencies = [
 
 [[package]]
 name = "lala-bar"
-version = "0.3.10"
+version = "0.3.11"
 dependencies = [
  "alsa",
  "anyhow",
