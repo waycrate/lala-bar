@@ -424,16 +424,23 @@ impl LalaMusicBar {
         let mut view_elements: Vec<Element<Message>> = vec![];
 
         if let Some(data) = &self.service_data {
-            if let Some(art_url) = url::Url::parse(&data.metadata.mpris_arturl)
+            let art_url_str = &data.metadata.mpris_arturl;
+            if let Some(art_url) = url::Url::parse(art_url_str)
                 .ok()
                 .and_then(|url| url.to_file_path().ok())
             {
-                view_elements.push(
-                    container(image(image::Handle::from_path(art_url)).width(Length::Fill))
-                        .padding(10)
-                        .width(Length::Fill)
-                        .into(),
-                );
+                // HACK: not render soem thing like "/tmp/.org.chromium.Chromium.hYbnBf"
+                if art_url_str.ends_with("png")
+                    || art_url_str.ends_with("jpeg")
+                    || art_url_str.ends_with("jpg")
+                {
+                    view_elements.push(
+                        container(image(image::Handle::from_path(art_url)).width(Length::Fill))
+                            .padding(10)
+                            .width(Length::Fill)
+                            .into(),
+                    );
+                }
                 view_elements.push(Space::with_height(10.).into());
                 view_elements.push(
                     container(
@@ -542,7 +549,17 @@ impl LalaMusicBar {
         let art_url = self
             .service_data
             .as_ref()
-            .and_then(|data| url::Url::parse(&data.metadata.mpris_arturl).ok())
+            .and_then(|data| {
+                let art_url_str = &data.metadata.mpris_arturl;
+                // HACK: not render soem thing like "/tmp/.org.chromium.Chromium.hYbnBf"
+                if !art_url_str.ends_with("png")
+                    && !art_url_str.ends_with("jpeg")
+                    && !art_url_str.ends_with("jpg")
+                {
+                    return None;
+                }
+                url::Url::parse(art_url_str).ok()
+            })
             .and_then(|url| url.to_file_path().ok());
         let title = container(
             text(title)
