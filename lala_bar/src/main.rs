@@ -1158,6 +1158,8 @@ impl MultiApplication for LalaMusicBar {
                 if let Some(id) = self.hidenid {
                     commands.push(Command::single(Action::Window(WindowAction::Close(id))));
                 }
+
+                commands.push(Command::perform(async {}, |_| Message::CheckOutput));
                 return Command::batch(commands);
             }
             Message::CloseErrorNotification(id) => {
