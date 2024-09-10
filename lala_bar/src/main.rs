@@ -229,9 +229,9 @@ impl LalaMusicBar {
 
         container(row![
             text(week),
-            Space::with_width(2.),
+            Space::with_width(5.),
             text(time_info),
-            Space::with_width(2.),
+            Space::with_width(5.),
             text(dateday)
         ])
         .center_x()
