@@ -29,7 +29,7 @@ use futures::channel::mpsc::{channel, Receiver, Sender};
 
 use tokio::sync::Mutex;
 
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
 
 mod aximer;
 mod launcher;
@@ -49,6 +49,23 @@ const LAUNCHER_SVG: &[u8] = include_bytes!("../asserts/launcher.svg");
 const RESET_SVG: &[u8] = include_bytes!("../asserts/reset.svg");
 
 const ERROR_SVG: &[u8] = include_bytes!("../asserts/error.svg");
+
+const GO_NEXT: &[u8] = include_bytes!("../asserts/go-next.svg");
+
+static GO_NEXT_HANDLE: LazyLock<svg::Handle> = LazyLock::new(|| svg::Handle::from_memory(GO_NEXT));
+
+const GO_PREVIOUS: &[u8] = include_bytes!("../asserts/go-previous.svg");
+
+static GO_PREVIOUS_HANDLE: LazyLock<svg::Handle> =
+    LazyLock::new(|| svg::Handle::from_memory(GO_PREVIOUS));
+
+const PLAY: &[u8] = include_bytes!("../asserts/play.svg");
+
+static PLAY_HANDLE: LazyLock<svg::Handle> = LazyLock::new(|| svg::Handle::from_memory(PLAY));
+
+const PAUSE: &[u8] = include_bytes!("../asserts/pause.svg");
+
+static PAUSE_HANDLE: LazyLock<svg::Handle> = LazyLock::new(|| svg::Handle::from_memory(PAUSE));
 
 const MAX_SHOWN_NOTIFICATIONS_COUNT: usize = 4;
 
@@ -619,46 +636,32 @@ impl LalaMusicBar {
         )
         .width(Length::Fill)
         .center_x();
-        let can_play = self.service_data.as_ref().is_some_and(|data| data.can_play);
-        let can_pause = self
-            .service_data
-            .as_ref()
-            .is_some_and(|data| data.can_pause);
-        let can_go_next = self
-            .service_data
-            .as_ref()
-            .is_some_and(|data| data.can_go_next);
-        let can_go_pre = self
-            .service_data
-            .as_ref()
-            .is_some_and(|data| data.can_go_previous);
-        let mut button_pre = button("<|");
+        let can_play = service_data.can_play;
+        let can_pause = service_data.can_pause;
+        let can_go_next = service_data.can_go_next;
+        let can_go_pre = service_data.can_go_previous;
+        let mut button_pre = button(svg(GO_PREVIOUS_HANDLE.clone()))
+            .width(30.)
+            .height(30.);
         if can_go_pre {
             button_pre = button_pre.on_press(Message::RequestPre);
         }
-        let mut button_next = button("|>");
+        let mut button_next = button(svg(GO_NEXT_HANDLE.clone())).width(30.).height(30.);
         if can_go_next {
             button_next = button_next.on_press(Message::RequestNext);
         }
-        let button_play = {
-            match self.service_data {
-                Some(ref data) => {
-                    if data.playback_status == "Playing" {
-                        let mut btn = button(text("Pause"));
-                        if can_pause {
-                            btn = btn.on_press(Message::RequestPause);
-                        }
-                        btn
-                    } else {
-                        let mut btn = button(text("Play"));
-                        if can_play {
-                            btn = btn.on_press(Message::RequestPlay);
-                        }
-                        btn
-                    }
-                }
-                None => button(text("Nothing todo")),
+        let button_play = if service_data.playback_status == "Playing" {
+            let mut btn = button(svg(PAUSE_HANDLE.clone())).width(30.).height(30.);
+            if can_pause {
+                btn = btn.on_press(Message::RequestPause);
             }
+            btn
+        } else {
+            let mut btn = button(svg(PLAY_HANDLE.clone())).width(30.).height(30.);
+            if can_play {
+                btn = btn.on_press(Message::RequestPlay);
+            }
+            btn
         };
         let buttons = container(row![button_pre, button_play, button_next].spacing(5))
             .width(Length::Fill)
