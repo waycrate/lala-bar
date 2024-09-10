@@ -41,6 +41,10 @@ jobs:
             - uses: dtolnay/rust-toolchain@stable
             - name: Install Deps
               run: sudo apt install -y libxkbcommon-dev libwayland-dev libalsaplayer-dev libasound2-dev
+            - name: Publish to crate
+              run: |
+                cargo publish -p iced_zbus_notification --token ${{ secrets.CRATES_TOKEN }}
+                cargo publish -p lala-bar --token ${{ secrets.CRATES_TOKEN }}
             - uses: softprops/action-gh-release@v2
               with:
                 draft: false
