@@ -541,26 +541,47 @@ async fn get_metadata() -> Option<ServiceInfo> {
 
 impl LalaMusicBar {
     fn main_view(&self) -> Element<Message> {
-        let title = self
-            .service_data
-            .as_ref()
-            .map(|data| data.metadata.xesam_title.as_str())
-            .unwrap_or("No Video here");
-        let art_url = self
-            .service_data
-            .as_ref()
-            .and_then(|data| {
-                let art_url_str = &data.metadata.mpris_arturl;
-                // HACK: not render some thing like "/tmp/.org.chromium.Chromium.hYbnBf"
-                if !art_url_str.ends_with("png")
-                    && !art_url_str.ends_with("jpeg")
-                    && !art_url_str.ends_with("jpg")
-                {
-                    return None;
-                }
-                url::Url::parse(art_url_str).ok()
-            })
-            .and_then(|url| url.to_file_path().ok());
+        let toggle_launcher = button(
+            svg(svg::Handle::from_memory(LAUNCHER_SVG))
+                .width(25.)
+                .height(25.),
+        )
+        .on_press(Message::ToggleLauncher);
+
+        let sound_slider = self.sound_slider();
+        let panel_text = if self.right_panel.is_some() { ">" } else { "<" };
+
+        let Some(service_data) = &self.service_data else {
+            let col = row![
+                toggle_launcher,
+                Space::with_width(Length::Fill),
+                container(sound_slider).width(700.),
+                Space::with_width(Length::Fixed(10.)),
+                button(text(panel_text)).on_press(Message::ToggleRightPanel)
+            ]
+            .spacing(10);
+            return container(col)
+                .width(Length::Fill)
+                .height(Length::Fill)
+                .center_x()
+                .center_y()
+                .into();
+        };
+        let title = &service_data.metadata.xesam_title;
+        let art_url = 'out: {
+            let art_url_str = &service_data.metadata.mpris_arturl;
+            if !art_url_str.ends_with("png")
+                && !art_url_str.ends_with("jpeg")
+                && !art_url_str.ends_with("jpg")
+            {
+                break 'out None;
+            }
+
+            url::Url::parse(art_url_str)
+                .ok()
+                .and_then(|url| url.to_file_path().ok())
+        };
+
         let title = container(
             text(title)
                 .size(20)
@@ -618,16 +639,9 @@ impl LalaMusicBar {
             .width(Length::Fill)
             .center_x();
 
-        let sound_slider = self.sound_slider();
-        let panel_text = if self.right_panel.is_some() { ">" } else { "<" };
         let col = if let Some(art_url) = art_url {
             row![
-                button(
-                    svg(svg::Handle::from_memory(LAUNCHER_SVG))
-                        .width(25.)
-                        .height(25.)
-                )
-                .on_press(Message::ToggleLauncher),
+                toggle_launcher,
                 Space::with_width(Length::Fixed(5.)),
                 image(image::Handle::from_path(art_url)),
                 title,
@@ -640,12 +654,7 @@ impl LalaMusicBar {
             .spacing(10)
         } else {
             row![
-                button(
-                    svg(svg::Handle::from_memory(LAUNCHER_SVG))
-                        .width(25.)
-                        .height(25.)
-                )
-                .on_press(Message::ToggleLauncher),
+                toggle_launcher,
                 title,
                 Space::with_width(Length::Fill),
                 buttons,
