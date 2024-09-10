@@ -41,3 +41,4 @@ xdg = "2.5.2"
 url.workspace = true
 futures.workspace = true
 zbus_notification.workspace = true
+chrono = "0.4.38"

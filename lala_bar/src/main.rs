@@ -18,6 +18,7 @@ use zbus_notification::{
     NOTIFICATION_SERVICE_PATH,
 };
 
+use chrono::prelude::*;
 use iced_layershell::reexport::{Anchor, KeyboardInteractivity, Layer, NewLayerShellSettings};
 use iced_layershell::settings::{LayerShellSettings, Settings};
 use iced_layershell::MultiApplication;
@@ -197,9 +198,30 @@ struct LalaMusicBar {
     sender: Sender<NotifyCommand>,
     receiver: Arc<Mutex<Receiver<NotifyCommand>>>,
     quite_mode: bool,
+
+    datetime: DateTime<Utc>,
 }
 
 impl LalaMusicBar {
+    fn date_widget(&self) -> Element<Message> {
+        let date = self.datetime.date_naive();
+        let dateday = date.format("%m-%d").to_string();
+        let week = date.format("%A").to_string();
+        let time = self.datetime.time();
+        let time_info = time.format("%H:%M").to_string();
+
+        container(row![
+            text(week),
+            Space::with_width(2.),
+            text(time_info),
+            Space::with_width(2.),
+            text(dateday)
+        ])
+        .center_x()
+        .center_y()
+        .height(Length::Fill)
+        .into()
+    }
     fn update_hidden_notification(&mut self) {
         let mut hiddened: Vec<NotifyUnitWidgetInfo> = self
             .notifications
@@ -491,6 +513,7 @@ enum Message {
     RequestPause,
     RequestPlay,
     RequestDBusInfoUpdate,
+    RequestUpdateTime,
     UpdateBalance,
     DBusInfoUpdate(Option<ServiceInfo>),
     BalanceChanged(u8),
@@ -556,7 +579,9 @@ impl LalaMusicBar {
                 toggle_launcher,
                 Space::with_width(Length::Fill),
                 container(sound_slider).width(700.),
-                Space::with_width(Length::Fixed(10.)),
+                Space::with_width(Length::Fixed(3.)),
+                self.date_widget(),
+                Space::with_width(Length::Fixed(3.)),
                 button(text(panel_text)).on_press(Message::ToggleRightPanel)
             ]
             .spacing(10);
@@ -648,7 +673,9 @@ impl LalaMusicBar {
                 Space::with_width(Length::Fill),
                 buttons,
                 sound_slider,
-                Space::with_width(Length::Fixed(10.)),
+                Space::with_width(Length::Fixed(3.)),
+                self.date_widget(),
+                Space::with_width(Length::Fixed(3.)),
                 button(text(panel_text)).on_press(Message::ToggleRightPanel)
             ]
             .spacing(10)
@@ -659,7 +686,9 @@ impl LalaMusicBar {
                 Space::with_width(Length::Fill),
                 buttons,
                 sound_slider,
-                Space::with_width(Length::Fixed(10.)),
+                Space::with_width(Length::Fixed(3.)),
+                self.date_widget(),
+                Space::with_width(Length::Fixed(3.)),
                 button(text(panel_text)).on_press(Message::ToggleRightPanel)
             ]
             .spacing(10)
@@ -700,6 +729,7 @@ impl MultiApplication for LalaMusicBar {
                 sender,
                 receiver: Arc::new(Mutex::new(receiver)),
                 quite_mode: false,
+                datetime: Utc::now(),
             },
             Command::perform(get_metadata_initial(), Message::DBusInfoUpdate),
         )
@@ -1174,6 +1204,9 @@ impl MultiApplication for LalaMusicBar {
             Message::CloseErrorNotification(id) => {
                 return Command::single(Action::Window(WindowAction::Close(id)));
             }
+            Message::RequestUpdateTime => {
+                self.datetime = Utc::now();
+            }
         }
         Command::none()
     }
@@ -1241,6 +1274,8 @@ impl MultiApplication for LalaMusicBar {
         iced::subscription::Subscription::batch([
             iced::time::every(std::time::Duration::from_secs(1))
                 .map(|_| Message::RequestDBusInfoUpdate),
+            iced::time::every(std::time::Duration::from_secs(60))
+                .map(|_| Message::RequestUpdateTime),
             iced::time::every(std::time::Duration::from_secs(5)).map(|_| Message::UpdateBalance),
             iced::event::listen()
                 .map(|event| Message::LauncherInfo(LaunchMessage::IcedEvent(event))),
