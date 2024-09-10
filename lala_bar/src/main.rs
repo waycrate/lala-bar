@@ -11,12 +11,12 @@ use iced::{Command, Element, Length, Theme};
 use iced_layershell::actions::{
     LayershellCustomActionsWithIdAndInfo, LayershellCustomActionsWithInfo,
 };
-use launcher::{LaunchMessage, Launcher};
-use zbus_mpirs::ServiceInfo;
 use iced_zbus_notification::{
     start_connection, ImageInfo, LaLaMako, NotifyMessage, NotifyUnit, VersionInfo, DEFAULT_ACTION,
     NOTIFICATION_SERVICE_PATH,
 };
+use launcher::{LaunchMessage, Launcher};
+use zbus_mpirs::ServiceInfo;
 
 use chrono::prelude::*;
 use iced_layershell::reexport::{Anchor, KeyboardInteractivity, Layer, NewLayerShellSettings};
