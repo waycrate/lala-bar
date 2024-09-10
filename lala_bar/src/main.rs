@@ -216,7 +216,7 @@ struct LalaMusicBar {
     receiver: Arc<Mutex<Receiver<NotifyCommand>>>,
     quite_mode: bool,
 
-    datetime: DateTime<Utc>,
+    datetime: DateTime<Local>,
 }
 
 impl LalaMusicBar {
@@ -732,7 +732,7 @@ impl MultiApplication for LalaMusicBar {
                 sender,
                 receiver: Arc::new(Mutex::new(receiver)),
                 quite_mode: false,
-                datetime: Utc::now(),
+                datetime: Local::now(),
             },
             Command::perform(get_metadata_initial(), Message::DBusInfoUpdate),
         )
@@ -1208,7 +1208,7 @@ impl MultiApplication for LalaMusicBar {
                 return Command::single(Action::Window(WindowAction::Close(id)));
             }
             Message::RequestUpdateTime => {
-                self.datetime = Utc::now();
+                self.datetime = Local::now();
             }
         }
         Command::none()
