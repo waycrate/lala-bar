@@ -1843,6 +1843,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "iced_zbus_notification"
+version = "0.3.11"
+dependencies = [
+ "futures",
+ "futures-util",
+ "glob",
+ "serde",
+ "url",
+ "zbus",
+]
+
+[[package]]
 name = "icrate"
 version = "0.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2021,6 +2033,7 @@ dependencies = [
  "iced_futures",
  "iced_layershell",
  "iced_runtime",
+ "iced_zbus_notification",
  "regex",
  "serde",
  "tokio",
@@ -2029,7 +2042,6 @@ dependencies = [
  "url",
  "xdg",
  "zbus",
- "zbus_notification",
 ]
 
 [[package]]
@@ -4822,18 +4834,6 @@ dependencies = [
  "serde",
  "static_assertions",
  "zvariant",
-]
-
-[[package]]
-name = "zbus_notification"
-version = "0.3.6"
-dependencies = [
- "futures",
- "futures-util",
- "glob",
- "serde",
- "url",
- "zbus",
 ]
 
 [[package]]

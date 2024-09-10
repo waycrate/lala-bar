@@ -13,7 +13,7 @@ use iced_layershell::actions::{
 };
 use launcher::{LaunchMessage, Launcher};
 use zbus_mpirs::ServiceInfo;
-use zbus_notification::{
+use iced_zbus_notification::{
     start_connection, ImageInfo, LaLaMako, NotifyMessage, NotifyUnit, VersionInfo, DEFAULT_ACTION,
     NOTIFICATION_SERVICE_PATH,
 };

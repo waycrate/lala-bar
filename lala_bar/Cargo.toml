@@ -40,5 +40,5 @@ regex = "1.10.5"
 xdg = "2.5.2"
 url.workspace = true
 futures.workspace = true
-zbus_notification.workspace = true
+iced_zbus_notification.workspace = true
 chrono = "0.4.38"
