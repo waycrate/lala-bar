@@ -6,7 +6,7 @@ use iced::widget::{
     button, checkbox, column, container, image, row, scrollable, slider, svg, text, text_input,
     Space,
 };
-use iced::{executor, Font};
+use iced::{executor, Alignment, Font};
 use iced::{Element, Length, Task as Command, Theme};
 use iced_layershell::actions::{
     LayershellCustomActionsWithIdAndInfo, LayershellCustomActionsWithInfo,
@@ -130,8 +130,16 @@ impl NotifyUnitWidgetInfo {
             .height(Length::Fill)
             .on_press(Message::RemoveNotify(self.unit.id))
             .into(),
-            Some(ImageInfo::Data { pixels, .. }) => button(row![
-                image(image::Handle::from_bytes(pixels)),
+            Some(ImageInfo::Data {
+                pixels,
+                width,
+                height,
+            }) => button(row![
+                image(image::Handle::from_rgba(
+                    width as u32,
+                    height as u32,
+                    pixels
+                )),
                 Space::with_width(4.),
                 column![
                     text(notify.summery.clone())
@@ -410,6 +418,7 @@ impl LalaMusicBar {
             Space::with_width(Length::Fixed(1.)),
             button(">").on_press(Message::SliderIndexNext)
         ]
+        .align_y(Alignment::Center)
         .into()
     }
     fn left_bar(&self) -> Element<Message> {
@@ -422,6 +431,7 @@ impl LalaMusicBar {
             Space::with_width(Length::Fixed(10.)),
             button(">").on_press(Message::SliderIndexNext)
         ]
+        .align_y(Alignment::Center)
         .into()
     }
     fn right_bar(&self) -> Element<Message> {
@@ -434,6 +444,7 @@ impl LalaMusicBar {
             Space::with_width(Length::Fixed(10.)),
             button(">").on_press(Message::SliderIndexNext)
         ]
+        .align_y(Alignment::Center)
         .into()
     }
 
