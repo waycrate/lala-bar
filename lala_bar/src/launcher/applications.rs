@@ -7,7 +7,7 @@ use gio::{AppLaunchContext, DesktopAppInfo};
 
 use gio::prelude::*;
 use iced::widget::{button, column, image, row, svg, text};
-use iced::{theme, Pixels};
+use iced::Pixels;
 use iced::{Element, Length};
 
 use super::Message;
@@ -85,9 +85,9 @@ impl App {
         .width(Length::Fill)
         .height(Length::Fixed(85.))
         .style(if selected {
-            theme::Button::Primary
+            button::primary
         } else {
-            theme::Button::Secondary
+            button::secondary
         })
         .into()
     }

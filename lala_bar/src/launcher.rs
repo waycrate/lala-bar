@@ -2,9 +2,9 @@ mod applications;
 
 use applications::{all_apps, App};
 use iced::widget::{column, scrollable, text_input};
-use iced::{Command, Element, Event, Length};
-use iced_runtime::command::Action;
+use iced::{Element, Event, Length, Task as Command};
 use iced_runtime::window::Action as WindowAction;
+use iced_runtime::Action;
 
 use super::Message;
 
@@ -66,7 +66,7 @@ impl Launcher {
                 if let Some((_, (_, app))) = index {
                     app.launch();
                     self.should_delete = true;
-                    Command::single(Action::Window(WindowAction::Close(id)))
+                    iced_runtime::task::effect(Action::Window(WindowAction::Close(id)))
                 } else {
                     Command::none()
                 }
@@ -79,7 +79,7 @@ impl Launcher {
             LaunchMessage::Launch(index) => {
                 self.apps[index].launch();
                 self.should_delete = true;
-                Command::single(Action::Window(WindowAction::Close(id)))
+                iced_runtime::task::effect(Action::Window(WindowAction::Close(id)))
             }
             LaunchMessage::IcedEvent(event) => {
                 let mut len = self.apps.len();
@@ -113,7 +113,9 @@ impl Launcher {
                         }
                         keyboard::Key::Named(Named::Escape) => {
                             self.should_delete = true;
-                            return Command::single(Action::Window(WindowAction::Close(id)));
+                            return iced_runtime::task::effect(Action::Window(
+                                WindowAction::Close(id),
+                            ));
                         }
                         _ => {}
                     }
