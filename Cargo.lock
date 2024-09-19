@@ -1972,7 +1972,7 @@ dependencies = [
 
 [[package]]
 name = "iced_zbus_notification"
-version = "0.3.15"
+version = "0.3.16"
 dependencies = [
  "futures",
  "futures-util",
@@ -2138,7 +2138,7 @@ dependencies = [
 
 [[package]]
 name = "lala-bar"
-version = "0.3.15"
+version = "0.3.16"
 dependencies = [
  "alsa",
  "anyhow",
