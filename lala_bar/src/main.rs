@@ -973,7 +973,6 @@ impl MultiApplication for LalaMusicBar {
             Message::ToggleRightPanel => {
                 if self.right_panel.is_some() {
                     if let Some(id) = self.right_panel {
-                        self.right_panel.take();
                         return iced_runtime::task::effect(Action::Window(WindowAction::Close(id)));
                     }
                     return Command::none();
