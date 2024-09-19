@@ -683,24 +683,30 @@ impl LalaMusicBar {
         let can_pause = service_data.can_pause;
         let can_go_next = service_data.can_go_next;
         let can_go_pre = service_data.can_go_previous;
-        let mut button_pre = button(svg(GO_PREVIOUS_HANDLE.clone()))
+        let mut button_pre = button(svg(GO_PREVIOUS_HANDLE.clone()).width(25.).height(25.))
             .width(30.)
             .height(30.);
         if can_go_pre {
             button_pre = button_pre.on_press(Message::RequestPre);
         }
-        let mut button_next = button(svg(GO_NEXT_HANDLE.clone())).width(30.).height(30.);
+        let mut button_next = button(svg(GO_NEXT_HANDLE.clone()).width(25.).height(25.))
+            .width(30.)
+            .height(30.);
         if can_go_next {
             button_next = button_next.on_press(Message::RequestNext);
         }
         let button_play = if service_data.playback_status == "Playing" {
-            let mut btn = button(svg(PAUSE_HANDLE.clone())).width(30.).height(30.);
+            let mut btn = button(svg(PAUSE_HANDLE.clone()).width(25.).height(25.))
+                .width(30.)
+                .height(30.);
             if can_pause {
                 btn = btn.on_press(Message::RequestPause);
             }
             btn
         } else {
-            let mut btn = button(svg(PLAY_HANDLE.clone())).width(30.).height(30.);
+            let mut btn = button(svg(PLAY_HANDLE.clone()).width(25.).height(25.))
+                .width(30.)
+                .height(30.);
             if can_play {
                 btn = btn.on_press(Message::RequestPlay);
             }
