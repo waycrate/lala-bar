@@ -484,7 +484,10 @@ impl LalaMusicBar {
                                 weight: iced::font::Weight::Bold,
                                 ..Default::default()
                             })
-                            .shaping(text::Shaping::Advanced), //.style(iced::theme::Text::Color(iced::Color::WHITE)),
+                            .shaping(text::Shaping::Advanced)
+                            .style(|_theme| text::Style {
+                                color: Some(iced::Color::WHITE),
+                            }),
                     )
                     .width(Length::Fill)
                     .center_x(Length::Fill)
@@ -658,7 +661,10 @@ impl LalaMusicBar {
                     weight: iced::font::Weight::Bold,
                     ..Default::default()
                 })
-                .shaping(text::Shaping::Advanced), //.style(iced::Text::Color(iced::Color::WHITE)),
+                .shaping(text::Shaping::Advanced)
+                .style(|_theme| text::Style {
+                    color: Some(iced::Color::WHITE),
+                }),
         )
         .width(Length::Fill)
         .center_x(Length::Fill);
