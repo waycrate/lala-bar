@@ -13,7 +13,7 @@ readme = "README.md"
 [workspace.dependencies]
 iced_zbus_notification = { version = "0.3.14", path = "iced_zbus_notification" }
 futures = "0.3.30"
-serde = { version = "1.0.204", features = ["derive"] }
+serde = { version = "1.0.210", features = ["derive"] }
 url = "2.5.2"
 zbus = { version = "4.4.0", default-features = false, features = ["tokio"] }
 futures-util = "0.3.30"
