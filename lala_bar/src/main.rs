@@ -207,7 +207,7 @@ struct LalaMusicBar {
     bar_index: SliderIndex,
     launcher: Option<launcher::Launcher>,
     launcherid: Option<iced::window::Id>,
-    hidenid: Option<iced::window::Id>,
+    hiddenid: Option<iced::window::Id>,
     right_panel: Option<iced::window::Id>,
     notifications: HashMap<u32, NotifyUnitWidgetInfo>,
     showned_notifications: HashMap<iced::window::Id, u32>,
@@ -381,7 +381,7 @@ impl LalaMusicBar {
 
         // NOTE: we should delete to be deleted notification
         if notifications_count <= MAX_SHOWN_NOTIFICATIONS_COUNT {
-            if let Some(id) = self.hidenid {
+            if let Some(id) = self.hiddenid {
                 commands.push(iced_runtime::task::effect(Action::Window(
                     WindowAction::Close(id),
                 )));
@@ -775,7 +775,7 @@ impl MultiApplication for LalaMusicBar {
                 launcher: None,
                 launcherid: None,
                 right_panel: None,
-                hidenid: None,
+                hiddenid: None,
                 notifications: HashMap::new(),
                 showned_notifications: HashMap::new(),
                 cached_notifications: HashMap::new(),
@@ -798,7 +798,7 @@ impl MultiApplication for LalaMusicBar {
     fn id_info(&self, id: iced::window::Id) -> Option<Self::WindowInfo> {
         if self.launcherid.is_some_and(|tid| tid == id) {
             Some(LaLaInfo::Launcher)
-        } else if self.hidenid.is_some_and(|tid| tid == id) {
+        } else if self.hiddenid.is_some_and(|tid| tid == id) {
             Some(LaLaInfo::HiddenInfo)
         } else if self.right_panel.is_some_and(|tid| tid == id) {
             Some(LaLaInfo::RightPanel)
@@ -826,7 +826,7 @@ impl MultiApplication for LalaMusicBar {
                 self.showned_notifications.insert(id, notify.unit.id);
             }
             LaLaInfo::HiddenInfo => {
-                self.hidenid = Some(id);
+                self.hiddenid = Some(id);
             }
             LaLaInfo::RightPanel => self.right_panel = Some(id),
             _ => unreachable!(),
@@ -841,8 +841,8 @@ impl MultiApplication for LalaMusicBar {
         if self.right_panel.is_some_and(|lid| lid == id) {
             self.right_panel.take();
         }
-        if self.hidenid.is_some_and(|lid| lid == id) {
-            self.hidenid.take();
+        if self.hiddenid.is_some_and(|lid| lid == id) {
+            self.hiddenid.take();
         }
         'clear_nid: {
             if let Some(nid) = self.showned_notifications.remove(&id) {
@@ -1082,7 +1082,7 @@ impl MultiApplication for LalaMusicBar {
                 }
 
                 if self.notifications.len() > MAX_SHOWN_NOTIFICATIONS_COUNT
-                    && self.hidenid.is_none()
+                    && self.hiddenid.is_none()
                     && !self.quite_mode
                 {
                     commands.push(Command::done(Message::NewLayerShell {
@@ -1111,7 +1111,7 @@ impl MultiApplication for LalaMusicBar {
                             WindowAction::Close(*id),
                         )));
                     }
-                    if let Some(extra_id) = self.hidenid {
+                    if let Some(extra_id) = self.hiddenid {
                         commands.push(iced_runtime::task::effect(Action::Window(
                             WindowAction::Close(extra_id),
                         )));
@@ -1136,7 +1136,7 @@ impl MultiApplication for LalaMusicBar {
                         }));
                     }
                     if self.notifications.len() > MAX_SHOWN_NOTIFICATIONS_COUNT
-                        && self.hidenid.is_none()
+                        && self.hiddenid.is_none()
                     {
                         commands.push(Command::done(Message::NewLayerShell {
                             settings: NewLayerShellSettings {
@@ -1210,7 +1210,7 @@ impl MultiApplication for LalaMusicBar {
                     .collect::<Vec<_>>();
                 self.notifications.clear();
 
-                if let Some(id) = self.hidenid {
+                if let Some(id) = self.hiddenid {
                     commands.push(iced_runtime::task::effect(Action::Window(
                         WindowAction::Close(id),
                     )));
