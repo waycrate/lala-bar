@@ -1215,7 +1215,6 @@ impl MultiApplication for LalaMusicBar {
                     .keys()
                     .map(|id| iced_runtime::task::effect(Action::Window(WindowAction::Close(*id))))
                     .collect::<Vec<_>>();
-                self.notifications.clear();
 
                 if let Some(id) = self.hiddenid {
                     commands.push(iced_runtime::task::effect(Action::Window(
@@ -1223,6 +1222,14 @@ impl MultiApplication for LalaMusicBar {
                     )));
                 }
 
+                for (id, nid) in self.showned_notifications.iter() {
+                    if let Some(info) = self.notifications.get(nid) {
+                        self.cached_notifications.insert(*id, info.clone());
+                    }
+                }
+
+                self.notifications.clear();
+                self.update_hidden_notification();
                 commands.push(Command::perform(async {}, |_| Message::CheckOutput));
                 return Command::batch(commands);
             }
