@@ -208,6 +208,7 @@ struct LalaMusicBar {
     launcher: Option<launcher::Launcher>,
     launcherid: Option<iced::window::Id>,
     hiddenid: Option<iced::window::Id>,
+    hiddenid_lock: bool,
     right_panel: Option<iced::window::Id>,
     notifications: HashMap<u32, NotifyUnitWidgetInfo>,
     showned_notifications: HashMap<iced::window::Id, u32>,
@@ -776,6 +777,7 @@ impl MultiApplication for LalaMusicBar {
                 launcherid: None,
                 right_panel: None,
                 hiddenid: None,
+                hiddenid_lock: false,
                 notifications: HashMap::new(),
                 showned_notifications: HashMap::new(),
                 cached_notifications: HashMap::new(),
@@ -826,6 +828,7 @@ impl MultiApplication for LalaMusicBar {
                 self.showned_notifications.insert(id, notify.unit.id);
             }
             LaLaInfo::HiddenInfo => {
+                self.hiddenid_lock = false;
                 self.hiddenid = Some(id);
             }
             LaLaInfo::RightPanel => self.right_panel = Some(id),
@@ -1081,10 +1084,13 @@ impl MultiApplication for LalaMusicBar {
                     }
                 }
 
-                if self.notifications.len() > MAX_SHOWN_NOTIFICATIONS_COUNT
+                self.update_hidden_notification();
+
+                if !self.hidden_notification().is_empty()
                     && self.hiddenid.is_none()
-                    && !self.quite_mode
+                    && !self.hiddenid_lock
                 {
+                    self.hiddenid_lock = true;
                     commands.push(Command::done(Message::NewLayerShell {
                         settings: NewLayerShellSettings {
                             size: Some((300, 25)),
@@ -1098,7 +1104,7 @@ impl MultiApplication for LalaMusicBar {
                         info: LaLaInfo::HiddenInfo,
                     }));
                 }
-                self.update_hidden_notification();
+
                 return Command::batch(commands);
             }
 
