@@ -1290,8 +1290,6 @@ impl MultiApplication for LalaMusicBar {
     }
 
     fn subscription(&self) -> iced::Subscription<Self::Message> {
-        //let rv = self.receiver.clone();
-
         iced::Subscription::batch([
             iced::time::every(std::time::Duration::from_secs(1))
                 .map(|_| Message::RequestDBusInfoUpdate),
