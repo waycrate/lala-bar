@@ -1974,6 +1974,7 @@ dependencies = [
 name = "iced_zbus_notification"
 version = "0.3.16"
 dependencies = [
+ "async-trait",
  "futures",
  "futures-util",
  "glob",
@@ -2142,6 +2143,7 @@ version = "0.3.16"
 dependencies = [
  "alsa",
  "anyhow",
+ "async-trait",
  "chrono",
  "env_logger",
  "futures",

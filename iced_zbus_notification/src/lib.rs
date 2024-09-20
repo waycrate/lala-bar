@@ -8,13 +8,13 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
+use async_trait::async_trait;
 use glob::glob;
 use serde::{Deserialize, Serialize};
 use zbus::{interface, object_server::SignalContext, zvariant::OwnedValue};
 
-use std::sync::{Arc, LazyLock, RwLock};
-
 use futures::channel::mpsc::Sender;
+use std::sync::{Arc, LazyLock, RwLock};
 use zbus::ConnectionBuilder;
 
 use zbus::zvariant::{SerializeDict, Type};
@@ -245,11 +245,34 @@ pub struct VersionInfo {
     pub spec_version: String,
 }
 
+/// This trait is used to control the action of the message send
+/// Like you can add some delay in this trait, to control the action of the daemon
+#[async_trait]
+pub trait MessageSender<T: Send> {
+    async fn try_send(&mut self, message: T) -> Option<()>;
+}
+
+/// it is a default message sender, just contains a [`Sender`]
+pub struct MessageSenderDefault<T: Send>(Sender<T>);
+
+impl<T: Send> MessageSenderDefault<T> {
+    /// You should pass a sender to this MessageSenderDefault
+    pub fn new(sender: Sender<T>) -> Self {
+        MessageSenderDefault(sender)
+    }
+}
+
+#[async_trait]
+impl<T: Send> MessageSender<T> for MessageSenderDefault<T> {
+    async fn try_send(&mut self, message: T) -> Option<()> {
+        self.0.try_send(message).ok()
+    }
+}
+
 /// Do not care this name. it is the Interface name of `org.freedesktop.Notifications`
-#[derive(Debug)]
 pub struct LaLaMako<T: From<NotifyMessage> + Send> {
     capabilities: Vec<String>,
-    sender: Sender<T>,
+    sender: Box<dyn MessageSender<T> + Send + Sync>,
     version: VersionInfo,
 }
 
@@ -266,7 +289,7 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
             .ok();
         self.sender
             .try_send(NotifyMessage::UnitRemove(id).into())
-            .ok();
+            .await;
         Ok(())
     }
 
@@ -293,7 +316,7 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
 
     // Notify method
     #[allow(clippy::too_many_arguments)]
-    fn notify(
+    async fn notify(
         &mut self,
         app_name: &str,
         replaced_id: u32,
@@ -342,7 +365,7 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
                 }))
                 .into(),
             )
-            .ok();
+            .await;
         Ok(id.0)
     }
 
@@ -388,8 +411,11 @@ pub const NOTIFICATION_CLOSED: &str = "notification_closed";
 pub const DEFAULT_ACTION: &str = "default";
 
 /// start a connection
-pub async fn start_connection<T: From<NotifyMessage> + Send + 'static>(
-    sender: Sender<T>,
+pub async fn start_connection<
+    T: From<NotifyMessage> + Send + 'static,
+    MsgSender: MessageSender<T> + 'static + Send + Sync,
+>(
+    sender: MsgSender,
     capabilities: Vec<String>,
     version: VersionInfo,
 ) -> Result<zbus::Connection, zbus::Error> {
@@ -398,7 +424,7 @@ pub async fn start_connection<T: From<NotifyMessage> + Send + 'static>(
         .serve_at(
             "/org/freedesktop/Notifications",
             LaLaMako {
-                sender,
+                sender: Box::new(sender),
                 capabilities,
                 version,
             },

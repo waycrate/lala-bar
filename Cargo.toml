@@ -17,3 +17,4 @@ serde = { version = "1.0.210", features = ["derive"] }
 url = "2.5.2"
 zbus = { version = "4.4.0", default-features = false, features = ["tokio"] }
 futures-util = "0.3.30"
+async-trait = "0.1.82"

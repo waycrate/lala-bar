@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use async_trait::async_trait;
 use futures::future::pending;
 use futures::StreamExt;
 use iced::widget::{
@@ -12,8 +13,8 @@ use iced_layershell::actions::{
     LayershellCustomActionsWithIdAndInfo, LayershellCustomActionsWithInfo,
 };
 use iced_zbus_notification::{
-    start_connection, ImageInfo, LaLaMako, NotifyMessage, NotifyUnit, VersionInfo, DEFAULT_ACTION,
-    NOTIFICATION_SERVICE_PATH,
+    start_connection, ImageInfo, LaLaMako, MessageSender, NotifyMessage, NotifyUnit, VersionInfo,
+    DEFAULT_ACTION, NOTIFICATION_SERVICE_PATH,
 };
 use launcher::{LaunchMessage, Launcher};
 use zbus_mpirs::ServiceInfo;
@@ -1312,7 +1313,7 @@ impl MultiApplication for LalaMusicBar {
                     // Send the sender back to the application
                     output.send(Message::Ready(sender)).await.ok();
                     let Ok(connection) = start_connection(
-                        output,
+                        IcedMessageSender(output),
                         vec![
                             "body".to_owned(),
                             "body-markup".to_owned(),
@@ -1384,5 +1385,19 @@ impl MultiApplication for LalaMusicBar {
 
     fn theme(&self) -> Self::Theme {
         Theme::TokyoNight
+    }
+}
+
+struct IcedMessageSender(Sender<Message>);
+
+#[async_trait]
+impl MessageSender<Message> for IcedMessageSender {
+    async fn try_send(&mut self, message: Message) -> Option<()> {
+        if matches!(message, Message::Notify(NotifyMessage::UnitAdd(_))) {
+            // HACK: let message receiver to be a little late, for the notify widget to be ready
+            tokio::time::sleep(std::time::Duration::from_secs_f64(0.05)).await;
+        }
+
+        self.0.try_send(message).ok()
     }
 }
