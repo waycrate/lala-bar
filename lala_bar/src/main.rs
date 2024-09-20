@@ -1088,6 +1088,7 @@ impl MultiApplication for LalaMusicBar {
                 self.update_hidden_notification();
 
                 if !self.hidden_notification().is_empty()
+                    && !self.quite_mode
                     && self.hiddenid.is_none()
                     && !self.hiddenid_lock
                 {
