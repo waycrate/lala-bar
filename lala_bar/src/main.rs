@@ -1225,6 +1225,9 @@ impl MultiApplication for LalaMusicBar {
                 self.datetime = Local::now();
             }
             Message::Ready(sender) => self.sender = Some(sender),
+            Message::LinkClicked(link) => {
+                let _ = open::that_in_background(link.to_string());
+            }
             _ => unreachable!(),
         }
         Command::none()
