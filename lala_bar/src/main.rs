@@ -9,9 +9,6 @@ use iced::widget::{
 };
 use iced::{executor, Alignment, Font};
 use iced::{Element, Length, Task as Command, Theme};
-use iced_layershell::actions::{
-    LayershellCustomActionsWithIdAndInfo, LayershellCustomActionsWithInfo,
-};
 use iced_zbus_notification::{
     start_connection, ImageInfo, LaLaMako, MessageSender, NotifyMessage, NotifyUnit, VersionInfo,
     DEFAULT_ACTION, NOTIFICATION_SERVICE_PATH,
@@ -22,6 +19,7 @@ use zbus_mpirs::ServiceInfo;
 use chrono::prelude::*;
 use iced_layershell::reexport::{Anchor, KeyboardInteractivity, Layer, NewLayerShellSettings};
 use iced_layershell::settings::{LayerShellSettings, Settings};
+use iced_layershell::to_layer_message;
 use iced_layershell::MultiApplication;
 use iced_runtime::window::Action as WindowAction;
 use iced_runtime::Action;
@@ -33,9 +31,6 @@ use std::sync::LazyLock;
 mod aximer;
 mod launcher;
 mod zbus_mpirs;
-
-type LaLaShellIdAction = LayershellCustomActionsWithIdAndInfo<LaLaInfo>;
-type LalaShellAction = LayershellCustomActionsWithInfo<LaLaInfo>;
 
 const BEGINNING_UP_MARGIN: i32 = 10;
 
@@ -533,7 +528,7 @@ impl LalaMusicBar {
     }
 }
 
-#[derive(Debug, Clone)]
+#[to_layer_message(multi, info_name = "LaLaInfo", derives = "Debug Clone")]
 enum Message {
     RequestPre,
     RequestNext,
@@ -560,38 +555,6 @@ enum Message {
     QuiteMode(bool),
     CloseErrorNotification(iced::window::Id),
     Ready(Sender<NotifyCommand>),
-
-    // LayerShellInfo
-    NewLayerShell {
-        info: LaLaInfo,
-        settings: NewLayerShellSettings,
-    },
-    ForgetLastOutput,
-    MarginChange {
-        id: iced::window::Id,
-        margin: (i32, i32, i32, i32),
-    },
-}
-
-impl TryInto<LaLaShellIdAction> for Message {
-    type Error = Self;
-    fn try_into(self) -> Result<LaLaShellIdAction, Self::Error> {
-        match self {
-            Self::NewLayerShell { info, settings } => Ok(LaLaShellIdAction::new(
-                None,
-                LalaShellAction::NewLayerShell((settings, info)),
-            )),
-            Self::ForgetLastOutput => Ok(LaLaShellIdAction::new(
-                None,
-                LalaShellAction::ForgetLastOutput,
-            )),
-            Self::MarginChange { id, margin } => Ok(LaLaShellIdAction::new(
-                Some(id),
-                LalaShellAction::MarginChange(margin),
-            )),
-            _ => Err(self),
-        }
-    }
 }
 
 impl From<NotifyMessage> for Message {

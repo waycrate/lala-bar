@@ -1853,15 +1853,16 @@ dependencies = [
 
 [[package]]
 name = "iced_layershell"
-version = "0.7.0-beta1"
+version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a07e6a4645814ecc8ad2506f8b489ed5472ba28b3903006512b90f6bd74d5ec3"
+checksum = "1f371f8ce2942df542270905c5e825f242bcae1bb9dec5cf88211eb559654b1f"
 dependencies = [
  "futures",
  "iced",
  "iced_core",
  "iced_futures",
  "iced_graphics",
+ "iced_layershell_macros",
  "iced_renderer",
  "iced_runtime",
  "layershellev",
@@ -1869,6 +1870,17 @@ dependencies = [
  "thiserror",
  "tracing",
  "window_clipboard",
+]
+
+[[package]]
+name = "iced_layershell_macros"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3d4a0eeab61c0ec4c7e87883fc89fe0b797aa1941da30e8925ebe12e01da6923"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.77",
 ]
 
 [[package]]
@@ -1972,7 +1984,7 @@ dependencies = [
 
 [[package]]
 name = "iced_zbus_notification"
-version = "0.3.16"
+version = "0.4.0"
 dependencies = [
  "async-trait",
  "futures",
@@ -2139,7 +2151,7 @@ dependencies = [
 
 [[package]]
 name = "lala-bar"
-version = "0.3.16"
+version = "0.4.0"
 dependencies = [
  "alsa",
  "anyhow",
@@ -2166,9 +2178,9 @@ dependencies = [
 
 [[package]]
 name = "layershellev"
-version = "0.7.0-beta1"
+version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5455f239975bad4ad356129ebe51ca5d3803b82f724ba71ea8753817bbf4b2a0"
+checksum = "413fc578a0f06874c6bd9bf05a971397036266ee5441f6723e8b2b6b9f619eff"
 dependencies = [
  "bitflags 2.6.0",
  "log",
@@ -4213,9 +4225,9 @@ dependencies = [
 
 [[package]]
 name = "waycrate_xkbkeycode"
-version = "0.7.0-beta1"
+version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "99785b3520e668e4cca4733d7d596b57192edfdb38b0dfcf8f67f02c8db2bc57"
+checksum = "b28bc4368a57ca2f6086a3e0bdcb9328f239e3fe28fbafe5c14aeb0ad1b56e17"
 dependencies = [
  "bitflags 2.6.0",
  "log",
