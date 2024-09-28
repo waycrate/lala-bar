@@ -558,7 +558,8 @@ impl LalaMusicBar {
     }
 }
 
-#[to_layer_message(multi, info_name = "LaLaInfo", derives = "Debug Clone")]
+#[to_layer_message(multi, info_name = "LaLaInfo")]
+#[derive(Debug, Clone)]
 enum Message {
     RequestPre,
     RequestNext,
