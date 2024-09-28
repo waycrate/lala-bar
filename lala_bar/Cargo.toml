@@ -43,5 +43,3 @@ futures.workspace = true
 iced_zbus_notification.workspace = true
 chrono = "0.4.38"
 async-trait.workspace = true
-
-open = "5.3"

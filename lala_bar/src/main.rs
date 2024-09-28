@@ -5,7 +5,7 @@ use futures::future::pending;
 use futures::StreamExt;
 use iced::widget::{
     button, checkbox, column, container, image, markdown, row, scrollable, slider, svg, text,
-    text_input, Space,
+    text_input, Space, Stack,
 };
 use iced::{executor, Alignment, Font};
 use iced::{Element, Length, Task as Command, Theme};
@@ -105,7 +105,7 @@ impl NotifyUnitWidgetInfo {
             button::secondary
         };
         let markdown_info = bar.notifications_markdown.get(&self.unit.id);
-        let text_render: Element<Message> = match markdown_info {
+        let text_render_text: Element<Message> = match markdown_info {
             Some(data) => markdown::view(
                 data,
                 markdown::Settings::default(),
@@ -117,6 +117,22 @@ impl NotifyUnitWidgetInfo {
                 .shaping(text::Shaping::Advanced)
                 .into(),
         };
+        let text_render = Stack::new().push(text_render_text).push(
+            button("")
+                .style(|_theme, status| {
+                    let color = match status {
+                        button::Status::Hovered => iced::Color::new(0.118, 0.193, 0.188, 0.65),
+                        _ => iced::Color::TRANSPARENT,
+                    };
+                    button::Style {
+                        background: Some(iced::Background::Color(color)),
+                        ..Default::default()
+                    }
+                })
+                .width(Length::Fill)
+                .height(Length::Fill)
+                .on_press(Message::RemoveNotify(self.unit.id)),
+        );
         match notify.image() {
             Some(ImageInfo::Svg(path)) => button(row![
                 svg(svg::Handle::from_path(path))
@@ -1225,8 +1241,8 @@ impl MultiApplication for LalaMusicBar {
                 self.datetime = Local::now();
             }
             Message::Ready(sender) => self.sender = Some(sender),
-            Message::LinkClicked(link) => {
-                let _ = open::that_in_background(link.to_string());
+            Message::LinkClicked(_link) => {
+                // I do not care
             }
             _ => unreachable!(),
         }
