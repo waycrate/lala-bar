@@ -4,8 +4,8 @@ use async_trait::async_trait;
 use futures::future::pending;
 use futures::StreamExt;
 use iced::widget::{
-    button, checkbox, column, container, image, row, scrollable, slider, svg, text, text_input,
-    Space,
+    button, checkbox, column, container, image, markdown, row, scrollable, slider, svg, text,
+    text_input, Space, Stack,
 };
 use iced::{executor, Alignment, Font};
 use iced::{Element, Length, Task as Command, Theme};
@@ -97,13 +97,42 @@ struct NotifyUnitWidgetInfo {
 }
 
 impl NotifyUnitWidgetInfo {
-    fn notify_button<'a>(&self) -> Element<'a, Message> {
+    fn notify_button<'a>(&self, bar: &'a LalaMusicBar) -> Element<'a, Message> {
         let notify = &self.unit;
         let notify_theme = if notify.is_critical() {
             button::primary
         } else {
             button::secondary
         };
+        let markdown_info = bar.notifications_markdown.get(&self.unit.id);
+        let text_render_text: Element<Message> = match markdown_info {
+            Some(data) => markdown::view(
+                data,
+                markdown::Settings::default(),
+                markdown::Style::from_palette(bar.theme().palette()),
+            )
+            .map(Message::LinkClicked)
+            .into(),
+            None => text(notify.body.clone())
+                .shaping(text::Shaping::Advanced)
+                .into(),
+        };
+        let text_render = Stack::new().push(text_render_text).push(
+            button("")
+                .style(|_theme, status| {
+                    let color = match status {
+                        button::Status::Hovered => iced::Color::new(0.118, 0.193, 0.188, 0.65),
+                        _ => iced::Color::TRANSPARENT,
+                    };
+                    button::Style {
+                        background: Some(iced::Background::Color(color)),
+                        ..Default::default()
+                    }
+                })
+                .width(Length::Fill)
+                .height(Length::Fill)
+                .on_press(Message::RemoveNotify(self.unit.id)),
+        );
         match notify.image() {
             Some(ImageInfo::Svg(path)) => button(row![
                 svg(svg::Handle::from_path(path))
@@ -118,7 +147,7 @@ impl NotifyUnitWidgetInfo {
                             weight: iced::font::Weight::Bold,
                             ..Default::default()
                         }),
-                    text(notify.body.clone()).shaping(text::Shaping::Advanced)
+                    text_render
                 ]
             ])
             .style(notify_theme)
@@ -145,7 +174,7 @@ impl NotifyUnitWidgetInfo {
                             weight: iced::font::Weight::Bold,
                             ..Default::default()
                         }),
-                    text(notify.body.clone()).shaping(text::Shaping::Advanced)
+                    text_render
                 ]
             ])
             .width(Length::Fill)
@@ -164,7 +193,7 @@ impl NotifyUnitWidgetInfo {
                             weight: iced::font::Weight::Bold,
                             ..Default::default()
                         }),
-                    text(notify.body.clone()).shaping(text::Shaping::Advanced)
+                    text_render
                 ]
             ])
             .width(Length::Fill)
@@ -174,7 +203,7 @@ impl NotifyUnitWidgetInfo {
             .into(),
             _ => button(column![
                 text(notify.summery.clone()).shaping(text::Shaping::Advanced),
-                text(notify.body.clone()).shaping(text::Shaping::Advanced)
+                text_render
             ])
             .width(Length::Fill)
             .height(Length::Fill)
@@ -207,6 +236,7 @@ struct LalaMusicBar {
     hiddenid_lock: bool,
     right_panel: Option<iced::window::Id>,
     notifications: HashMap<u32, NotifyUnitWidgetInfo>,
+    notifications_markdown: HashMap<u32, Vec<markdown::Item>>,
     showned_notifications: HashMap<iced::window::Id, u32>,
     cached_notifications: HashMap<iced::window::Id, NotifyUnitWidgetInfo>,
     cached_hidden_notifications: Vec<NotifyUnitWidgetInfo>,
@@ -458,7 +488,7 @@ impl LalaMusicBar {
             .hidden_notification()
             .iter()
             .map(|wdgetinfo| {
-                container(wdgetinfo.notify_button())
+                container(wdgetinfo.notify_button(self))
                     .height(Length::Fixed(100.))
                     .into()
             })
@@ -528,7 +558,8 @@ impl LalaMusicBar {
     }
 }
 
-#[to_layer_message(multi, info_name = "LaLaInfo", derives = "Debug Clone")]
+#[to_layer_message(multi, info_name = "LaLaInfo")]
+#[derive(Debug, Clone)]
 enum Message {
     RequestPre,
     RequestNext,
@@ -555,6 +586,8 @@ enum Message {
     QuiteMode(bool),
     CloseErrorNotification(iced::window::Id),
     Ready(Sender<NotifyCommand>),
+    #[allow(unused)]
+    LinkClicked(markdown::Url),
 }
 
 impl From<NotifyMessage> for Message {
@@ -743,6 +776,7 @@ impl MultiApplication for LalaMusicBar {
                 hiddenid: None,
                 hiddenid_lock: false,
                 notifications: HashMap::new(),
+                notifications_markdown: HashMap::new(),
                 showned_notifications: HashMap::new(),
                 cached_notifications: HashMap::new(),
                 cached_hidden_notifications: Vec::new(),
@@ -822,6 +856,7 @@ impl MultiApplication for LalaMusicBar {
                 // If the widget is marked to removed
                 // Then delete it
                 self.notifications.remove(&nid);
+                self.notifications_markdown.remove(&nid);
             }
         }
         self.cached_notifications.remove(&id);
@@ -980,6 +1015,8 @@ impl MultiApplication for LalaMusicBar {
                     ))
                 }
 
+                self.notifications_markdown
+                    .insert(notify.id, markdown::parse(&notify.body).collect());
                 self.notifications.insert(
                     notify.id,
                     NotifyUnitWidgetInfo {
@@ -1192,6 +1229,7 @@ impl MultiApplication for LalaMusicBar {
                     }
                 }
 
+                self.notifications_markdown.clear();
                 self.notifications.clear();
                 self.update_hidden_notification();
                 commands.push(Command::perform(async {}, |_| Message::CheckOutput));
@@ -1204,6 +1242,9 @@ impl MultiApplication for LalaMusicBar {
                 self.datetime = Local::now();
             }
             Message::Ready(sender) => self.sender = Some(sender),
+            Message::LinkClicked(_link) => {
+                // I do not care
+            }
             _ => unreachable!(),
         }
         Command::none()
@@ -1218,7 +1259,7 @@ impl MultiApplication for LalaMusicBar {
                     }
                 }
                 LaLaInfo::Notify(unitwidgetinfo) => {
-                    let btnwidgets: Element<Message> = unitwidgetinfo.notify_button();
+                    let btnwidgets: Element<Message> = unitwidgetinfo.notify_button(self);
 
                     let notify = &unitwidgetinfo.unit;
                     if notify.inline_reply_support() {
