@@ -36,7 +36,7 @@ anyhow = "1.0.89"
 alsa = "0.9.1"
 
 gio = "0.20.1"
-regex = "1.10.6"
+regex = "1.11.0"
 xdg = "2.5.2"
 url.workspace = true
 futures.workspace = true
