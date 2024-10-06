@@ -1903,9 +1903,9 @@ dependencies = [
 
 [[package]]
 name = "iced_layershell"
-version = "0.8.0"
+version = "0.9.0-beta1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fd8db631c95dd7f9e66574cdbe0357c4cfb58e24086548f5d6207c01e5102b9f"
+checksum = "eb3830b59b4020f2457c7d1ee9b9c4d903c10efad7ff0cfe74fb3b810771f817"
 dependencies = [
  "futures",
  "iced",
@@ -1924,9 +1924,9 @@ dependencies = [
 
 [[package]]
 name = "iced_layershell_macros"
-version = "0.8.0"
+version = "0.9.0-beta1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c73bd915b37876b60094f3ebd7927a2ae49ad688e2bf9331e95a3e8205f2960d"
+checksum = "c60a64b52bff336da34330f6712688f32f4fe7e31522c5bb5975cc464980a999"
 dependencies = [
  "darling",
  "manyhow",
@@ -2238,9 +2238,9 @@ dependencies = [
 
 [[package]]
 name = "layershellev"
-version = "0.8.0"
+version = "0.9.0-beta1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "861a7ed1dce31957c76c0789c45bc3a991fb0c7584b128d8ef7527e27d910d4e"
+checksum = "b264c5b73c4d3372ab76ded32bc73e9ac9487d695e8ef7912cd26600d99daae5"
 dependencies = [
  "bitflags 2.6.0",
  "log",
@@ -3837,9 +3837,9 @@ checksum = "61c41af27dd6d1e27b1b16b489db798443478cef1f06a660c96db617ba5de3b1"
 
 [[package]]
 name = "tempfile"
-version = "3.12.0"
+version = "3.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "04cbcdd0c794ebb0d4cf35e88edd2f7d2c4c3e9a5a6dab322839b321c6a87a64"
+checksum = "f0f2c9fc62d0beef6951ccffd757e241266a2c833136efbe35af6cd2567dca5b"
 dependencies = [
  "cfg-if",
  "fastrand",
@@ -4354,9 +4354,9 @@ dependencies = [
 
 [[package]]
 name = "waycrate_xkbkeycode"
-version = "0.8.0"
+version = "0.9.0-beta1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e38cfb9a7db9e8a988c6903fe6f0119d46335e0d7080148c3509ebeea7fd73d"
+checksum = "8c2c26b9f31aca3b5d9590f22aede874a76d12e10445ff5b33addc9d1b6bb16d"
 dependencies = [
  "bitflags 2.6.0",
  "log",
