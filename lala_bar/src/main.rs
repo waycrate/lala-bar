@@ -635,7 +635,7 @@ impl LalaMusicBar {
             let col = row![
                 toggle_launcher,
                 Space::with_width(Length::Fill),
-                container(sound_slider).width(700.),
+                container(sound_slider).width(600.),
                 Space::with_width(Length::Fixed(3.)),
                 self.date_widget(),
                 Space::with_width(Length::Fixed(3.)),
