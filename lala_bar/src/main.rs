@@ -143,7 +143,7 @@ impl NotifyUnitWidgetInfo {
                 column![
                     text(notify.summery.clone())
                         .shaping(text::Shaping::Advanced)
-                        .size(17)
+                        .size(20)
                         .font(Font {
                             weight: iced::font::Weight::Bold,
                             ..Default::default()
@@ -170,7 +170,7 @@ impl NotifyUnitWidgetInfo {
                 column![
                     text(notify.summery.clone())
                         .shaping(text::Shaping::Advanced)
-                        .size(17)
+                        .size(20)
                         .font(Font {
                             weight: iced::font::Weight::Bold,
                             ..Default::default()
@@ -189,7 +189,7 @@ impl NotifyUnitWidgetInfo {
                 column![
                     text(notify.summery.clone())
                         .shaping(text::Shaping::Advanced)
-                        .size(17)
+                        .size(20)
                         .font(Font {
                             weight: iced::font::Weight::Bold,
                             ..Default::default()
