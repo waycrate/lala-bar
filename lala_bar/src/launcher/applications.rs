@@ -93,7 +93,7 @@ impl App {
     }
 }
 
-static ICONS_SIZE: &[&str] = &["256x256", "128x128", "64x64", "32x32", "16x16"];
+static ICONS_SIZE: &[&str] = &["256x256", "128x128", "64x64", "48x48", "32x32", "16x16"];
 
 static THEMES_LIST: &[&str] = &["breeze", "Adwaita"];
 
