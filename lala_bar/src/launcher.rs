@@ -20,7 +20,6 @@ pub struct Launcher {
     pub should_delete: bool,
 }
 
-#[allow(unused)]
 #[derive(Debug, Clone)]
 pub enum LaunchMessage {
     SearchEditChanged(String),
