@@ -1316,8 +1316,9 @@ impl MultiApplication for LalaMusicBar {
             iced::time::every(std::time::Duration::from_secs(10))
                 .map(|_| Message::RequestUpdateTime),
             iced::time::every(std::time::Duration::from_secs(5)).map(|_| Message::UpdateBalance),
-            iced::event::listen()
-                .map(|event| Message::LauncherInfo(LaunchMessage::IcedEvent(event))),
+            // FIXME: this one will make event be too many
+            //iced::event::listen()
+            //    .map(|event| Message::LauncherInfo(LaunchMessage::IcedEvent(event))),
             iced::Subscription::run(|| {
                 iced::stream::channel(100, |mut output| async move {
                     use iced::futures::sink::SinkExt;
