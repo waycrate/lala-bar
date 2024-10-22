@@ -9,6 +9,7 @@ use std::sync::LazyLock;
 use tokio::sync::Mutex;
 
 use zbus::{
+    fdo::{DBusProxy, NameOwnerChangedArgs},
     proxy,
     zvariant::{OwnedObjectPath, OwnedValue},
     Result,
@@ -292,29 +293,13 @@ trait MediaPlayer2Dbus {
     fn previous(&self) -> Result<()>;
 }
 
-#[proxy(
-    default_service = "org.freedesktop.DBus",
-    interface = "org.freedesktop.DBus",
-    default_path = "/org/freedesktop/DBus"
-)]
-trait FreedestopDBus {
-    #[zbus(signal)]
-    fn name_owner_changed(
-        &self,
-        name: String,
-        new_owner: String,
-        older_owner: String,
-    ) -> Result<()>;
-    fn list_names(&self) -> Result<Vec<String>>;
-}
-
 pub async fn init_mpirs() -> Result<()> {
     let conn = get_connection().await?;
-    let freedesktop = FreedestopDBusProxy::new(&conn).await?;
+    let freedesktop = DBusProxy::new(&conn).await?;
     let names = freedesktop.list_names().await?;
     let names: Vec<String> = names
         .iter()
-        .filter(|name| name.starts_with("org.mpris.MediaPlayer2") && *name != PLAYCTLD)
+        .filter(|name| name.starts_with("org.mpris.MediaPlayer2") && **name != PLAYCTLD)
         .cloned()
         .map(|name| name.to_string())
         .collect();
@@ -349,16 +334,17 @@ pub async fn init_mpirs() -> Result<()> {
         while let Some(signal) = namechangesignal.next().await {
             let NameOwnerChangedArgs {
                 name: interfacename,
-                older_owner: removed,
-                new_owner: added,
+                old_owner,
+                new_owner,
                 ..
             } = signal.args()?;
+
             if !interfacename.starts_with("org.mpris.MediaPlayer2") && interfacename != PLAYCTLD {
                 continue;
             }
-            if removed.is_empty() {
+            if old_owner.is_some() {
                 remove_mpirs_connection(&interfacename).await;
-            } else if added.is_empty() && !mpirs_is_ready_in(interfacename.as_str()).await {
+            } else if new_owner.is_some() && !mpirs_is_ready_in(interfacename.as_str()).await {
                 let instance = MediaPlayer2DbusProxy::builder(&conn)
                     .destination(interfacename.as_str())?
                     .build()
