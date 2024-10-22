@@ -1362,7 +1362,7 @@ impl MultiApplication for LalaMusicBar {
                         match cmd {
                             NotifyCommand::ActionInvoked { id, action_key } => {
                                 LaLaMakoMusic::action_invoked(
-                                    lalaref.signal_context(),
+                                    lalaref.signal_emitter(),
                                     id,
                                     &action_key,
                                 )
@@ -1371,7 +1371,7 @@ impl MultiApplication for LalaMusicBar {
                             }
                             NotifyCommand::InlineReply { id, text } => {
                                 LaLaMakoMusic::notification_replied(
-                                    lalaref.signal_context(),
+                                    lalaref.signal_emitter(),
                                     id,
                                     &text,
                                 )
@@ -1380,7 +1380,7 @@ impl MultiApplication for LalaMusicBar {
                             }
                             NotifyCommand::NotificationClosed { id, reason } => {
                                 LaLaMakoMusic::notification_closed(
-                                    lalaref.signal_context(),
+                                    lalaref.signal_emitter(),
                                     id,
                                     reason,
                                 )

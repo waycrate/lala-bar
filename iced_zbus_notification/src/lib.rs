@@ -11,11 +11,11 @@ use std::path::{Path, PathBuf};
 use async_trait::async_trait;
 use glob::glob;
 use serde::{Deserialize, Serialize};
-use zbus::{interface, object_server::SignalContext, zvariant::OwnedValue};
+use zbus::{interface, object_server::SignalEmitter, zvariant::OwnedValue};
 
 use futures::channel::mpsc::Sender;
 use std::sync::{Arc, LazyLock, RwLock};
-use zbus::ConnectionBuilder;
+use zbus::connection;
 
 use zbus::zvariant::{SerializeDict, Type};
 
@@ -281,7 +281,7 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
     // CloseNotification method
     async fn close_notification(
         &mut self,
-        #[zbus(signal_context)] ctx: SignalContext<'_>,
+        #[zbus(signal_emitter)] ctx: SignalEmitter<'_>,
         id: u32,
     ) -> zbus::fdo::Result<()> {
         Self::notification_closed(&ctx, id, NOTIFICATION_DELETED_BY_USER)
@@ -372,7 +372,7 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
     /// Invoke Action
     #[zbus(signal)]
     pub async fn action_invoked(
-        ctx: &SignalContext<'_>,
+        ctx: &SignalEmitter<'_>,
         id: u32,
         action_key: &str,
     ) -> zbus::Result<()>;
@@ -380,7 +380,7 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
     /// Notification Reply
     #[zbus(signal)]
     pub async fn notification_replied(
-        ctx: &SignalContext<'_>,
+        ctx: &SignalEmitter<'_>,
         id: u32,
         text: &str,
     ) -> zbus::Result<()>;
@@ -388,7 +388,7 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
     /// NotificationClosed signal
     #[zbus(signal)]
     pub async fn notification_closed(
-        ctx: &SignalContext<'_>,
+        ctx: &SignalEmitter<'_>,
         id: u32,
         reason: u32,
     ) -> zbus::Result<()>;
@@ -419,7 +419,7 @@ pub async fn start_connection<
     capabilities: Vec<String>,
     version: VersionInfo,
 ) -> Result<zbus::Connection, zbus::Error> {
-    ConnectionBuilder::session()?
+    connection::Builder::session()?
         .name("org.freedesktop.Notifications")?
         .serve_at(
             "/org/freedesktop/Notifications",
