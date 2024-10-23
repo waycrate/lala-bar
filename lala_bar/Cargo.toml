@@ -22,7 +22,7 @@ iced = { version = "0.13.1", features = [
 ] }
 iced_runtime = "0.13.0"
 iced_layershell = "0.9.4-rc3"
-tokio = { version = "1.40", features = ["full"] }
+tokio = { version = "1.41", features = ["full"] }
 iced_futures = "0.13.1"
 env_logger = "0.11.5"
 tracing = "0.1.40"
