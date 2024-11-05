@@ -20,10 +20,10 @@ iced = { version = "0.13.1", features = [
 	"svg",
 	"markdown",
 ] }
-iced_runtime = "0.13.0"
+iced_runtime = "0.13.2"
 iced_layershell = "0.9.4"
 tokio = { version = "1.41", features = ["full"] }
-iced_futures = "0.13.1"
+iced_futures = "0.13.2"
 env_logger = "0.11.5"
 tracing = "0.1.40"
 
@@ -32,11 +32,11 @@ serde.workspace = true
 
 zbus.workspace = true
 tracing-subscriber = "0.3.18"
-anyhow = "1.0.89"
+anyhow = "1.0.92"
 alsa = "0.9.1"
 
-gio = "0.20.1"
-regex = "1.11.0"
+gio = "0.20.5"
+regex = "1.11.1"
 xdg = "2.5.2"
 url.workspace = true
 futures.workspace = true

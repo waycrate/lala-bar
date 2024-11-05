@@ -16,4 +16,4 @@ zbus.workspace = true
 futures-util.workspace = true
 url.workspace = true
 glob = "0.3.1"
-async-trait = "0.1.82"
+async-trait = "0.1.83"
