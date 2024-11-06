@@ -187,9 +187,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.92"
+version = "1.0.93"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "74f37166d7d48a0284b99dd824694c26119c700b53bf0d1540cdb147dbdaaf13"
+checksum = "4c95c10ba0b00a02636238b814946408b1322d5ac4760326e6fb8ec956d85775"
 
 [[package]]
 name = "approx"
@@ -570,9 +570,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.1.34"
+version = "1.1.36"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "67b9470d453346108f93a59222a9a1a5724db32d0a4727b7ab7ace4b4d822dc9"
+checksum = "baee610e9452a8f6f0a1b6194ec09ff9e2d85dea54432acdae41aa0761c95d70"
 dependencies = [
  "jobserver",
  "libc",
@@ -1277,9 +1277,9 @@ checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
 
 [[package]]
 name = "font-types"
-version = "0.7.2"
+version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dda6e36206148f69fc6ecb1bb6c0dedd7ee469f3db1d0dc2045beea28430ca43"
+checksum = "b3971f9a5ca983419cdc386941ba3b9e1feba01a0ab888adf78739feb2798492"
 dependencies = [
  "bytemuck",
 ]
@@ -1903,9 +1903,9 @@ dependencies = [
 
 [[package]]
 name = "iced_layershell"
-version = "0.9.4"
+version = "0.9.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c7b5cc18818b5f07b7e4e5742d47b13e59f33d1e6f4d3c3c3eeb726481cc05e3"
+checksum = "a5929bd962a558f99c2c497fec97efcce7f14c272bc74558085d202ac241d2d1"
 dependencies = [
  "futures",
  "iced",
@@ -1924,9 +1924,9 @@ dependencies = [
 
 [[package]]
 name = "iced_layershell_macros"
-version = "0.9.4"
+version = "0.9.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f778284314281b4994c0ac45b8ad654fa87266956e1814d1a00bd9a2f6b3141f"
+checksum = "626cf5cdf951895c9c4a5be55d39595913e41d28f9bb2a7490b78de59a65f0bf"
 dependencies = [
  "darling",
  "manyhow",
@@ -2367,9 +2367,9 @@ dependencies = [
 
 [[package]]
 name = "layershellev"
-version = "0.9.4"
+version = "0.9.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "072e6fb98dd0efcdbcdccdf2a81940b7732d56967b36e08e587c5cf9c34fc61b"
+checksum = "729858eb577a5aedadeb05dd91b61b1f4f09538896df0949b1a7ca46f73d76c1"
 dependencies = [
  "bitflags 2.6.0",
  "calloop 0.14.1",
@@ -4453,11 +4453,12 @@ dependencies = [
 
 [[package]]
 name = "waycrate_xkbkeycode"
-version = "0.9.4"
+version = "0.9.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3a7bd055785a92d468d4be98c9d0b1929ed17bf190c3a36d9878b991a05f8800"
+checksum = "e5ab4a8bbe75163bc3e24569ba6b81b1646f25a5c22db4e9b2fc50187dbe77e4"
 dependencies = [
  "bitflags 2.6.0",
+ "calloop 0.14.1",
  "log",
  "memmap2",
  "smol_str",
@@ -5153,9 +5154,9 @@ checksum = "b9cc00251562a284751c9973bace760d86c0276c471b4be569fe6b068ee97a56"
 
 [[package]]
 name = "xml-rs"
-version = "0.8.22"
+version = "0.8.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "af4e2e2f7cba5a093896c1e150fbfe177d1883e7448200efb81d40b9d339ef26"
+checksum = "af310deaae937e48a26602b730250b4949e125f468f11e6990be3e5304ddd96f"
 
 [[package]]
 name = "xmlwriter"

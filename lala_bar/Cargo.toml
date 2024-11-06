@@ -21,7 +21,7 @@ iced = { version = "0.13.1", features = [
 	"markdown",
 ] }
 iced_runtime = "0.13.2"
-iced_layershell = "0.9.4"
+iced_layershell = "0.9.6"
 tokio = { version = "1.41", features = ["full"] }
 iced_futures = "0.13.2"
 env_logger = "0.11.5"
@@ -32,7 +32,7 @@ serde.workspace = true
 
 zbus.workspace = true
 tracing-subscriber = "0.3.18"
-anyhow = "1.0.92"
+anyhow = "1.0.93"
 alsa = "0.9.1"
 
 gio = "0.20.5"
