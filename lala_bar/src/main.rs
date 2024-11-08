@@ -65,8 +65,7 @@ static PAUSE_HANDLE: LazyLock<svg::Handle> = LazyLock::new(|| svg::Handle::from_
 const MAX_SHOWN_NOTIFICATIONS_COUNT: usize = 4;
 
 pub fn main() -> Result<(), iced_layershell::Error> {
-    env_logger::builder().format_timestamp(None).init();
-
+    tracing_subscriber::fmt().init();
     LalaMusicBar::run(Settings {
         layer_settings: LayerShellSettings {
             size: Some((0, 35)),

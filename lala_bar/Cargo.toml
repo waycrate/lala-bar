@@ -43,3 +43,4 @@ futures.workspace = true
 iced_zbus_notification.workspace = true
 chrono = "0.4.38"
 async-trait.workspace = true
+tracing-journald = "0.3.0"
