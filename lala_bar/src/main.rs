@@ -29,6 +29,7 @@ use futures::channel::mpsc::{channel, Sender};
 use std::sync::LazyLock;
 
 mod aximer;
+mod dbusbackend;
 mod launcher;
 mod zbus_mpirs;
 
@@ -112,8 +113,7 @@ impl NotifyUnitWidgetInfo {
                 markdown::Settings::default(),
                 markdown::Style::from_palette(bar.theme().palette()),
             )
-            .map(Message::LinkClicked)
-            .into(),
+            .map(Message::LinkClicked),
             None => text(notify.body.clone())
                 .shaping(text::Shaping::Advanced)
                 .into(),
@@ -576,6 +576,7 @@ enum Message {
     SliderIndexNext,
     SliderIndexPre,
     ToggleLauncher,
+    ToggleLauncherDBus,
     ToggleRightPanel,
     LauncherInfo(LaunchMessage),
     Notify(NotifyMessage),
@@ -973,6 +974,31 @@ impl MultiApplication for LalaMusicBar {
                     self.launcher.as_ref().unwrap().focus_input(),
                 ]);
             }
+            Message::ToggleLauncherDBus => {
+                if self.launcher.is_some() {
+                    if let Some(id) = self.launcherid {
+                        return iced_runtime::task::effect(Action::Window(WindowAction::Close(id)));
+                    }
+                    return Command::none();
+                }
+                self.launcher = Some(Launcher::new());
+                return Command::batch(vec![
+                    Command::done(Message::NewLayerShell {
+                        settings: NewLayerShellSettings {
+                            size: None,
+                            margin: Some((300, 400, 300, 400)),
+
+                            exclusive_zone: None,
+                            anchor: Anchor::Left | Anchor::Bottom | Anchor::Right | Anchor::Top,
+                            layer: Layer::Top,
+                            keyboard_interactivity: KeyboardInteractivity::Exclusive,
+                            use_last_output: false,
+                        },
+                        info: LaLaInfo::Launcher,
+                    }),
+                    self.launcher.as_ref().unwrap().focus_input(),
+                ]);
+            }
             Message::ToggleRightPanel => {
                 if self.right_panel.is_some() {
                     if let Some(id) = self.right_panel {
@@ -982,7 +1008,7 @@ impl MultiApplication for LalaMusicBar {
                 }
                 return Command::done(Message::NewLayerShell {
                     settings: NewLayerShellSettings {
-                        size: Some((300, 0)),
+                        size: Some((1000, 1000)),
                         exclusive_zone: Some(300),
                         anchor: Anchor::Right | Anchor::Bottom | Anchor::Top,
                         layer: Layer::Top,
@@ -1318,6 +1344,14 @@ impl MultiApplication for LalaMusicBar {
             iced::time::every(std::time::Duration::from_secs(5)).map(|_| Message::UpdateBalance),
             iced::event::listen()
                 .map(|event| Message::LauncherInfo(LaunchMessage::IcedEvent(event))),
+            iced::Subscription::run(|| {
+                iced::stream::channel(100, |output| async move {
+                    use dbusbackend::start_backend;
+                    let _conn = start_backend(output).await.expect("already registered");
+                    pending::<()>().await;
+                    unreachable!()
+                })
+            }),
             iced::Subscription::run(|| {
                 iced::stream::channel(100, |mut output| async move {
                     use iced::futures::sink::SinkExt;
