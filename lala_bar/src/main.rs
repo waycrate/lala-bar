@@ -985,8 +985,8 @@ impl MultiApplication for LalaMusicBar {
                 return Command::batch(vec![
                     Command::done(Message::NewLayerShell {
                         settings: NewLayerShellSettings {
-                            size: None,
-                            margin: Some((300, 400, 300, 400)),
+                            size: Some((1200, 1000)),
+                            margin: None,
 
                             exclusive_zone: None,
                             anchor: Anchor::Left | Anchor::Bottom | Anchor::Right | Anchor::Top,
