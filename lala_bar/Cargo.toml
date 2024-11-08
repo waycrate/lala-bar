@@ -31,7 +31,7 @@ futures-util.workspace = true
 serde.workspace = true
 
 zbus.workspace = true
-tracing-subscriber = "0.3.18"
+tracing-subscriber = { version = "0.3.18", features = ["std", "env-filter"] }
 anyhow = "1.0.93"
 alsa = "0.9.1"
 
