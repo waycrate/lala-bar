@@ -1008,7 +1008,7 @@ impl MultiApplication for LalaMusicBar {
                 }
                 return Command::done(Message::NewLayerShell {
                     settings: NewLayerShellSettings {
-                        size: Some((1000, 1000)),
+                        size: Some((300, 0)),
                         exclusive_zone: Some(300),
                         anchor: Anchor::Right | Anchor::Bottom | Anchor::Top,
                         layer: Layer::Top,
