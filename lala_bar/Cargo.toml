@@ -1,6 +1,6 @@
 [package]
 name = "lala-bar"
-version.workspace = true
+version = "0.4.1"
 edition.workspace = true
 description = "a bar on layershell with iced-rs"
 authors.workspace = true
@@ -46,3 +46,9 @@ async-trait.workspace = true
 tracing-journald = "0.3.0"
 iced_aw = "0.11.0"
 iced_fonts = "0.1.1"
+i18n-embed = { version = "0.13.4", features = [
+	"fluent-system",
+	"desktop-requester",
+] }
+i18n-embed-fl = "0.6.4"
+rust-embed = "6.3.0"
