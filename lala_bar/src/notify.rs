@@ -29,7 +29,7 @@ impl NotifyUnitWidgetInfo {
                 markdown::Settings::default(),
                 markdown::Style::from_palette(bar.theme().palette()),
             )
-                .map(Message::LinkClicked),
+            .map(Message::LinkClicked),
             None => text(notify.body.clone())
                 .shaping(text::Shaping::Advanced)
                 .into(),
@@ -69,16 +69,16 @@ impl NotifyUnitWidgetInfo {
                     text_render
                 ]
             ])
-                .style(notify_theme)
-                .width(Length::Fill)
-                .height(Length::Fill)
-                .on_press(Message::RemoveNotify(self.unit.id))
-                .into(),
+            .style(notify_theme)
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .on_press(Message::RemoveNotify(self.unit.id))
+            .into(),
             Some(ImageInfo::Data {
-                     pixels,
-                     width,
-                     height,
-                 }) => button(row![
+                pixels,
+                width,
+                height,
+            }) => button(row![
                 image(image::Handle::from_rgba(
                     width as u32,
                     height as u32,
@@ -96,11 +96,11 @@ impl NotifyUnitWidgetInfo {
                     text_render
                 ]
             ])
-                .width(Length::Fill)
-                .height(Length::Fill)
-                .style(notify_theme)
-                .on_press(Message::RemoveNotify(self.unit.id))
-                .into(),
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .style(notify_theme)
+            .on_press(Message::RemoveNotify(self.unit.id))
+            .into(),
             Some(ImageInfo::Png(path)) | Some(ImageInfo::Jpg(path)) => button(row![
                 image(image::Handle::from_path(path)).height(Length::Fill),
                 Space::with_width(4.),
@@ -115,20 +115,20 @@ impl NotifyUnitWidgetInfo {
                     text_render
                 ]
             ])
-                .width(Length::Fill)
-                .height(Length::Fill)
-                .style(button::secondary)
-                .on_press(Message::RemoveNotify(self.unit.id))
-                .into(),
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .style(button::secondary)
+            .on_press(Message::RemoveNotify(self.unit.id))
+            .into(),
             _ => button(column![
                 text(notify.summery.clone()).shaping(text::Shaping::Advanced),
                 text_render
             ])
-                .width(Length::Fill)
-                .height(Length::Fill)
-                .style(notify_theme)
-                .on_press(Message::RemoveNotify(self.unit.id))
-                .into(),
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .style(notify_theme)
+            .on_press(Message::RemoveNotify(self.unit.id))
+            .into(),
         }
     }
 }

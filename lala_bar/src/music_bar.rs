@@ -38,7 +38,7 @@ pub struct LalaMusicBar {
     bar_index: SliderIndex,
     launcher: Option<launcher::Launcher>,
     launcherid: Option<iced::window::Id>,
-    hiddenid: Option<iced::window::Id>,
+    hiddenid: Option<icded::window::Id>,
     hiddenid_lock: bool,
     right_panel: Option<iced::window::Id>,
     notifications: HashMap<u32, NotifyUnitWidgetInfo>,
@@ -67,9 +67,9 @@ impl LalaMusicBar {
             Space::with_width(5.),
             text(dateday)
         ])
-            .center_y(Length::Fill)
-            .height(Length::Fill)
-            .into()
+        .center_y(Length::Fill)
+        .height(Length::Fill)
+        .into()
     }
     pub fn update_hidden_notification(&mut self) {
         let mut hiddened: Vec<NotifyUnitWidgetInfo> = self
@@ -222,8 +222,8 @@ impl LalaMusicBar {
             Space::with_width(Length::Fixed(1.)),
             button(">").on_press(Message::SliderIndexNext)
         ]
-            .align_y(Alignment::Center)
-            .into()
+        .align_y(Alignment::Center)
+        .into()
     }
     fn left_bar(&self) -> Element<Message> {
         row![
@@ -235,8 +235,8 @@ impl LalaMusicBar {
             Space::with_width(Length::Fixed(10.)),
             button(">").on_press(Message::SliderIndexNext)
         ]
-            .align_y(Alignment::Center)
-            .into()
+        .align_y(Alignment::Center)
+        .into()
     }
     fn right_bar(&self) -> Element<Message> {
         row![
@@ -248,8 +248,8 @@ impl LalaMusicBar {
             Space::with_width(Length::Fixed(10.)),
             button(">").on_press(Message::SliderIndexNext)
         ]
-            .align_y(Alignment::Center)
-            .into()
+        .align_y(Alignment::Center)
+        .into()
     }
 
     fn sound_slider(&self) -> Element<Message> {
@@ -304,9 +304,9 @@ impl LalaMusicBar {
                                 color: Some(iced::Color::WHITE),
                             }),
                     )
-                        .width(Length::Fill)
-                        .center_x(Length::Fill)
-                        .into(),
+                    .width(Length::Fill)
+                    .center_x(Length::Fill)
+                    .into(),
                 );
                 view_elements.push(Space::with_height(10.).into());
             }
@@ -318,8 +318,8 @@ impl LalaMusicBar {
                 column(btns).spacing(10.),
                 Space::with_width(10.)
             ))
-                .height(Length::Fill)
-                .into(),
+            .height(Length::Fill)
+            .into(),
             container(checkbox("quite mode", self.quite_mode).on_toggle(Message::QuiteMode))
                 .width(Length::Fill)
                 .center_x(Length::Fill)
@@ -342,7 +342,7 @@ impl LalaMusicBar {
                 .width(25.)
                 .height(25.),
         )
-            .on_press(Message::ToggleLauncher);
+        .on_press(Message::ToggleLauncher);
 
         let sound_slider = self.sound_slider();
         let panel_text = if self.right_panel.is_some() { ">" } else { "<" };
@@ -357,7 +357,7 @@ impl LalaMusicBar {
                 Space::with_width(Length::Fixed(3.)),
                 button(text(panel_text)).on_press(Message::ToggleRightPanel)
             ]
-                .spacing(10);
+            .spacing(10);
             return container(col)
                 .width(Length::Fill)
                 .height(Length::Fill)
@@ -392,8 +392,8 @@ impl LalaMusicBar {
                     color: Some(iced::Color::WHITE),
                 }),
         )
-            .width(Length::Fill)
-            .center_x(Length::Fill);
+        .width(Length::Fill)
+        .center_x(Length::Fill);
         let can_play = service_data.can_play;
         let can_pause = service_data.can_pause;
         let can_go_next = service_data.can_go_next;
@@ -445,7 +445,7 @@ impl LalaMusicBar {
                 Space::with_width(Length::Fixed(3.)),
                 button(text(panel_text)).on_press(Message::ToggleRightPanel)
             ]
-                .spacing(10)
+            .spacing(10)
         } else {
             row![
                 toggle_launcher,
@@ -458,7 +458,7 @@ impl LalaMusicBar {
                 Space::with_width(Length::Fixed(3.)),
                 button(text(panel_text)).on_press(Message::ToggleRightPanel)
             ]
-                .spacing(10)
+            .spacing(10)
         };
 
         container(col)
@@ -565,8 +565,8 @@ impl MultiApplication for LalaMusicBar {
         'clear_nid: {
             if let Some(nid) = self.showned_notifications.remove(&id) {
                 if let Some(NotifyUnitWidgetInfo {
-                                to_delete: false, ..
-                            }) = self.notifications.get(&nid)
+                    to_delete: false, ..
+                }) = self.notifications.get(&nid)
                 {
                     break 'clear_nid;
                 }
@@ -1021,7 +1021,7 @@ impl MultiApplication for LalaMusicBar {
                                 ))),
                             ]
                         ]
-                            .into();
+                        .into();
                     }
                     return btnwidgets;
                 }
@@ -1030,7 +1030,7 @@ impl MultiApplication for LalaMusicBar {
                         "hidden notifications {}",
                         self.hidden_notification().len()
                     ))
-                        .into();
+                    .into();
                 }
                 LaLaInfo::RightPanel => {
                     return self.right_panel_view();
@@ -1092,7 +1092,7 @@ impl MultiApplication for LalaMusicBar {
                             spec_version: env!("CARGO_PKG_VERSION_PATCH").to_owned(),
                         },
                     )
-                        .await
+                    .await
                     else {
                         pending::<()>().await;
                         unreachable!()
@@ -1115,8 +1115,8 @@ impl MultiApplication for LalaMusicBar {
                                     id,
                                     &action_key,
                                 )
-                                    .await
-                                    .ok();
+                                .await
+                                .ok();
                             }
                             NotifyCommand::InlineReply { id, text } => {
                                 LaLaMakoMusic::notification_replied(
@@ -1124,8 +1124,8 @@ impl MultiApplication for LalaMusicBar {
                                     id,
                                     &text,
                                 )
-                                    .await
-                                    .ok();
+                                .await
+                                .ok();
                             }
                             NotifyCommand::NotificationClosed { id, reason } => {
                                 LaLaMakoMusic::notification_closed(
@@ -1133,8 +1133,8 @@ impl MultiApplication for LalaMusicBar {
                                     id,
                                     reason,
                                 )
-                                    .await
-                                    .ok();
+                                .await
+                                .ok();
                             }
                         }
                     }

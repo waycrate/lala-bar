@@ -31,7 +31,7 @@ pub fn main() -> Result<(), iced_layershell::Error> {
                 .with_default_directive(LevelFilter::INFO.into())
                 .from_env_lossy()
                 .add_directive("usvg=off".parse().unwrap()), //.parse("usvg::parser::svgtree=off")
-            //.unwrap(),
+                                                             //.unwrap(),
         )
         .init();
     LalaMusicBar::run(Settings {
