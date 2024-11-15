@@ -38,7 +38,7 @@ pub struct LalaMusicBar {
     bar_index: SliderIndex,
     launcher: Option<launcher::Launcher>,
     launcherid: Option<iced::window::Id>,
-    hiddenid: Option<icded::window::Id>,
+    hiddenid: Option<iced::window::Id>,
     hiddenid_lock: bool,
     right_panel: Option<iced::window::Id>,
     notifications: HashMap<u32, NotifyUnitWidgetInfo>,
