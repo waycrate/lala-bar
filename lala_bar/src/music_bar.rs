@@ -17,6 +17,7 @@ use iced::widget::{
     button, checkbox, column, container, image, markdown, row, scrollable, slider, svg, text,
     text_input, Space,
 };
+use iced_aw::{date_picker::Date, helpers::date_picker};
 use iced::{executor, Alignment, Element, Font, Length, Task as Command, Theme};
 use iced_layershell::reexport::{Anchor, KeyboardInteractivity, Layer, NewLayerShellSettings};
 use iced_layershell::MultiApplication;
@@ -27,6 +28,10 @@ use iced_zbus_notification::{
     NOTIFICATION_SERVICE_PATH,
 };
 use std::collections::HashMap;
+
+enum WindowInfo {
+    Right,
+}
 
 pub struct LalaMusicBar {
     pub(crate) service_data: Option<ServiceInfo>,
@@ -48,8 +53,10 @@ pub struct LalaMusicBar {
     cached_hidden_notifications: Vec<NotifyUnitWidgetInfo>,
     sender: Option<Sender<NotifyCommand>>,
     quite_mode: bool,
-
     datetime: DateTime<Local>,
+    calendar_id: Option<iced::window::Id>,
+    show_picker: bool,
+    date: Date,
 }
 
 impl LalaMusicBar {
@@ -59,9 +66,10 @@ impl LalaMusicBar {
         let week = date.format("%A").to_string();
         let time = self.datetime.time();
         let time_info = time.format("%H:%M").to_string();
+        let but = button("open window").on_press(Message::NewWindowRight);
 
         container(row![
-            text(week),
+            but,
             Space::with_width(5.),
             text(time_info),
             Space::with_width(5.),
@@ -500,6 +508,9 @@ impl MultiApplication for LalaMusicBar {
                 sender: None,
                 quite_mode: false,
                 datetime: Local::now(),
+                calendar_id: None,
+                show_picker: false,
+                date: Date::today(),
             },
             Command::batch(vec![
                 Command::done(Message::UpdateBalance),
@@ -519,6 +530,8 @@ impl MultiApplication for LalaMusicBar {
             Some(LaLaInfo::HiddenInfo)
         } else if self.right_panel.is_some_and(|tid| tid == id) {
             Some(LaLaInfo::RightPanel)
+        } else if self.calendar_id.is_some_and(|tid| tid == id) {
+            Some(LaLaInfo::Calendar)
         } else {
             if let Some(info) = self.cached_notifications.get(&id) {
                 return Some(LaLaInfo::Notify(Box::new(info.clone())));
@@ -547,6 +560,9 @@ impl MultiApplication for LalaMusicBar {
                 self.hiddenid = Some(id);
             }
             LaLaInfo::RightPanel => self.right_panel = Some(id),
+            LaLaInfo::Calendar => {
+                self.calendar_id = Some(id)
+            },
             _ => unreachable!(),
         }
     }
@@ -584,6 +600,27 @@ impl MultiApplication for LalaMusicBar {
             Message::DBusInfoUpdate(data) => self.service_data = data,
             Message::RequestDBusInfoUpdate => {
                 return Command::perform(get_metadata(), Message::DBusInfoUpdate)
+            }
+            Message::Close(id) => return iced_runtime::task::effect(Action::Window(WindowAction::Close(id))),
+            Message::NewWindowRight => return Command::done(Message::NewLayerShell {
+                settings: NewLayerShellSettings {
+                    size: Some((500, 500)),
+                    exclusive_zone: None,
+                    anchor: Anchor::Right | Anchor::Bottom,
+                    layer: Layer::Top,
+                    margin: Some((10, 10, 10,10)),
+                    keyboard_interactivity: KeyboardInteractivity::Exclusive,
+                    use_last_output: false,
+                },
+                info: LaLaInfo::Calendar,
+            }),
+
+            Message::Submit(date) => {
+                self.date = date;
+                self.show_picker = false;
+            }
+            Message::Cancel => {
+                self.show_picker = false;
             }
             Message::RequestPlay => {
                 if let Some(ref data) = self.service_data {
@@ -999,6 +1036,18 @@ impl MultiApplication for LalaMusicBar {
                     if let Some(launcher) = &self.launcher {
                         return launcher.view();
                     }
+                }
+                LaLaInfo::Calendar => {
+                    let datepicker = date_picker(
+                        true,
+                        self.date,
+                        button(text("Pick date")),
+                        Message::Cancel,
+                        Message::Submit,
+                    );
+                    return column![
+                        datepicker
+                    ].into()
                 }
                 LaLaInfo::Notify(unitwidgetinfo) => {
                     let btnwidgets: Element<Message> = unitwidgetinfo.notify_button(self);
