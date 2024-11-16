@@ -619,7 +619,7 @@ impl MultiApplication for LalaMusicBar {
                         use_last_output: false,
                     },
                     info: LaLaInfo::Calendar,
-                })
+                });
             }
 
             Message::Submit(date) => {
