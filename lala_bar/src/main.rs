@@ -89,8 +89,7 @@ pub enum Message {
     Ready(Sender<NotifyCommand>),
     #[allow(unused)]
     LinkClicked(markdown::Url),
-    Close(iced::window::Id),
-    NewWindowRight,
+    ToggleCalendar,
     Cancel,
     Submit(Date),
 }

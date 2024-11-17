@@ -63,13 +63,7 @@ impl LalaMusicBar {
         let week = date.format("%A").to_string();
         let time = self.datetime.time();
         let time_info = time.format("%H:%M").to_string();
-        let mut week_btn = button(text(week.clone())).on_press(Message::NewWindowRight);
-        if self.is_calendar_open && self.calendar_id.is_some() {
-            week_btn =
-                button(text(week.clone())).on_press(Message::Close(self.calendar_id.unwrap()));
-        } else {
-            week_btn = button(text(week.clone())).on_press(Message::NewWindowRight);
-        }
+        let week_btn = button(text(week.clone())).on_press(Message::ToggleCalendar);
         container(row![
             week_btn,
             Space::with_width(5.),
@@ -602,24 +596,27 @@ impl MultiApplication for LalaMusicBar {
             Message::RequestDBusInfoUpdate => {
                 return Command::perform(get_metadata(), Message::DBusInfoUpdate)
             }
-            Message::Close(id) => {
-                self.is_calendar_open = false;
-                return iced_runtime::task::effect(Action::Window(WindowAction::Close(id)));
-            }
-            Message::NewWindowRight => {
-                self.is_calendar_open = true;
-                return Command::done(Message::NewLayerShell {
-                    settings: NewLayerShellSettings {
-                        size: Some((400, 350)),
-                        exclusive_zone: None,
-                        anchor: Anchor::Right | Anchor::Bottom,
-                        layer: Layer::Top,
-                        margin: Some((10, 10, 10, 10)),
-                        keyboard_interactivity: KeyboardInteractivity::Exclusive,
-                        use_last_output: false,
-                    },
-                    info: LaLaInfo::Calendar,
-                });
+            Message::ToggleCalendar => {
+                if self.is_calendar_open && self.calendar_id.is_some() {
+                    self.is_calendar_open = false;
+                    return iced_runtime::task::effect(Action::Window(WindowAction::Close(
+                        self.calendar_id.unwrap(),
+                    )));
+                } else {
+                    self.is_calendar_open = true;
+                    return Command::done(Message::NewLayerShell {
+                        settings: NewLayerShellSettings {
+                            size: Some((400, 350)),
+                            exclusive_zone: None,
+                            anchor: Anchor::Right | Anchor::Bottom,
+                            layer: Layer::Top,
+                            margin: Some((10, 10, 10, 10)),
+                            keyboard_interactivity: KeyboardInteractivity::Exclusive,
+                            use_last_output: false,
+                        },
+                        info: LaLaInfo::Calendar,
+                    });
+                }
             }
 
             Message::Submit(date) => {
