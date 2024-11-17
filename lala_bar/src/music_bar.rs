@@ -63,13 +63,16 @@ impl LalaMusicBar {
         let week = date.format("%A").to_string();
         let time = self.datetime.time();
         let time_info = time.format("%H:%M").to_string();
-        let week_btn = button(text(week.clone())).on_press(Message::ToggleCalendar);
+
+        let week_btn = button(text(week))
+            .on_press(Message::ToggleCalendar)
+            .style(button::secondary);
         container(row![
             week_btn,
             Space::with_width(5.),
-            text(time_info),
+            container(text(time_info)).center_y(Length::Fill),
             Space::with_width(5.),
-            text(dateday)
+            container(text(dateday)).center_y(Length::Fill)
         ])
         .center_y(Length::Fill)
         .height(Length::Fill)
@@ -606,13 +609,13 @@ impl MultiApplication for LalaMusicBar {
                     self.is_calendar_open = true;
                     return Command::done(Message::NewLayerShell {
                         settings: NewLayerShellSettings {
-                            size: Some((400, 350)),
+                            size: Some((350, 350)),
                             exclusive_zone: None,
                             anchor: Anchor::Right | Anchor::Bottom,
                             layer: Layer::Top,
                             margin: Some((10, 10, 10, 10)),
-                            keyboard_interactivity: KeyboardInteractivity::Exclusive,
-                            use_last_output: false,
+                            keyboard_interactivity: KeyboardInteractivity::None,
+                            use_last_output: true,
                         },
                         info: LaLaInfo::Calendar,
                     });
@@ -1042,14 +1045,16 @@ impl MultiApplication for LalaMusicBar {
                     }
                 }
                 LaLaInfo::Calendar => {
-                    let datepicker = date_picker(
+                    return container(date_picker(
                         true,
                         self.date,
                         button(text("Pick date")),
                         Message::Cancel,
                         Message::Submit,
-                    );
-                    return column![datepicker].into();
+                    ))
+                    .center_y(Length::Fill)
+                    .center_x(Length::Fill)
+                    .into();
                 }
                 LaLaInfo::Notify(unitwidgetinfo) => {
                     let btnwidgets: Element<Message> = unitwidgetinfo.notify_button(self);

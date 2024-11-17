@@ -2399,6 +2399,7 @@ dependencies = [
  "gio",
  "iced",
  "iced_aw",
+ "iced_fonts",
  "iced_futures",
  "iced_layershell",
  "iced_runtime",
