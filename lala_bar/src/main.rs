@@ -5,6 +5,7 @@ use launcher::{LaunchMessage, Launcher};
 use zbus_mpirs::ServiceInfo;
 
 use futures::channel::mpsc::Sender;
+use iced_aw::date_picker::Date;
 use iced_layershell::reexport::{Anchor, Layer};
 use iced_layershell::settings::{LayerShellSettings, Settings, StartMode};
 use iced_layershell::to_layer_message;
@@ -54,6 +55,7 @@ pub enum LaLaInfo {
     HiddenInfo,
     RightPanel,
     ErrorHappened(iced::window::Id),
+    Calendar,
 }
 
 #[to_layer_message(multi, info_name = "LaLaInfo")]
@@ -87,6 +89,9 @@ pub enum Message {
     Ready(Sender<NotifyCommand>),
     #[allow(unused)]
     LinkClicked(markdown::Url),
+    ToggleCalendar,
+    Cancel,
+    Submit(Date),
 }
 
 impl From<NotifyMessage> for Message {
