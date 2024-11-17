@@ -616,6 +616,7 @@ impl MultiApplication for LalaMusicBar {
                             margin: Some((10, 10, 10, 10)),
                             keyboard_interactivity: KeyboardInteractivity::None,
                             use_last_output: true,
+                            ..Default::default()
                         },
                         info: LaLaInfo::Calendar,
                     });
@@ -727,6 +728,7 @@ impl MultiApplication for LalaMusicBar {
                             margin: None,
                             keyboard_interactivity: KeyboardInteractivity::Exclusive,
                             use_last_output: false,
+                            ..Default::default()
                         },
                         info: LaLaInfo::Launcher,
                     }),
@@ -752,6 +754,7 @@ impl MultiApplication for LalaMusicBar {
                             layer: Layer::Top,
                             keyboard_interactivity: KeyboardInteractivity::Exclusive,
                             use_last_output: false,
+                            ..Default::default()
                         },
                         info: LaLaInfo::Launcher,
                     }),
@@ -774,6 +777,7 @@ impl MultiApplication for LalaMusicBar {
                         margin: None,
                         keyboard_interactivity: KeyboardInteractivity::None,
                         use_last_output: false,
+                        ..Default::default()
                     },
                     info: LaLaInfo::RightPanel,
                 });
@@ -848,6 +852,7 @@ impl MultiApplication for LalaMusicBar {
                                 margin: Some((10, 10, 10, 10)),
                                 keyboard_interactivity: KeyboardInteractivity::OnDemand,
                                 use_last_output: true,
+                                ..Default::default()
                             },
                             info: LaLaInfo::Notify(Box::new(NotifyUnitWidgetInfo {
                                 to_delete: false,
@@ -888,6 +893,7 @@ impl MultiApplication for LalaMusicBar {
                             margin: Some((EXTRAINF_MARGIN, 10, 10, 10)),
                             keyboard_interactivity: KeyboardInteractivity::None,
                             use_last_output: true,
+                            ..Default::default()
                         },
                         info: LaLaInfo::HiddenInfo,
                     }));
@@ -925,6 +931,7 @@ impl MultiApplication for LalaMusicBar {
                                 margin: Some((notify_info.upper, 10, 10, 10)),
                                 keyboard_interactivity: KeyboardInteractivity::OnDemand,
                                 use_last_output: true,
+                                ..Default::default()
                             },
                             info: LaLaInfo::Notify(Box::new(notify_info.clone())),
                         }));
@@ -941,6 +948,7 @@ impl MultiApplication for LalaMusicBar {
                                 margin: Some((EXTRAINF_MARGIN, 10, 10, 10)),
                                 keyboard_interactivity: KeyboardInteractivity::None,
                                 use_last_output: true,
+                                ..Default::default()
                             },
                             info: LaLaInfo::HiddenInfo,
                         }));

@@ -31,8 +31,7 @@ pub fn main() -> Result<(), iced_layershell::Error> {
             tracing_subscriber::filter::EnvFilter::builder()
                 .with_default_directive(LevelFilter::INFO.into())
                 .from_env_lossy()
-                .add_directive("usvg=off".parse().unwrap()), //.parse("usvg::parser::svgtree=off")
-                                                             //.unwrap(),
+                .add_directive("usvg=off".parse().unwrap()),
         )
         .init();
     LalaMusicBar::run(Settings {
@@ -42,8 +41,10 @@ pub fn main() -> Result<(), iced_layershell::Error> {
             anchor: Anchor::Bottom | Anchor::Left | Anchor::Right,
             layer: Layer::Top,
             start_mode: StartMode::AllScreens,
+
             ..Default::default()
         },
+        fonts: vec![std::borrow::Cow::Borrowed(iced_fonts::REQUIRED_FONT_BYTES)],
         ..Default::default()
     })
 }
