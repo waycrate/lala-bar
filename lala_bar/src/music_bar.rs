@@ -18,7 +18,9 @@ use iced::widget::{
     text_input, Space,
 };
 use iced::{executor, Alignment, Element, Font, Length, Task as Command, Theme};
-use iced_aw::{date_picker::Date, helpers::date_picker};
+use iced_aw::{
+    date_picker::Date, helpers::date_picker, time_picker, time_picker::Time, TimePicker,
+};
 use iced_layershell::reexport::{Anchor, KeyboardInteractivity, Layer, NewLayerShellSettings};
 use iced_layershell::MultiApplication;
 use iced_runtime::window::Action as WindowAction;
@@ -54,6 +56,9 @@ pub struct LalaMusicBar {
     show_picker: bool,
     date: Date,
     is_calendar_open: bool,
+    time: Time,
+    is_time_picker_open: bool,
+    time_picker_id: Option<iced::window::Id>,
 }
 
 impl LalaMusicBar {
@@ -67,16 +72,21 @@ impl LalaMusicBar {
         let week_btn = button(text(week))
             .on_press(Message::ToggleCalendar)
             .style(button::secondary);
+
+        let time_btn = button(text(time_info))
+            .on_press(Message::ToggleTime)
+            .style(button::secondary);
+
         container(row![
             week_btn,
             Space::with_width(5.),
-            container(text(time_info)).center_y(Length::Fill),
+            container(time_btn).center_y(Length::Fill),
             Space::with_width(5.),
             container(text(dateday)).center_y(Length::Fill)
         ])
-        .center_y(Length::Fill)
-        .height(Length::Fill)
-        .into()
+            .center_y(Length::Fill)
+            .height(Length::Fill)
+            .into()
     }
     pub fn update_hidden_notification(&mut self) {
         let mut hiddened: Vec<NotifyUnitWidgetInfo> = self
@@ -229,8 +239,8 @@ impl LalaMusicBar {
             Space::with_width(Length::Fixed(1.)),
             button(">").on_press(Message::SliderIndexNext)
         ]
-        .align_y(Alignment::Center)
-        .into()
+            .align_y(Alignment::Center)
+            .into()
     }
     fn left_bar(&self) -> Element<Message> {
         row![
@@ -242,8 +252,8 @@ impl LalaMusicBar {
             Space::with_width(Length::Fixed(10.)),
             button(">").on_press(Message::SliderIndexNext)
         ]
-        .align_y(Alignment::Center)
-        .into()
+            .align_y(Alignment::Center)
+            .into()
     }
     fn right_bar(&self) -> Element<Message> {
         row![
@@ -255,8 +265,8 @@ impl LalaMusicBar {
             Space::with_width(Length::Fixed(10.)),
             button(">").on_press(Message::SliderIndexNext)
         ]
-        .align_y(Alignment::Center)
-        .into()
+            .align_y(Alignment::Center)
+            .into()
     }
 
     fn sound_slider(&self) -> Element<Message> {
@@ -311,9 +321,9 @@ impl LalaMusicBar {
                                 color: Some(iced::Color::WHITE),
                             }),
                     )
-                    .width(Length::Fill)
-                    .center_x(Length::Fill)
-                    .into(),
+                        .width(Length::Fill)
+                        .center_x(Length::Fill)
+                        .into(),
                 );
                 view_elements.push(Space::with_height(10.).into());
             }
@@ -325,8 +335,8 @@ impl LalaMusicBar {
                 column(btns).spacing(10.),
                 Space::with_width(10.)
             ))
-            .height(Length::Fill)
-            .into(),
+                .height(Length::Fill)
+                .into(),
             container(checkbox("quite mode", self.quite_mode).on_toggle(Message::QuiteMode))
                 .width(Length::Fill)
                 .center_x(Length::Fill)
@@ -349,7 +359,7 @@ impl LalaMusicBar {
                 .width(25.)
                 .height(25.),
         )
-        .on_press(Message::ToggleLauncher);
+            .on_press(Message::ToggleLauncher);
 
         let sound_slider = self.sound_slider();
         let panel_text = if self.right_panel.is_some() { ">" } else { "<" };
@@ -364,7 +374,7 @@ impl LalaMusicBar {
                 Space::with_width(Length::Fixed(3.)),
                 button(text(panel_text)).on_press(Message::ToggleRightPanel)
             ]
-            .spacing(10);
+                .spacing(10);
             return container(col)
                 .width(Length::Fill)
                 .height(Length::Fill)
@@ -399,8 +409,8 @@ impl LalaMusicBar {
                     color: Some(iced::Color::WHITE),
                 }),
         )
-        .width(Length::Fill)
-        .center_x(Length::Fill);
+            .width(Length::Fill)
+            .center_x(Length::Fill);
         let can_play = service_data.can_play;
         let can_pause = service_data.can_pause;
         let can_go_next = service_data.can_go_next;
@@ -452,7 +462,7 @@ impl LalaMusicBar {
                 Space::with_width(Length::Fixed(3.)),
                 button(text(panel_text)).on_press(Message::ToggleRightPanel)
             ]
-            .spacing(10)
+                .spacing(10)
         } else {
             row![
                 toggle_launcher,
@@ -465,7 +475,7 @@ impl LalaMusicBar {
                 Space::with_width(Length::Fixed(3.)),
                 button(text(panel_text)).on_press(Message::ToggleRightPanel)
             ]
-            .spacing(10)
+                .spacing(10)
         };
 
         container(col)
@@ -511,6 +521,9 @@ impl MultiApplication for LalaMusicBar {
                 show_picker: false,
                 date: Date::today(),
                 is_calendar_open: false,
+                is_time_picker_open: false,
+                time: Time::default(),
+                time_picker_id: None,
             },
             Command::batch(vec![
                 Command::done(Message::UpdateBalance),
@@ -528,6 +541,8 @@ impl MultiApplication for LalaMusicBar {
             Some(LaLaInfo::Launcher)
         } else if self.hiddenid.is_some_and(|tid| tid == id) {
             Some(LaLaInfo::HiddenInfo)
+        } else if self.time_picker_id.is_some_and(|tid| tid == id) {
+            Some(LaLaInfo::TimePicker)
         } else if self.right_panel.is_some_and(|tid| tid == id) {
             Some(LaLaInfo::RightPanel)
         } else if self.calendar_id.is_some_and(|tid| tid == id) {
@@ -561,6 +576,7 @@ impl MultiApplication for LalaMusicBar {
             }
             LaLaInfo::RightPanel => self.right_panel = Some(id),
             LaLaInfo::Calendar => self.calendar_id = Some(id),
+            LaLaInfo::TimePicker => self.time_picker_id = Some(id),
             _ => unreachable!(),
         }
     }
@@ -579,8 +595,8 @@ impl MultiApplication for LalaMusicBar {
         'clear_nid: {
             if let Some(nid) = self.showned_notifications.remove(&id) {
                 if let Some(NotifyUnitWidgetInfo {
-                    to_delete: false, ..
-                }) = self.notifications.get(&nid)
+                                to_delete: false, ..
+                            }) = self.notifications.get(&nid)
                 {
                     break 'clear_nid;
                 }
@@ -602,10 +618,47 @@ impl MultiApplication for LalaMusicBar {
             Message::ToggleCalendar => {
                 if self.is_calendar_open && self.calendar_id.is_some() {
                     self.is_calendar_open = false;
-                    return iced_runtime::task::effect(Action::Window(WindowAction::Close(
-                        self.calendar_id.unwrap(),
-                    )));
+                    return iced_runtime::task::Task::batch([iced_runtime::task::effect(
+                        Action::Window(WindowAction::Close(self.calendar_id.unwrap())),
+                    )]);
+                } else if self.is_calendar_open
+                    && self.is_time_picker_open
+                    && self.calendar_id.is_some()
+                    && self.time_picker_id.is_some()
+                {
+                    self.is_time_picker_open = false;
+                    self.is_calendar_open = false;
+                    return iced_runtime::task::Task::batch([
+                        iced_runtime::task::effect(Action::Window(WindowAction::Close(
+                            self.calendar_id.unwrap(),
+                        ))),
+                        iced_runtime::task::effect(Action::Window(WindowAction::Close(
+                            self.time_picker_id.unwrap(),
+                        ))),
+                    ]);
                 } else {
+                    if self.is_time_picker_open && self.time_picker_id.is_some() {
+                        self.is_time_picker_open = false;
+                        self.is_calendar_open = true;
+                        return iced_runtime::task::Task::batch([
+                            iced_runtime::task::effect(Action::Window(WindowAction::Close(
+                                self.time_picker_id.unwrap(),
+                            ))),
+                            Command::done(Message::NewLayerShell {
+                                settings: NewLayerShellSettings {
+                                    size: Some((350, 350)),
+                                    exclusive_zone: None,
+                                    anchor: Anchor::Right | Anchor::Bottom,
+                                    layer: Layer::Top,
+                                    margin: Some((10, 10, 10, 10)),
+                                    keyboard_interactivity: KeyboardInteractivity::None,
+                                    use_last_output: true,
+                                    ..Default::default()
+                                },
+                                info: LaLaInfo::Calendar,
+                            }),
+                        ]);
+                    }
                     self.is_calendar_open = true;
                     return Command::done(Message::NewLayerShell {
                         settings: NewLayerShellSettings {
@@ -619,6 +672,67 @@ impl MultiApplication for LalaMusicBar {
                             ..Default::default()
                         },
                         info: LaLaInfo::Calendar,
+                    });
+                }
+            }
+
+            Message::ToggleTime => {
+                if self.is_time_picker_open && self.time_picker_id.is_some() {
+                    self.is_time_picker_open = false;
+                    return iced_runtime::task::Task::batch([iced_runtime::task::effect(
+                        Action::Window(WindowAction::Close(self.time_picker_id.unwrap())),
+                    )]);
+                } else if self.is_calendar_open
+                    && self.is_time_picker_open
+                    && self.calendar_id.is_some()
+                    && self.time_picker_id.is_some()
+                {
+                    self.is_time_picker_open = false;
+                    self.is_calendar_open = false;
+                    return iced_runtime::task::Task::batch([
+                        iced_runtime::task::effect(Action::Window(WindowAction::Close(
+                            self.calendar_id.unwrap(),
+                        ))),
+                        iced_runtime::task::effect(Action::Window(WindowAction::Close(
+                            self.time_picker_id.unwrap(),
+                        ))),
+                    ]);
+                } else {
+                    if self.is_calendar_open && self.calendar_id.is_some() {
+                        self.is_calendar_open = false;
+                        self.is_time_picker_open = true;
+                        return iced_runtime::task::Task::batch([
+                            iced_runtime::task::effect(Action::Window(WindowAction::Close(
+                                self.calendar_id.unwrap(),
+                            ))),
+                            Command::done(Message::NewLayerShell {
+                                settings: NewLayerShellSettings {
+                                    size: Some((350, 350)),
+                                    exclusive_zone: None,
+                                    anchor: Anchor::Right | Anchor::Bottom,
+                                    layer: Layer::Top,
+                                    margin: Some((10, 10, 10, 10)),
+                                    keyboard_interactivity: KeyboardInteractivity::None,
+                                    use_last_output: true,
+                                    ..Default::default()
+                                },
+                                info: LaLaInfo::TimePicker,
+                            }),
+                        ]);
+                    }
+                    self.is_time_picker_open = true;
+                    return Command::done(Message::NewLayerShell {
+                        settings: NewLayerShellSettings {
+                            size: Some((350, 350)),
+                            exclusive_zone: None,
+                            anchor: Anchor::Right | Anchor::Bottom,
+                            layer: Layer::Top,
+                            margin: Some((10, 10, 10, 10)),
+                            keyboard_interactivity: KeyboardInteractivity::None,
+                            use_last_output: true,
+                            ..Default::default()
+                        },
+                        info: LaLaInfo::TimePicker,
                     });
                 }
             }
@@ -1060,9 +1174,22 @@ impl MultiApplication for LalaMusicBar {
                         Message::Cancel,
                         Message::Submit,
                     ))
-                    .center_y(Length::Fill)
-                    .center_x(Length::Fill)
-                    .into();
+                        .center_y(Length::Fill)
+                        .center_x(Length::Fill)
+                        .into();
+                }
+
+                LaLaInfo::TimePicker => {
+                    return container(time_picker(
+                        true,
+                        self.time,
+                        button(text("Pick time")),
+                        Message::CancelTime,
+                        Message::SubmitTime,
+                    ))
+                        .center_y(Length::Fill)
+                        .center_x(Length::Fill)
+                        .into();
                 }
                 LaLaInfo::Notify(unitwidgetinfo) => {
                     let btnwidgets: Element<Message> = unitwidgetinfo.notify_button(self);
@@ -1085,7 +1212,7 @@ impl MultiApplication for LalaMusicBar {
                                 ))),
                             ]
                         ]
-                        .into();
+                            .into();
                     }
                     return btnwidgets;
                 }
@@ -1094,7 +1221,7 @@ impl MultiApplication for LalaMusicBar {
                         "hidden notifications {}",
                         self.hidden_notification().len()
                     ))
-                    .into();
+                        .into();
                 }
                 LaLaInfo::RightPanel => {
                     return self.right_panel_view();
@@ -1156,7 +1283,7 @@ impl MultiApplication for LalaMusicBar {
                             spec_version: env!("CARGO_PKG_VERSION_PATCH").to_owned(),
                         },
                     )
-                    .await
+                        .await
                     else {
                         pending::<()>().await;
                         unreachable!()
@@ -1179,8 +1306,8 @@ impl MultiApplication for LalaMusicBar {
                                     id,
                                     &action_key,
                                 )
-                                .await
-                                .ok();
+                                    .await
+                                    .ok();
                             }
                             NotifyCommand::InlineReply { id, text } => {
                                 LaLaMakoMusic::notification_replied(
@@ -1188,8 +1315,8 @@ impl MultiApplication for LalaMusicBar {
                                     id,
                                     &text,
                                 )
-                                .await
-                                .ok();
+                                    .await
+                                    .ok();
                             }
                             NotifyCommand::NotificationClosed { id, reason } => {
                                 LaLaMakoMusic::notification_closed(
@@ -1197,8 +1324,8 @@ impl MultiApplication for LalaMusicBar {
                                     id,
                                     reason,
                                 )
-                                .await
-                                .ok();
+                                    .await
+                                    .ok();
                             }
                         }
                     }
