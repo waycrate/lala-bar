@@ -520,7 +520,7 @@ impl MultiApplication for LalaMusicBar {
                 date: Date::today(),
                 is_calendar_open: false,
                 is_time_picker_open: false,
-                time: Time::default(),
+                time: Time::now_hm(true),
                 time_picker_id: None,
             },
             Command::batch(vec![
