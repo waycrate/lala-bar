@@ -6,6 +6,7 @@ use zbus_mpirs::ServiceInfo;
 
 use futures::channel::mpsc::Sender;
 use iced_aw::date_picker::Date;
+use iced_aw::time_picker::Time;
 use iced_layershell::reexport::{Anchor, Layer};
 use iced_layershell::settings::{LayerShellSettings, Settings, StartMode};
 use iced_layershell::to_layer_message;
@@ -57,6 +58,7 @@ pub enum LaLaInfo {
     RightPanel,
     ErrorHappened(iced::window::Id),
     Calendar,
+    TimePicker,
 }
 
 #[to_layer_message(multi, info_name = "LaLaInfo")]
@@ -93,6 +95,9 @@ pub enum Message {
     ToggleCalendar,
     Cancel,
     Submit(Date),
+    ToggleTime,
+    CancelTime,
+    SubmitTime(Time),
 }
 
 impl From<NotifyMessage> for Message {
