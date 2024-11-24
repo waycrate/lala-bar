@@ -67,7 +67,7 @@ impl LalaMusicBar {
         let time = self.datetime.time();
         let time_info = time.format("%H:%M").to_string();
 
-        let week_btn = button(text(week))
+        let date_btn = button(text(format!("{week} {dateday}")))
             .on_press(Message::ToggleCalendar)
             .style(button::secondary);
 
@@ -75,16 +75,10 @@ impl LalaMusicBar {
             .on_press(Message::ToggleTime)
             .style(button::secondary);
 
-        container(row![
-            week_btn,
-            Space::with_width(5.),
-            container(time_btn).center_y(Length::Fill),
-            Space::with_width(5.),
-            container(text(dateday)).center_y(Length::Fill)
-        ])
-        .center_y(Length::Fill)
-        .height(Length::Fill)
-        .into()
+        container(row![time_btn, Space::with_width(5.), date_btn,])
+            .center_y(Length::Fill)
+            .height(Length::Fill)
+            .into()
     }
     pub fn update_hidden_notification(&mut self) {
         let mut hiddened: Vec<NotifyUnitWidgetInfo> = self
@@ -470,7 +464,7 @@ impl LalaMusicBar {
                 sound_slider,
                 Space::with_width(Length::Fixed(3.)),
                 self.date_widget(),
-                Space::with_width(Length::Fixed(3.)),
+                Space::with_width(Length::Fixed(1.)),
                 button(text(panel_text)).on_press(Message::ToggleRightPanel)
             ]
             .spacing(10)
