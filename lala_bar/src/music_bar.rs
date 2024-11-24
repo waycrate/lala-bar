@@ -852,7 +852,7 @@ impl MultiApplication for LalaMusicBar {
                                 margin: Some((10, 10, 10, 10)),
                                 keyboard_interactivity: KeyboardInteractivity::OnDemand,
                                 use_last_output: true,
-                                ..Default::default()
+                                events_transparent: true,
                             },
                             info: LaLaInfo::Notify(Box::new(NotifyUnitWidgetInfo {
                                 to_delete: false,
