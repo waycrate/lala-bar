@@ -728,9 +728,9 @@ impl MultiApplication for LalaMusicBar {
                     });
                 }
             }
-
-            Message::Submit(date) => {
-                self.date = date;
+            // NOTE: it is meaningless to pick the date now
+            Message::Submit(_date) => {
+                //self.date = date;
                 self.show_picker = false;
             }
             Message::Cancel => {
@@ -1140,12 +1140,14 @@ impl MultiApplication for LalaMusicBar {
             }
             Message::RequestUpdateTime => {
                 self.datetime = Local::now();
+                self.date = self.datetime.date_naive().into();
+                self.time = self.datetime.time().into()
             }
             Message::Ready(sender) => self.sender = Some(sender),
             Message::LinkClicked(_link) => {
                 // I do not care
             }
-            _ => unreachable!(),
+            _ => {}
         }
         Command::none()
     }
