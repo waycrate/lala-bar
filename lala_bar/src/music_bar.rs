@@ -51,7 +51,6 @@ pub struct LalaMusicBar {
     quite_mode: bool,
     datetime: DateTime<Local>,
     calendar_id: Option<iced::window::Id>,
-    show_picker: bool,
     date: Date,
     is_calendar_open: bool,
     time: Time,
@@ -510,7 +509,6 @@ impl MultiApplication for LalaMusicBar {
                 quite_mode: false,
                 datetime: Local::now(),
                 calendar_id: None,
-                show_picker: false,
                 date: Date::today(),
                 is_calendar_open: false,
                 is_time_picker_open: false,
@@ -610,9 +608,9 @@ impl MultiApplication for LalaMusicBar {
             Message::ToggleCalendar => {
                 if self.is_calendar_open && self.calendar_id.is_some() {
                     self.is_calendar_open = false;
-                    return iced_runtime::task::Task::batch([iced_runtime::task::effect(
-                        Action::Window(WindowAction::Close(self.calendar_id.unwrap())),
-                    )]);
+                    return iced_runtime::task::effect(Action::Window(WindowAction::Close(
+                        self.calendar_id.unwrap(),
+                    )));
                 } else if self.is_calendar_open
                     && self.is_time_picker_open
                     && self.calendar_id.is_some()
@@ -729,12 +727,17 @@ impl MultiApplication for LalaMusicBar {
                 }
             }
             // NOTE: it is meaningless to pick the date now
-            Message::Submit(_date) => {
-                //self.date = date;
-                self.show_picker = false;
+            Message::SubmitDate(_) | Message::CancelDate => {
+                if let Some(id) = self.calendar_id {
+                    self.is_calendar_open = false;
+                    return iced_runtime::task::effect(Action::Window(WindowAction::Close(id)));
+                }
             }
-            Message::Cancel => {
-                self.show_picker = false;
+            Message::SubmitTime(_) | Message::CancelTime => {
+                if let Some(id) = self.time_picker_id {
+                    self.is_time_picker_open = false;
+                    return iced_runtime::task::effect(Action::Window(WindowAction::Close(id)));
+                }
             }
             Message::RequestPlay => {
                 if let Some(ref data) = self.service_data {
@@ -1147,7 +1150,7 @@ impl MultiApplication for LalaMusicBar {
             Message::LinkClicked(_link) => {
                 // I do not care
             }
-            _ => {}
+            _ => unreachable!(),
         }
         Command::none()
     }
@@ -1165,8 +1168,8 @@ impl MultiApplication for LalaMusicBar {
                         true,
                         self.date,
                         button(text("Pick date")),
-                        Message::Cancel,
-                        Message::Submit,
+                        Message::CancelDate,
+                        Message::SubmitDate,
                     ))
                     .center_y(Length::Fill)
                     .center_x(Length::Fill)

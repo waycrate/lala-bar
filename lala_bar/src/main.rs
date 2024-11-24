@@ -93,8 +93,8 @@ pub enum Message {
     #[allow(unused)]
     LinkClicked(markdown::Url),
     ToggleCalendar,
-    Cancel,
-    Submit(Date),
+    CancelDate,
+    SubmitDate(Date),
     ToggleTime,
     CancelTime,
     SubmitTime(Time),
