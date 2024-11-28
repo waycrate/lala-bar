@@ -627,7 +627,7 @@ impl MultiApplication for LalaMusicBar {
                                     ..Default::default()
                                 },
                                 info: LaLaInfo::Calendar,
-                                single_tone: true,
+                                singleton: true,
                             }),
                         ]);
                     }
@@ -643,7 +643,7 @@ impl MultiApplication for LalaMusicBar {
                             ..Default::default()
                         },
                         info: LaLaInfo::Calendar,
-                        single_tone: true,
+                        singleton: true,
                     });
                 }
             }
@@ -671,7 +671,7 @@ impl MultiApplication for LalaMusicBar {
                                     ..Default::default()
                                 },
                                 info: LaLaInfo::TimePicker,
-                                single_tone: true,
+                                singleton: true,
                             }),
                         ]);
                     }
@@ -687,7 +687,7 @@ impl MultiApplication for LalaMusicBar {
                             ..Default::default()
                         },
                         info: LaLaInfo::TimePicker,
-                        single_tone: true,
+                        singleton: true,
                     });
                 }
             }
@@ -803,7 +803,7 @@ impl MultiApplication for LalaMusicBar {
                             ..Default::default()
                         },
                         info: LaLaInfo::Launcher,
-                        single_tone: true,
+                        singleton: true,
                     }),
                     self.launcher.as_ref().unwrap().focus_input(),
                 ]);
@@ -830,7 +830,7 @@ impl MultiApplication for LalaMusicBar {
                             ..Default::default()
                         },
                         info: LaLaInfo::Launcher,
-                        single_tone: true,
+                        singleton: true,
                     }),
                     self.launcher.as_ref().unwrap().focus_input(),
                 ]);
@@ -854,7 +854,7 @@ impl MultiApplication for LalaMusicBar {
                         ..Default::default()
                     },
                     info: LaLaInfo::RightPanel,
-                    single_tone: true,
+                    singleton: true,
                 });
             }
             Message::Notify(NotifyMessage::UnitAdd(notify)) => {
@@ -936,7 +936,7 @@ impl MultiApplication for LalaMusicBar {
                                 inline_reply: String::new(),
                                 unit: *notify.clone(),
                             })),
-                            single_tone: false,
+                            singleton: false,
                         }));
 
                         // NOTE: remove the new one
@@ -970,7 +970,7 @@ impl MultiApplication for LalaMusicBar {
                             ..Default::default()
                         },
                         info: LaLaInfo::HiddenInfo,
-                        single_tone: true,
+                        singleton: true,
                     }));
                 }
 
@@ -1009,7 +1009,7 @@ impl MultiApplication for LalaMusicBar {
                                 ..Default::default()
                             },
                             info: LaLaInfo::Notify(Box::new(notify_info.clone())),
-                            single_tone: false,
+                            singleton: false,
                         }));
                     }
                     if self.notifications.len() > MAX_SHOWN_NOTIFICATIONS_COUNT
@@ -1027,7 +1027,7 @@ impl MultiApplication for LalaMusicBar {
                                 ..Default::default()
                             },
                             info: LaLaInfo::HiddenInfo,
-                            single_tone: true,
+                            singleton: true,
                         }));
                     }
                 }
