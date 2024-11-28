@@ -1934,9 +1934,9 @@ dependencies = [
 
 [[package]]
 name = "iced_layershell"
-version = "0.9.7"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "14ebe7d51beda677292d014275df5e0ef1fbfb4c199fc00d817e1b0212efab1f"
+checksum = "4bd3513e52e46272da1cb42cb8d70b1feed4ec2b92254f3cc6cc317bd1f6a90a"
 dependencies = [
  "futures",
  "iced",
@@ -1955,9 +1955,9 @@ dependencies = [
 
 [[package]]
 name = "iced_layershell_macros"
-version = "0.9.7"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "68509059191e2941e8cf3722075d49c68e286cb15d6b641e9d25a9f0d1050f85"
+checksum = "0c48550986be5238fafde9d655ea277367d4fe5f8bad7c148c01e11715cb4ff6"
 dependencies = [
  "darling",
  "manyhow",
@@ -2417,9 +2417,9 @@ dependencies = [
 
 [[package]]
 name = "layershellev"
-version = "0.9.7"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6e6d80d84918461e2433d399644b77cac971f33801aae7fd19977edee50e78b9"
+checksum = "8491373adc2ac2da377f8a17ed899e7678d8e29251d01a2264110bc0146ab45f"
 dependencies = [
  "bitflags 2.6.0",
  "calloop 0.14.1",
@@ -2472,7 +2472,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4979f22fdb869068da03c9f7528f8297c6fd2606bc3a4affe42e6a823fdb8da4"
 dependencies = [
  "cfg-if",
- "windows-targets 0.48.5",
+ "windows-targets 0.52.6",
 ]
 
 [[package]]
@@ -4605,9 +4605,9 @@ dependencies = [
 
 [[package]]
 name = "waycrate_xkbkeycode"
-version = "0.9.7"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "41785f50961595dd1d6e60caf7f3337caf2842d3a1d6fdf06bce7c025e958f18"
+checksum = "f9145baf637613b323747a6ebc080edd62b9fd6b4de8812ed20653b60085631b"
 dependencies = [
  "bitflags 2.6.0",
  "calloop 0.14.1",
@@ -4779,7 +4779,7 @@ dependencies = [
  "js-sys",
  "log",
  "naga",
- "parking_lot 0.11.2",
+ "parking_lot 0.12.3",
  "profiling",
  "raw-window-handle",
  "smallvec",
@@ -4807,7 +4807,7 @@ dependencies = [
  "log",
  "naga",
  "once_cell",
- "parking_lot 0.11.2",
+ "parking_lot 0.12.3",
  "profiling",
  "raw-window-handle",
  "rustc-hash 1.1.0",
@@ -4849,7 +4849,7 @@ dependencies = [
  "ndk-sys 0.5.0+25.2.9519653",
  "objc",
  "once_cell",
- "parking_lot 0.11.2",
+ "parking_lot 0.12.3",
  "profiling",
  "range-alloc",
  "raw-window-handle",

@@ -4,7 +4,7 @@ use iced::{Font, Length};
 use iced_layershell::MultiApplication;
 use iced_zbus_notification::{ImageInfo, NotifyUnit};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct NotifyUnitWidgetInfo {
     pub to_delete: bool,
     pub upper: i32,

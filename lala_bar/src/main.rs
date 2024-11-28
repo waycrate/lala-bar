@@ -50,7 +50,7 @@ pub fn main() -> Result<(), iced_layershell::Error> {
     })
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum LaLaInfo {
     Launcher,
     Notify(Box<NotifyUnitWidgetInfo>),

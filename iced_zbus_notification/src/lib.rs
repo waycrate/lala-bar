@@ -52,7 +52,7 @@ impl Id {
 }
 
 /// Describe the image information.
-#[derive(Type, Debug, SerializeDict, OwnedValue, Clone)]
+#[derive(Type, Debug, SerializeDict, OwnedValue, Clone, PartialEq)]
 struct ImageData {
     width: i32,
     height: i32,
@@ -127,14 +127,14 @@ fn get_jpeg_icon(theme: &str, icon: &str) -> Option<PathBuf> {
 }
 
 /// storage the hint of notification
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct NotifyHint {
     image_data: Option<ImageData>,
     desktop_entry: Option<String>,
     urgency: Urgency,
 }
 
-#[derive(Deserialize, Serialize, Type, Debug, Clone, OwnedValue)]
+#[derive(Deserialize, Serialize, Type, Debug, Clone, OwnedValue, PartialEq)]
 #[repr(u8)]
 pub enum Urgency {
     Low = 0,
@@ -179,7 +179,7 @@ impl NotifyHint {
 }
 
 /// Describe the information in every time notify send
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct NotifyUnit {
     /// application from
     pub app_name: String,
