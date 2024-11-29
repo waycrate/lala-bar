@@ -627,7 +627,6 @@ impl MultiApplication for LalaMusicBar {
                                     ..Default::default()
                                 },
                                 info: LaLaInfo::Calendar,
-                                singleton: true,
                             }),
                         ]);
                     }
@@ -643,7 +642,6 @@ impl MultiApplication for LalaMusicBar {
                             ..Default::default()
                         },
                         info: LaLaInfo::Calendar,
-                        singleton: true,
                     });
                 }
             }
@@ -671,7 +669,6 @@ impl MultiApplication for LalaMusicBar {
                                     ..Default::default()
                                 },
                                 info: LaLaInfo::TimePicker,
-                                singleton: true,
                             }),
                         ]);
                     }
@@ -687,7 +684,6 @@ impl MultiApplication for LalaMusicBar {
                             ..Default::default()
                         },
                         info: LaLaInfo::TimePicker,
-                        singleton: true,
                     });
                 }
             }
@@ -803,7 +799,6 @@ impl MultiApplication for LalaMusicBar {
                             ..Default::default()
                         },
                         info: LaLaInfo::Launcher,
-                        singleton: true,
                     }),
                     self.launcher.as_ref().unwrap().focus_input(),
                 ]);
@@ -830,7 +825,6 @@ impl MultiApplication for LalaMusicBar {
                             ..Default::default()
                         },
                         info: LaLaInfo::Launcher,
-                        singleton: true,
                     }),
                     self.launcher.as_ref().unwrap().focus_input(),
                 ]);
@@ -854,7 +848,6 @@ impl MultiApplication for LalaMusicBar {
                         ..Default::default()
                     },
                     info: LaLaInfo::RightPanel,
-                    singleton: true,
                 });
             }
             Message::Notify(NotifyMessage::UnitAdd(notify)) => {
@@ -936,7 +929,6 @@ impl MultiApplication for LalaMusicBar {
                                 inline_reply: String::new(),
                                 unit: *notify.clone(),
                             })),
-                            singleton: false,
                         }));
 
                         // NOTE: remove the new one
@@ -970,7 +962,6 @@ impl MultiApplication for LalaMusicBar {
                             ..Default::default()
                         },
                         info: LaLaInfo::HiddenInfo,
-                        singleton: true,
                     }));
                 }
 
@@ -1009,7 +1000,6 @@ impl MultiApplication for LalaMusicBar {
                                 ..Default::default()
                             },
                             info: LaLaInfo::Notify(Box::new(notify_info.clone())),
-                            singleton: false,
                         }));
                     }
                     if self.notifications.len() > MAX_SHOWN_NOTIFICATIONS_COUNT
@@ -1027,7 +1017,6 @@ impl MultiApplication for LalaMusicBar {
                                 ..Default::default()
                             },
                             info: LaLaInfo::HiddenInfo,
-                            singleton: true,
                         }));
                     }
                 }

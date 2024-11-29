@@ -9,8 +9,8 @@ use iced_aw::date_picker::Date;
 use iced_aw::time_picker::Time;
 use iced_layershell::reexport::{Anchor, Layer};
 use iced_layershell::settings::{LayerShellSettings, Settings, StartMode};
-use iced_layershell::to_layer_message;
 use iced_layershell::MultiApplication;
+use iced_layershell::{to_layer_message, LayerSingleton};
 
 mod aximer;
 mod config;
@@ -50,14 +50,19 @@ pub fn main() -> Result<(), iced_layershell::Error> {
     })
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, LayerSingleton)]
 pub enum LaLaInfo {
+    #[singleton]
     Launcher,
     Notify(Box<NotifyUnitWidgetInfo>),
+    #[singleton]
     HiddenInfo,
+    #[singleton]
     RightPanel,
     ErrorHappened(iced::window::Id),
+    #[singleton]
     Calendar,
+    #[singleton]
     TimePicker,
 }
 
