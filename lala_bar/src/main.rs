@@ -16,6 +16,7 @@ mod aximer;
 mod config;
 mod dbusbackend;
 mod launcher;
+mod localize;
 mod music_bar;
 mod notify;
 mod slider;
@@ -35,6 +36,7 @@ pub fn main() -> Result<(), iced_layershell::Error> {
                 .add_directive("usvg=off".parse().unwrap()),
         )
         .init();
+    localize::localize();
     LalaMusicBar::run(Settings {
         layer_settings: LayerShellSettings {
             size: Some((0, 35)),
