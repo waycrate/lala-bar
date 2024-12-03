@@ -1,7 +1,6 @@
 use crate::{LalaMusicBar, Message};
 use iced::widget::{button, column, image, markdown, row, svg, text, Space, Stack};
 use iced::{Font, Length};
-use iced_layershell::MultiApplication;
 use iced_zbus_notification::{ImageInfo, NotifyUnit};
 
 #[derive(Debug, Clone, PartialEq)]

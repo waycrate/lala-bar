@@ -17,10 +17,11 @@ use iced::widget::{
     button, checkbox, column, container, image, markdown, row, scrollable, slider, svg, text,
     text_input, Space,
 };
-use iced::{executor, Alignment, Element, Font, Length, Task as Command, Theme};
+use iced::{Alignment, Element, Font, Length, Task as Command, Theme};
 use iced_aw::{date_picker::Date, helpers::date_picker, time_picker, time_picker::Time};
 use iced_layershell::reexport::{Anchor, KeyboardInteractivity, Layer, NewLayerShellSettings};
-use iced_layershell::MultiApplication;
+use iced_layershell::settings::LayerShellSettings;
+use iced_layershell::settings::StartMode;
 use iced_runtime::window::Action as WindowAction;
 use iced_runtime::Action;
 use iced_zbus_notification::{
@@ -28,6 +29,32 @@ use iced_zbus_notification::{
     NOTIFICATION_SERVICE_PATH,
 };
 use std::collections::HashMap;
+
+use iced_layershell::build_pattern::daemon;
+
+pub fn run_lalabar() -> iced_layershell::Result {
+    daemon(
+        LalaMusicBar::namespace,
+        LalaMusicBar::update,
+        LalaMusicBar::view,
+        LalaMusicBar::id_info,
+        LalaMusicBar::set_id_info,
+        LalaMusicBar::remove_id,
+    )
+    .layer_settings(LayerShellSettings {
+        size: Some((0, 35)),
+        exclusive_zone: 35,
+        anchor: Anchor::Bottom | Anchor::Left | Anchor::Right,
+        layer: Layer::Top,
+        start_mode: StartMode::AllScreens,
+
+        ..Default::default()
+    })
+    .theme(LalaMusicBar::theme)
+    .subscription(LalaMusicBar::subscription)
+    .font(iced_fonts::REQUIRED_FONT_BYTES)
+    .run_with(LalaMusicBar::new)
+}
 
 pub struct LalaMusicBar {
     pub(crate) service_data: Option<ServiceInfo>,
@@ -475,14 +502,8 @@ impl LalaMusicBar {
     }
 }
 
-impl MultiApplication for LalaMusicBar {
-    type Message = Message;
-    type Flags = ();
-    type Executor = executor::Default;
-    type Theme = Theme;
-    type WindowInfo = LaLaInfo;
-
-    fn new(_flags: Self::Flags) -> (Self, Command<Message>) {
+impl LalaMusicBar {
+    fn new() -> (Self, Command<Message>) {
         (
             Self {
                 service_data: None,
@@ -520,7 +541,7 @@ impl MultiApplication for LalaMusicBar {
         String::from("Mpirs_panel")
     }
 
-    fn id_info(&self, id: iced::window::Id) -> Option<Self::WindowInfo> {
+    fn id_info(&self, id: iced::window::Id) -> Option<LaLaInfo> {
         if self.launcherid.is_some_and(|tid| tid == id) {
             Some(LaLaInfo::Launcher)
         } else if self.hiddenid.is_some_and(|tid| tid == id) {
@@ -546,7 +567,7 @@ impl MultiApplication for LalaMusicBar {
         }
     }
 
-    fn set_id_info(&mut self, id: iced::window::Id, info: Self::WindowInfo) {
+    fn set_id_info(&mut self, id: iced::window::Id, info: LaLaInfo) {
         match info {
             LaLaInfo::Launcher => {
                 self.launcherid = Some(id);
@@ -1195,7 +1216,7 @@ impl MultiApplication for LalaMusicBar {
         self.main_view()
     }
 
-    fn subscription(&self) -> iced::Subscription<Self::Message> {
+    fn subscription(&self) -> iced::Subscription<Message> {
         iced::Subscription::batch([
             iced::time::every(std::time::Duration::from_secs(1))
                 .map(|_| Message::RequestDBusInfoUpdate),
@@ -1290,7 +1311,7 @@ impl MultiApplication for LalaMusicBar {
         ])
     }
 
-    fn theme(&self) -> Self::Theme {
+    pub fn theme(&self) -> iced::Theme {
         Theme::TokyoNight
     }
 }

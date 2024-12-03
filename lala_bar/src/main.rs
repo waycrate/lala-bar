@@ -7,9 +7,6 @@ use zbus_mpirs::ServiceInfo;
 use futures::channel::mpsc::Sender;
 use iced_aw::date_picker::Date;
 use iced_aw::time_picker::Time;
-use iced_layershell::reexport::{Anchor, Layer};
-use iced_layershell::settings::{LayerShellSettings, Settings, StartMode};
-use iced_layershell::MultiApplication;
 use iced_layershell::{to_layer_message, LayerSingleton};
 
 mod aximer;
@@ -35,19 +32,7 @@ pub fn main() -> Result<(), iced_layershell::Error> {
                 .add_directive("usvg=off".parse().unwrap()),
         )
         .init();
-    LalaMusicBar::run(Settings {
-        layer_settings: LayerShellSettings {
-            size: Some((0, 35)),
-            exclusive_zone: 35,
-            anchor: Anchor::Bottom | Anchor::Left | Anchor::Right,
-            layer: Layer::Top,
-            start_mode: StartMode::AllScreens,
-
-            ..Default::default()
-        },
-        fonts: vec![std::borrow::Cow::Borrowed(iced_fonts::REQUIRED_FONT_BYTES)],
-        ..Default::default()
-    })
+    music_bar::run_lalabar()
 }
 
 #[derive(Debug, Clone, PartialEq, LayerSingleton)]
