@@ -919,7 +919,9 @@ impl LalaMusicBar {
             Message::ToggleLauncherDBus => {
                 if self.launcher.is_some() {
                     if let Some(Some(id)) = self.ids.get("launcher").map(|v| v.as_ref()) {
-                        return iced_runtime::task::effect(Action::Window(WindowAction::Close(*id)));
+                        return iced_runtime::task::effect(Action::Window(WindowAction::Close(
+                            *id,
+                        )));
                     }
                     return Command::none();
                 }
