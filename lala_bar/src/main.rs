@@ -7,7 +7,7 @@ use zbus_mpirs::ServiceInfo;
 use futures::channel::mpsc::Sender;
 use iced_aw::date_picker::Date;
 use iced_aw::time_picker::Time;
-use iced_layershell::{to_layer_message, WindowInfoMarker};
+use iced_layershell::to_layer_message;
 
 mod aximer;
 mod config;
@@ -35,23 +35,18 @@ pub fn main() -> Result<(), iced_layershell::Error> {
     music_bar::run_lalabar()
 }
 
-#[derive(Debug, Clone, PartialEq, WindowInfoMarker)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum LaLaInfo {
-    #[singleton]
     Launcher,
     Notify(Box<NotifyUnitWidgetInfo>),
-    #[singleton]
     HiddenInfo,
-    #[singleton]
     RightPanel,
     ErrorHappened(iced::window::Id),
-    #[singleton]
     Calendar,
-    #[singleton]
     TimePicker,
 }
 
-#[to_layer_message(multi, info_name = "LaLaInfo")]
+#[to_layer_message(multi)]
 #[derive(Debug, Clone)]
 pub enum Message {
     RequestPre,

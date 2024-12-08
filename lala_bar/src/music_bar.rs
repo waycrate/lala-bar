@@ -37,8 +37,6 @@ pub fn run_lalabar() -> iced_layershell::Result {
         LalaMusicBar::namespace,
         LalaMusicBar::update,
         LalaMusicBar::view,
-        LalaMusicBar::id_info,
-        LalaMusicBar::set_id_info,
         LalaMusicBar::remove_id,
     )
     .layer_settings(LayerShellSettings {
@@ -631,6 +629,8 @@ impl LalaMusicBar {
                         calendar_id,
                     )));
                 } else {
+                    let id = iced::window::Id::unique();
+                    self.set_id_info(id, LaLaInfo::Calendar);
                     if let Some(time_picker_id) = self.time_picker_id {
                         return iced_runtime::task::Task::batch([
                             iced_runtime::task::effect(Action::Window(WindowAction::Close(
@@ -647,7 +647,7 @@ impl LalaMusicBar {
                                     use_last_output: true,
                                     ..Default::default()
                                 },
-                                info: LaLaInfo::Calendar,
+                                id,
                             }),
                         ]);
                     }
@@ -662,7 +662,7 @@ impl LalaMusicBar {
                             use_last_output: true,
                             ..Default::default()
                         },
-                        info: LaLaInfo::Calendar,
+                        id,
                     });
                 }
             }
@@ -673,6 +673,8 @@ impl LalaMusicBar {
                         time_picker_id,
                     )));
                 } else {
+                    let id = iced::window::Id::unique();
+                    self.set_id_info(id, LaLaInfo::TimePicker);
                     if let Some(calendar_id) = self.calendar_id {
                         return iced_runtime::task::Task::batch([
                             iced_runtime::task::effect(Action::Window(WindowAction::Close(
@@ -689,7 +691,7 @@ impl LalaMusicBar {
                                     use_last_output: true,
                                     ..Default::default()
                                 },
-                                info: LaLaInfo::TimePicker,
+                                id,
                             }),
                         ]);
                     }
@@ -704,7 +706,7 @@ impl LalaMusicBar {
                             use_last_output: true,
                             ..Default::default()
                         },
-                        info: LaLaInfo::TimePicker,
+                        id,
                     });
                 }
             }
@@ -807,6 +809,8 @@ impl LalaMusicBar {
                     return Command::none();
                 }
                 self.launcher = Some(Launcher::new());
+                let id = iced::window::Id::unique();
+                self.set_id_info(id, LaLaInfo::Launcher);
                 return Command::batch(vec![
                     Command::done(Message::NewLayerShell {
                         settings: NewLayerShellSettings {
@@ -819,7 +823,7 @@ impl LalaMusicBar {
                             use_last_output: false,
                             ..Default::default()
                         },
-                        info: LaLaInfo::Launcher,
+                        id,
                     }),
                     self.launcher.as_ref().unwrap().focus_input(),
                 ]);
@@ -832,6 +836,8 @@ impl LalaMusicBar {
                     return Command::none();
                 }
                 self.launcher = Some(Launcher::new());
+                let id = iced::window::Id::unique();
+                self.set_id_info(id, LaLaInfo::Launcher);
                 return Command::batch(vec![
                     Command::done(Message::NewLayerShell {
                         settings: NewLayerShellSettings {
@@ -845,7 +851,7 @@ impl LalaMusicBar {
                             use_last_output: false,
                             ..Default::default()
                         },
-                        info: LaLaInfo::Launcher,
+                        id,
                     }),
                     self.launcher.as_ref().unwrap().focus_input(),
                 ]);
@@ -857,6 +863,8 @@ impl LalaMusicBar {
                     }
                     return Command::none();
                 }
+                let id = iced::window::Id::unique();
+                self.set_id_info(id, LaLaInfo::RightPanel);
                 return Command::done(Message::NewLayerShell {
                     settings: NewLayerShellSettings {
                         size: Some((300, 0)),
@@ -868,7 +876,7 @@ impl LalaMusicBar {
                         use_last_output: false,
                         ..Default::default()
                     },
-                    info: LaLaInfo::RightPanel,
+                    id,
                 });
             }
             Message::Notify(NotifyMessage::UnitAdd(notify)) => {
@@ -931,6 +939,31 @@ impl LalaMusicBar {
                             }
                         }
                     } else {
+                        // NOTE: remove the new one
+                        let to_adjust_notification = &showned_notifications_now[1..];
+                        for ((_, unit), (id, _)) in
+                            to_adjust_notification.iter().zip(showned_values.iter())
+                        {
+                            commands.push(Command::done(Message::MarginChange {
+                                id: **id,
+                                margin: (unit.upper, 10, 10, 10),
+                            }));
+                        }
+
+                        drop(showned_values);
+                        drop(showned_notifications_now);
+
+                        let id = iced::window::Id::unique();
+                        self.set_id_info(
+                            id,
+                            LaLaInfo::Notify(Box::new(NotifyUnitWidgetInfo {
+                                to_delete: false,
+                                counter: 0,
+                                upper: 10,
+                                inline_reply: String::new(),
+                                unit: *notify.clone(),
+                            })),
+                        );
                         // NOTE: if not all shown, then do as the way before
                         commands.push(Command::done(Message::NewLayerShell {
                             settings: NewLayerShellSettings {
@@ -943,25 +976,8 @@ impl LalaMusicBar {
                                 use_last_output: true,
                                 events_transparent: true,
                             },
-                            info: LaLaInfo::Notify(Box::new(NotifyUnitWidgetInfo {
-                                to_delete: false,
-                                counter: 0,
-                                upper: 10,
-                                inline_reply: String::new(),
-                                unit: *notify.clone(),
-                            })),
+                            id,
                         }));
-
-                        // NOTE: remove the new one
-                        let to_adjust_notification = &showned_notifications_now[1..];
-                        for ((_, unit), (id, _)) in
-                            to_adjust_notification.iter().zip(showned_values.iter())
-                        {
-                            commands.push(Command::done(Message::MarginChange {
-                                id: **id,
-                                margin: (unit.upper, 10, 10, 10),
-                            }));
-                        }
                     }
                 }
 
@@ -971,6 +987,8 @@ impl LalaMusicBar {
                     && !self.quite_mode
                     && self.hiddenid.is_none()
                 {
+                    let id = iced::window::Id::unique();
+                    self.set_id_info(id, LaLaInfo::HiddenInfo);
                     commands.push(Command::done(Message::NewLayerShell {
                         settings: NewLayerShellSettings {
                             size: Some((300, 25)),
@@ -982,7 +1000,7 @@ impl LalaMusicBar {
                             use_last_output: true,
                             ..Default::default()
                         },
-                        info: LaLaInfo::HiddenInfo,
+                        id,
                     }));
                 }
 
@@ -1006,9 +1024,12 @@ impl LalaMusicBar {
                 } else {
                     for (_, notify_info) in self
                         .notifications
+                        .clone()
                         .iter()
                         .filter(|(_, info)| info.counter < MAX_SHOWN_NOTIFICATIONS_COUNT)
                     {
+                        let id = iced::window::Id::unique();
+                        self.set_id_info(id, LaLaInfo::Notify(Box::new(notify_info.clone())));
                         commands.push(Command::done(Message::NewLayerShell {
                             settings: NewLayerShellSettings {
                                 size: Some((300, 130)),
@@ -1020,12 +1041,14 @@ impl LalaMusicBar {
                                 use_last_output: true,
                                 ..Default::default()
                             },
-                            info: LaLaInfo::Notify(Box::new(notify_info.clone())),
+                            id,
                         }));
                     }
                     if self.notifications.len() > MAX_SHOWN_NOTIFICATIONS_COUNT
                         && self.hiddenid.is_none()
                     {
+                        let id = iced::window::Id::unique();
+                        self.set_id_info(id, LaLaInfo::HiddenInfo);
                         commands.push(Command::done(Message::NewLayerShell {
                             settings: NewLayerShellSettings {
                                 size: Some((300, 25)),
@@ -1037,7 +1060,7 @@ impl LalaMusicBar {
                                 use_last_output: true,
                                 ..Default::default()
                             },
-                            info: LaLaInfo::HiddenInfo,
+                            id,
                         }));
                     }
                 }
