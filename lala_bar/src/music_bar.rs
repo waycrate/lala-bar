@@ -1022,9 +1022,8 @@ impl LalaMusicBar {
                         )));
                     }
                 } else {
-                    for (_, notify_info) in self
-                        .notifications
-                        .clone()
+                    let notifications = std::mem::take(&mut self.notifications);
+                    for (_, notify_info) in notifications
                         .iter()
                         .filter(|(_, info)| info.counter < MAX_SHOWN_NOTIFICATIONS_COUNT)
                     {
@@ -1044,6 +1043,7 @@ impl LalaMusicBar {
                             id,
                         }));
                     }
+                    self.notifications = notifications;
                     if self.notifications.len() > MAX_SHOWN_NOTIFICATIONS_COUNT
                         && self.hiddenid.is_none()
                     {
