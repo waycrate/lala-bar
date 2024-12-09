@@ -972,7 +972,7 @@ impl LalaMusicBar {
                                 anchor: Anchor::Right | Anchor::Top,
                                 layer: Layer::Top,
                                 margin: Some((10, 10, 10, 10)),
-                                keyboard_interactivity: KeyboardInteractivity::OnDemand,
+                                keyboard_interactivity: KeyboardInteractivity::None,
                                 use_last_output: true,
                                 events_transparent: true,
                             },
