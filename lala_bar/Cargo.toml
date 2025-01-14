@@ -21,28 +21,27 @@ iced = { version = "0.13.1", features = [
 	"markdown",
 ] }
 iced_runtime = "0.13.2"
-tokio = { version = "1.42", features = ["full"] }
-iced_layershell = "0.13.0"
+tokio = { version = "1.43", features = ["full"] }
+iced_layershell = "0.13.1"
 iced_futures = "0.13.2"
-env_logger = "0.11.5"
-tracing = "0.1.40"
+env_logger = "0.11.6"
+tracing = "0.1.41"
 
 futures-util.workspace = true
 serde.workspace = true
 
 zbus.workspace = true
-tracing-subscriber = { version = "0.3.18", features = ["std", "env-filter"] }
-anyhow = "1.0.93"
+tracing-subscriber = { version = "0.3.19", features = ["std", "env-filter"] }
+anyhow = "1.0.95"
 alsa = "0.9.1"
 
-gio = "0.20.6"
+gio = "0.20.7"
 regex = "1.11.1"
 xdg = "2.5.2"
 url.workspace = true
 futures.workspace = true
 iced_zbus_notification.workspace = true
-chrono = "0.4.38"
+chrono = "0.4.39"
 async-trait.workspace = true
-tracing-journald = "0.3.0"
 iced_aw = "0.11.0"
 iced_fonts = "0.1.1"

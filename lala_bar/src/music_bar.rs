@@ -974,7 +974,7 @@ impl LalaMusicBar {
                                 margin: Some((10, 10, 10, 10)),
                                 keyboard_interactivity: KeyboardInteractivity::None,
                                 use_last_output: true,
-                                events_transparent: true,
+                                events_transparent: false,
                             },
                             id,
                         }));
