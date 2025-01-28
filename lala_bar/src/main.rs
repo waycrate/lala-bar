@@ -24,6 +24,7 @@ use notify::NotifyUnitWidgetInfo;
 
 pub fn main() -> Result<(), iced_layershell::Error> {
     use tracing_subscriber::filter::LevelFilter;
+    use tracing_subscriber::fmt::time::LocalTime;
     tracing_subscriber::fmt()
         .with_env_filter(
             tracing_subscriber::filter::EnvFilter::builder()
@@ -31,6 +32,7 @@ pub fn main() -> Result<(), iced_layershell::Error> {
                 .from_env_lossy()
                 .add_directive("usvg=off".parse().unwrap()),
         )
+        .with_timer(LocalTime::rfc_3339())
         .init();
     music_bar::run_lalabar()
 }
