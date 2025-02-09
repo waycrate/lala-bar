@@ -12,13 +12,16 @@ repository.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-iced = { version = "0.13.1", features = [
+iced = { version = "0.13.1", default-features = false, features = [
 	"tokio",
 	"debug",
 	"image",
 	"advanced",
 	"svg",
 	"markdown",
+	"tiny-skia",
+	"fira-sans",
+	"auto-detect-theme",
 ] }
 iced_runtime = "0.13.2"
 tokio = { version = "1.43", features = ["full"] }
