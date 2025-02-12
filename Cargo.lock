@@ -2088,7 +2088,7 @@ dependencies = [
  "glob",
  "serde",
  "url",
- "zbus 5.3.0",
+ "zbus 5.5.0",
 ]
 
 [[package]]
@@ -2422,7 +2422,7 @@ dependencies = [
  "tracing-subscriber",
  "url",
  "xdg",
- "zbus 5.3.0",
+ "zbus 5.5.0",
 ]
 
 [[package]]
@@ -4312,7 +4312,7 @@ dependencies = [
  "serde",
  "serde_spanned",
  "toml_datetime",
- "winnow",
+ "winnow 0.6.24",
 ]
 
 [[package]]
@@ -5269,6 +5269,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "winnow"
+version = "0.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "59690dea168f2198d1a3b0cac23b8063efcd11012f10ae4698f284808c8ef603"
+dependencies = [
+ "memchr",
+]
+
+[[package]]
 name = "winreg"
 version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5444,9 +5453,9 @@ dependencies = [
 
 [[package]]
 name = "zbus"
-version = "5.3.0"
+version = "5.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "192a0d989036cd60a1e91a54c9851fb9ad5bd96125d41803eed79d2e2ef74bd7"
+checksum = "59c333f648ea1b647bc95dc1d34807c8e25ed7a6feff3394034dc4776054b236"
 dependencies = [
  "async-broadcast",
  "async-recursion",
@@ -5454,7 +5463,7 @@ dependencies = [
  "enumflags2",
  "event-listener",
  "futures-core",
- "futures-util",
+ "futures-lite",
  "hex",
  "nix",
  "ordered-stream",
@@ -5465,9 +5474,9 @@ dependencies = [
  "tracing",
  "uds_windows",
  "windows-sys 0.59.0",
- "winnow",
+ "winnow 0.7.2",
  "xdg-home",
- "zbus_macros 5.3.0",
+ "zbus_macros 5.5.0",
  "zbus_names 4.1.1",
  "zvariant 5.2.0",
 ]
@@ -5487,9 +5496,9 @@ dependencies = [
 
 [[package]]
 name = "zbus_macros"
-version = "5.3.0"
+version = "5.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3685b5c81fce630efc3e143a4ded235b107f1b1cdf186c3f115529e5e5ae4265"
+checksum = "f325ad10eb0d0a3eb060203494c3b7ec3162a01a59db75d2deee100339709fc0"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2",
@@ -5519,7 +5528,7 @@ checksum = "519629a3f80976d89c575895b05677cbc45eaf9f70d62a364d819ba646409cc8"
 dependencies = [
  "serde",
  "static_assertions",
- "winnow",
+ "winnow 0.6.24",
  "zvariant 5.2.0",
 ]
 
@@ -5625,7 +5634,7 @@ dependencies = [
  "enumflags2",
  "serde",
  "static_assertions",
- "winnow",
+ "winnow 0.6.24",
  "zvariant_derive 5.2.0",
  "zvariant_utils 3.1.0",
 ]
@@ -5678,5 +5687,5 @@ dependencies = [
  "serde",
  "static_assertions",
  "syn 2.0.96",
- "winnow",
+ "winnow 0.6.24",
 ]
