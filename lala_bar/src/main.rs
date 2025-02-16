@@ -1,6 +1,5 @@
-use async_trait::async_trait;
 use iced::widget::markdown;
-use iced_zbus_notification::{MessageSender, NotifyMessage};
+use iced_zbus_notification::NotifyMessage;
 use launcher::{LaunchMessage, Launcher};
 use zbus_mpirs::ServiceInfo;
 
@@ -113,18 +112,4 @@ async fn get_metadata() -> Option<ServiceInfo> {
         return Some((*playingserver).clone());
     }
     alive_infos.first().cloned().cloned()
-}
-
-struct IcedMessageSender(Sender<Message>);
-
-#[async_trait]
-impl MessageSender<Message> for IcedMessageSender {
-    async fn try_send(&mut self, message: Message) -> Option<()> {
-        if matches!(message, Message::Notify(NotifyMessage::UnitAdd(_))) {
-            // HACK: let message receiver to be a little late, for the notify widget to be ready
-            tokio::time::sleep(std::time::Duration::from_secs_f64(0.05)).await;
-        }
-
-        self.0.try_send(message).ok()
-    }
 }

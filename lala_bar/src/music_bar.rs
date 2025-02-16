@@ -5,7 +5,6 @@ use crate::launcher::LaunchMessage;
 use crate::notify::{NotifyCommand, NotifyUnitWidgetInfo};
 use crate::slider::SliderIndex;
 use crate::zbus_mpirs::ServiceInfo;
-use crate::IcedMessageSender;
 use crate::Launcher;
 use crate::{aximer, launcher};
 use crate::{get_metadata_initial, LaLaInfo, Message};
@@ -24,6 +23,7 @@ use iced_layershell::settings::LayerShellSettings;
 use iced_layershell::settings::StartMode;
 use iced_runtime::window::Action as WindowAction;
 use iced_runtime::Action;
+use iced_zbus_notification::MessageSenderDefault;
 use iced_zbus_notification::{
     start_connection, LaLaMako, NotifyMessage, VersionInfo, DEFAULT_ACTION,
     NOTIFICATION_SERVICE_PATH,
@@ -1264,7 +1264,7 @@ impl LalaMusicBar {
                     // Send the sender back to the application
                     output.send(Message::Ready(sender)).await.ok();
                     let Ok(connection) = start_connection(
-                        IcedMessageSender(output),
+                        MessageSenderDefault(output),
                         vec![
                             "body".to_owned(),
                             "body-markup".to_owned(),

@@ -253,7 +253,7 @@ pub trait MessageSender<T: Send> {
 }
 
 /// it is a default message sender, just contains a [`Sender`]
-pub struct MessageSenderDefault<T: Send>(Sender<T>);
+pub struct MessageSenderDefault<T: Send>(pub Sender<T>);
 
 impl<T: Send> MessageSenderDefault<T> {
     /// You should pass a sender to this MessageSenderDefault
