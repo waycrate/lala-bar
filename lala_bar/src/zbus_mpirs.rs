@@ -9,10 +9,10 @@ use std::sync::LazyLock;
 use tokio::sync::Mutex;
 
 use zbus::{
+    Result,
     fdo::{DBusProxy, NameOwnerChangedArgs},
     proxy,
     zvariant::{OwnedObjectPath, OwnedValue},
-    Result,
 };
 
 const PLAYCTLD: &str = "org.mpris.MediaPlayer2.playerctld";

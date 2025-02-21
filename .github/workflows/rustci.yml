@@ -17,11 +17,13 @@ jobs:
     build:
         name: Build Binary
         runs-on: ubuntu-latest
+        container:
+          image: archlinux:latest
         steps:
             - uses: actions/checkout@v4
             - uses: dtolnay/rust-toolchain@stable
             - name: Install Deps
-              run: sudo apt install -y libxkbcommon-dev libalsaplayer-dev libasound2-dev libglib2.0-dev
+              run: pacman -Syu --noconfirm build-base git sudo libxkbcommon wayland alsa-lib alsa-utils
             - name: Run fmt check
               run: cargo fmt --all -- --check
             - name: Run clippy check
@@ -36,11 +38,13 @@ jobs:
         needs:
             - build
         runs-on: ubuntu-latest
+        container:
+          image: archlinux:latest
         steps:
             - uses: actions/checkout@v4
             - uses: dtolnay/rust-toolchain@stable
             - name: Install Deps
-              run: sudo apt install -y libxkbcommon-dev libwayland-dev libalsaplayer-dev libasound2-dev
+              run: pacman -Syu --noconfirm build-base git sudo libxkbcommon wayland alsa-lib alsa-utils
             - name: Publish to crate
               run: |
                 cargo publish -p iced_zbus_notification --token ${{ secrets.CRATES_TOKEN }}

@@ -1,3 +1,4 @@
+use crate::Launcher;
 use crate::config::*;
 use crate::dbusbackend;
 use crate::get_metadata;
@@ -5,28 +6,27 @@ use crate::launcher::LaunchMessage;
 use crate::notify::{NotifyCommand, NotifyUnitWidgetInfo};
 use crate::slider::SliderIndex;
 use crate::zbus_mpirs::ServiceInfo;
-use crate::Launcher;
+use crate::{LaLaInfo, Message, get_metadata_initial};
 use crate::{aximer, launcher};
-use crate::{get_metadata_initial, LaLaInfo, Message};
 use chrono::{DateTime, Local};
-use futures::channel::mpsc::{channel, Sender};
-use futures::future::pending;
 use futures::StreamExt;
+use futures::channel::mpsc::{Sender, channel};
+use futures::future::pending;
 use iced::widget::{
-    button, checkbox, column, container, image, markdown, row, scrollable, slider, svg, text,
-    text_input, Space,
+    Space, button, checkbox, column, container, image, markdown, row, scrollable, slider, svg,
+    text, text_input,
 };
 use iced::{Alignment, Element, Font, Length, Task as Command, Theme};
 use iced_aw::{date_picker::Date, helpers::date_picker, time_picker, time_picker::Time};
 use iced_layershell::reexport::{Anchor, KeyboardInteractivity, Layer, NewLayerShellSettings};
 use iced_layershell::settings::LayerShellSettings;
 use iced_layershell::settings::StartMode;
-use iced_runtime::window::Action as WindowAction;
 use iced_runtime::Action;
+use iced_runtime::window::Action as WindowAction;
 use iced_zbus_notification::MessageSenderDefault;
 use iced_zbus_notification::{
-    start_connection, LaLaMako, NotifyMessage, VersionInfo, DEFAULT_ACTION,
-    NOTIFICATION_SERVICE_PATH,
+    DEFAULT_ACTION, LaLaMako, NOTIFICATION_SERVICE_PATH, NotifyMessage, VersionInfo,
+    start_connection,
 };
 use std::collections::HashMap;
 
@@ -621,7 +621,7 @@ impl LalaMusicBar {
         match message {
             Message::DBusInfoUpdate(data) => self.service_data = data,
             Message::RequestDBusInfoUpdate => {
-                return Command::perform(get_metadata(), Message::DBusInfoUpdate)
+                return Command::perform(get_metadata(), Message::DBusInfoUpdate);
             }
             Message::ToggleCalendar => {
                 if let Some(calendar_id) = self.calendar_id {
@@ -1070,7 +1070,7 @@ impl LalaMusicBar {
             }
 
             Message::Notify(NotifyMessage::UnitRemove(removed_id)) => {
-                return self.remove_notify(removed_id)
+                return self.remove_notify(removed_id);
             }
 
             Message::CheckOutput => {

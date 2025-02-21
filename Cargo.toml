@@ -1,10 +1,10 @@
 [workspace]
-resolver = "2"
+resolver = "3"
 members = ["./lala_bar", "./iced_zbus_notification"]
 
 [workspace.package]
 version = "0.4.3"
-edition = "2021"
+edition = "2024"
 authors = ["Decodertalkers <aakari@tutanota.com>"]
 license = "MIT"
 repository = "https://github.com/Decodetalkers/lala-bar"

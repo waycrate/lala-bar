@@ -1,10 +1,10 @@
 mod applications;
 
-use applications::{all_apps, App};
+use applications::{App, all_apps};
 use iced::widget::{column, scrollable, text_input};
 use iced::{Element, Event, Length, Task as Command};
-use iced_runtime::window::Action as WindowAction;
 use iced_runtime::Action;
+use iced_runtime::window::Action as WindowAction;
 
 use super::Message;
 

@@ -1,5 +1,5 @@
 use crate::{LalaMusicBar, Message};
-use iced::widget::{button, column, image, markdown, row, svg, text, Space, Stack};
+use iced::widget::{Space, Stack, button, column, image, markdown, row, svg, text};
 use iced::{Font, Length};
 use iced_zbus_notification::{ImageInfo, NotifyUnit};
 

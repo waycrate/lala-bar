@@ -112,11 +112,7 @@ fn get_png_icon(theme: &str, icon: &str) -> Option<PathBuf> {
 
 fn get_pixmap_icon(icon: &str) -> Option<PathBuf> {
     let path = Path::new(format!("/usr/share/pixmaps/{icon}.png").as_str()).to_owned();
-    if path.exists() {
-        Some(path)
-    } else {
-        None
-    }
+    if path.exists() { Some(path) } else { None }
 }
 
 fn get_jpeg_icon(theme: &str, icon: &str) -> Option<PathBuf> {
