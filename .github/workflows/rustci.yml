@@ -22,6 +22,8 @@ jobs:
         steps:
             - uses: actions/checkout@v4
             - uses: dtolnay/rust-toolchain@stable
+              with:
+                components: clippy rustfmt
             - name: Install Deps
               run: pacman -Syu --noconfirm base-devel git sudo libxkbcommon wayland alsa-lib alsa-utils
             - name: Run fmt check
