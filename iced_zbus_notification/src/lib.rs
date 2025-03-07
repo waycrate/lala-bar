@@ -393,7 +393,7 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
 /// org.freedesktop.Notifications server path
 pub const NOTIFICATION_SERVICE_PATH: &str = "/org/freedesktop/Notifications";
 /// org.freedesktop.Notifications server name
-pub const NOTIFICATION_SERVICE_NAME: &str = "/org/freedesktop/Notifications";
+pub const NOTIFICATION_SERVICE_NAME: &str = "org.freedesktop.Notifications";
 /// org.freedesktop.Notifications interface name
 pub const NOTIFICATION_SERVICE_INTERFACE: &str = "/org/freedesktop/Notifications";
 
