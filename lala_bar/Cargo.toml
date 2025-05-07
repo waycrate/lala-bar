@@ -21,7 +21,7 @@ iced = { version = "0.13.1", features = [
 	"markdown",
 ] }
 iced_runtime = "0.13.2"
-tokio = { version = "1.44", features = ["full"] }
+tokio = { version = "1.45", features = ["full"] }
 iced_layershell = "0.13.5"
 iced_futures = "0.13.2"
 env_logger = "0.11.6"
