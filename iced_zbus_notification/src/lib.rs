@@ -53,7 +53,6 @@ impl Id {
 
 /// Describe the image information.
 #[derive(Type, Debug, OwnedValue, Clone, PartialEq)]
-#[zvariant(signature = "dict")]
 struct ImageData {
     width: i32,
     height: i32,
