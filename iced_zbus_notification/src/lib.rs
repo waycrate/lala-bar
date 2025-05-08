@@ -17,7 +17,7 @@ use futures::channel::mpsc::Sender;
 use std::sync::{Arc, LazyLock, RwLock};
 use zbus::connection;
 
-use zbus::zvariant::{SerializeDict, Type};
+use zbus::zvariant::Type;
 
 /// The notification expired
 pub const NOTIFICATION_DELETED_BY_EXPIRED: u32 = 1;
@@ -52,7 +52,8 @@ impl Id {
 }
 
 /// Describe the image information.
-#[derive(Type, Debug, SerializeDict, OwnedValue, Clone, PartialEq)]
+#[derive(Type, Debug, OwnedValue, Clone, PartialEq)]
+#[zvariant(signature = "dict")]
 struct ImageData {
     width: i32,
     height: i32,
