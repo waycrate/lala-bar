@@ -155,6 +155,18 @@ pub enum ImageInfo {
     Jpg(PathBuf),
 }
 
+fn keep_rgba(has_alpha: bool, data: &Vec<u8>) -> Vec<u8> {
+    if has_alpha {
+        return data.clone();
+    }
+    let mut new_data = vec![];
+    for chunk in data.chunks(3) {
+        new_data.append(&mut chunk.to_vec());
+        new_data.push(u8::MAX);
+    }
+    new_data
+}
+
 impl NotifyHint {
     fn desktop_image(&self) -> Option<ImageInfo> {
         self.desktop_entry
@@ -165,7 +177,7 @@ impl NotifyHint {
         self.image_data.as_ref().map(|data| ImageInfo::Data {
             width: data.width,
             height: data.height,
-            pixels: data.data.clone(),
+            pixels: keep_rgba(data.has_alpha, &data.data),
         })
     }
 
