@@ -73,7 +73,7 @@ impl NotifyUnitWidgetInfo {
             .height(Length::Fill)
             .on_press(Message::RemoveNotify(self.unit.id))
             .into(),
-            Some(ImageInfo::Data {
+            Some(ImageInfo::RgbaRaw {
                 pixels,
                 width,
                 height,

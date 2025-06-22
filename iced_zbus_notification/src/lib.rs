@@ -142,7 +142,7 @@ pub enum Urgency {
 #[derive(Debug, Clone)]
 pub enum ImageInfo {
     /// raw data of image
-    Data {
+    RgbaRaw {
         width: i32,
         height: i32,
         pixels: Vec<u8>,
@@ -174,7 +174,7 @@ impl NotifyHint {
             .and_then(|icon| lazy_get_icon(icon))
     }
     fn hint_image(&self) -> Option<ImageInfo> {
-        self.image_data.as_ref().map(|data| ImageInfo::Data {
+        self.image_data.as_ref().map(|data| ImageInfo::RgbaRaw {
             width: data.width,
             height: data.height,
             pixels: keep_rgba(data.has_alpha, &data.data),
