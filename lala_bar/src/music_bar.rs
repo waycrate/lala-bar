@@ -972,7 +972,7 @@ impl LalaMusicBar {
                                 anchor: Anchor::Right | Anchor::Top,
                                 layer: Layer::Top,
                                 margin: Some((10, 10, 10, 10)),
-                                keyboard_interactivity: KeyboardInteractivity::None,
+                                keyboard_interactivity: KeyboardInteractivity::OnDemand,
                                 use_last_output: true,
                                 events_transparent: false,
                             },
@@ -996,7 +996,7 @@ impl LalaMusicBar {
                             anchor: Anchor::Right | Anchor::Top,
                             layer: Layer::Top,
                             margin: Some((EXTRAINF_MARGIN, 10, 10, 10)),
-                            keyboard_interactivity: KeyboardInteractivity::None,
+                            keyboard_interactivity: KeyboardInteractivity::OnDemand,
                             use_last_output: true,
                             ..Default::default()
                         },
