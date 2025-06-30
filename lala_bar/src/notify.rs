@@ -23,12 +23,7 @@ impl NotifyUnitWidgetInfo {
 
         let markdown_info = bar.notifications_markdown.get(&self.unit.id);
         let text_render_text: iced::Element<Message> = match markdown_info {
-            Some(data) => markdown::view(
-                data,
-                markdown::Settings::default(),
-                markdown::Style::from_palette(bar.theme().palette()),
-            )
-            .map(Message::LinkClicked),
+            Some(data) => markdown::view(data, iced::Theme::TokyoNight).map(Message::LinkClicked),
             None => text(notify.body.clone())
                 .shaping(text::Shaping::Advanced)
                 .into(),
@@ -38,7 +33,9 @@ impl NotifyUnitWidgetInfo {
             button("")
                 .style(|_theme, status| {
                     let color = match status {
-                        button::Status::Hovered => iced::Color::new(0.118, 0.193, 0.188, 0.65),
+                        button::Status::Hovered => {
+                            iced::Color::from_rgba(0.118, 0.193, 0.188, 0.65)
+                        }
                         _ => iced::Color::TRANSPARENT,
                     };
                     button::Style {
