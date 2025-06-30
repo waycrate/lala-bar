@@ -12,18 +12,20 @@ repository.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-iced = { version = "0.13.1", features = [
+iced = { features = [
 	"tokio",
 	"debug",
 	"image",
 	"advanced",
 	"svg",
 	"markdown",
-] }
-iced_runtime = "0.13.2"
-tokio = { version = "1.47", features = ["full"] }
-iced_layershell = "0.13.7"
-iced_futures = "0.13.2"
+], git = "https://github.com/iced-rs/iced.git" }
+
+iced_layershell = { git = "https://github.com/waycrate/exwlshelleventloop" }
+
+iced_runtime = { git = "https://github.com/iced-rs/iced.git" }
+tokio = { version = "1.45", features = ["full"] }
+iced_futures = { git = "https://github.com/iced-rs/iced.git" }
 env_logger = "0.11.6"
 tracing = "0.1.41"
 
@@ -48,5 +50,7 @@ futures.workspace = true
 iced_zbus_notification.workspace = true
 chrono = "0.4.39"
 async-trait.workspace = true
-iced_aw = "0.12.0"
-iced_fonts = "0.2.1"
+# iced_aw = "0.12.0"
+iced_fonts = { git = "https://github.com/Decodetalkers/iced_fonts", branch = "follow_iced_git", features = [
+	"full",
+] }
