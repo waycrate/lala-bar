@@ -1147,8 +1147,8 @@ impl LalaMusicBar {
             //    self.time = self.datetime.time().into()
             //}
             Message::Ready(sender) => self.sender = Some(sender),
-            Message::LinkClicked(_link) => {
-                // I do not care
+            Message::LinkClicked(link) => {
+                open::that_in_background(link.to_string());
             }
             Message::WindowClosed(id) => {
                 self.remove_id(id);

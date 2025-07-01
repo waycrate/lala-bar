@@ -54,3 +54,4 @@ async-trait.workspace = true
 iced_fonts = { git = "https://github.com/Decodetalkers/iced_fonts", branch = "follow_iced_git", features = [
 	"full",
 ] }
+open = "5.3.2"

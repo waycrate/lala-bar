@@ -1,5 +1,5 @@
 use crate::{LalaMusicBar, Message};
-use iced::widget::{Space, Stack, button, column, image, markdown, row, svg, text};
+use iced::widget::{Space, button, column, image, markdown, row, svg, text};
 use iced::{Font, Length};
 use iced_zbus_notification::{ImageInfo, NotifyUnit};
 
@@ -10,6 +10,15 @@ pub struct NotifyUnitWidgetInfo {
     pub counter: usize,
     pub inline_reply: String,
     pub unit: NotifyUnit,
+}
+
+#[derive(Debug)]
+struct CustomMarkdownView;
+
+impl<'a> markdown::Viewer<'a, Message> for CustomMarkdownView {
+    fn on_link_click(url: url::Url) -> Message {
+        Message::LinkClicked(url)
+    }
 }
 
 impl NotifyUnitWidgetInfo {
@@ -23,30 +32,26 @@ impl NotifyUnitWidgetInfo {
 
         let markdown_info = bar.notifications_markdown.get(&self.unit.id);
         let text_render_text: iced::Element<Message> = match markdown_info {
-            Some(data) => markdown::view(data, iced::Theme::TokyoNight).map(Message::LinkClicked),
+            Some(data) => markdown::view_with(data, iced::Theme::TokyoNight, &CustomMarkdownView),
             None => text(notify.body.clone())
                 .shaping(text::Shaping::Advanced)
                 .into(),
         };
 
-        let text_render = Stack::new().push(text_render_text).push(
-            button("")
-                .style(|_theme, status| {
-                    let color = match status {
-                        button::Status::Hovered => {
-                            iced::Color::from_rgba(0.118, 0.193, 0.188, 0.65)
-                        }
-                        _ => iced::Color::TRANSPARENT,
-                    };
-                    button::Style {
-                        background: Some(iced::Background::Color(color)),
-                        ..Default::default()
-                    }
-                })
-                .width(Length::Fill)
-                .height(Length::Fill)
-                .on_press(Message::RemoveNotify(self.unit.id)),
-        );
+        let text_render = button(text_render_text)
+            .style(|_theme, status| {
+                let color = match status {
+                    button::Status::Hovered => iced::Color::from_rgba(0.118, 0.193, 0.188, 0.65),
+                    _ => iced::Color::TRANSPARENT,
+                };
+                button::Style {
+                    background: Some(iced::Background::Color(color)),
+                    ..Default::default()
+                }
+            })
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .on_press(Message::RemoveNotify(self.unit.id));
 
         match notify.image() {
             Some(ImageInfo::Svg(path)) => button(row![
