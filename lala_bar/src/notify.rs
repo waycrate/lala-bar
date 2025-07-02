@@ -46,6 +46,7 @@ impl NotifyUnitWidgetInfo {
                 };
                 button::Style {
                     background: Some(iced::Background::Color(color)),
+                    text_color: iced::Color::WHITE,
                     ..Default::default()
                 }
             })
