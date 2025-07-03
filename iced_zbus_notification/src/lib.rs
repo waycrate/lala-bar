@@ -205,6 +205,9 @@ pub struct NotifyUnit {
     pub timeout: i32,
     /// other information like image-data
     pub hint: NotifyHint,
+    /// if the replaced_id is provided, we will still keep an id from the application
+    /// For that if the replaced_id is not exist, you should use this one
+    pub keeped_id: Option<u32>,
 }
 
 impl NotifyUnit {
@@ -335,9 +338,11 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
         mut hints: std::collections::HashMap<&str, OwnedValue>,
         timeout: i32,
     ) -> zbus::fdo::Result<u32> {
+        let mut keeped_id = None;
         let id = if replaced_id == 0 {
             Id::unique()
         } else {
+            keeped_id = Some(Id::unique().0);
             Id(replaced_id)
         };
         let mut image_data: Option<ImageData> =
@@ -370,6 +375,7 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
                         desktop_entry,
                         urgency,
                     },
+                    keeped_id,
                 }))
                 .into(),
             )
