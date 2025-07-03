@@ -35,7 +35,7 @@ use iced_layershell::build_pattern::daemon;
 
 pub fn run_lalabar() -> iced_layershell::Result {
     daemon(
-        || LalaMusicBar::new(),
+        LalaMusicBar::new,
         LalaMusicBar::namespace,
         LalaMusicBar::update,
         LalaMusicBar::view,
@@ -55,6 +55,12 @@ pub fn run_lalabar() -> iced_layershell::Result {
     .run()
 }
 
+#[derive(Default, Debug, Clone, Copy)]
+struct IdInfo {
+    sort_id: u32,
+    id: u32,
+}
+
 pub struct LalaMusicBar {
     pub(crate) service_data: Option<ServiceInfo>,
     pub(crate) left: i64,
@@ -69,7 +75,7 @@ pub struct LalaMusicBar {
     right_panel: Option<iced::window::Id>,
     notifications: HashMap<u32, NotifyUnitWidgetInfo>,
     pub(crate) notifications_markdown: HashMap<u32, Vec<markdown::Item>>,
-    showned_notifications: HashMap<iced::window::Id, u32>,
+    showned_notifications: HashMap<iced::window::Id, IdInfo>,
     cached_notifications: HashMap<iced::window::Id, NotifyUnitWidgetInfo>,
     cached_hidden_notifications: Vec<NotifyUnitWidgetInfo>,
     sender: Option<Sender<NotifyCommand>>,
@@ -169,16 +175,16 @@ impl LalaMusicBar {
             }
         }
 
-        let mut showned_values: Vec<(&iced::window::Id, &mut u32)> =
+        let mut showned_values: Vec<(&iced::window::Id, &mut IdInfo)> =
             self.showned_notifications.iter_mut().collect();
 
-        showned_values.sort_by(|(_, a), (_, b)| b.partial_cmp(a).unwrap());
+        showned_values.sort_by(|(_, a), (_, b)| b.sort_id.partial_cmp(&a.sort_id).unwrap());
 
-        let mut notifications: Vec<&u32> = self
+        let mut notifications: Vec<(u32, u32)> = self
             .notifications
             .iter()
             .filter(|(_, v)| !v.to_delete)
-            .map(|(k, _)| k)
+            .map(|(k, v)| (*k, v.sort_id))
             .collect();
 
         notifications.sort_by(|a, b| b.partial_cmp(a).unwrap());
@@ -188,13 +194,19 @@ impl LalaMusicBar {
         let mut has_removed = false;
 
         for (id, nid) in showned_values.into_iter() {
-            if let Some(onid) = notification_iter.next() {
-                *nid = **onid;
+            if let Some((id, sort_id)) = notification_iter.next() {
+                *nid = IdInfo {
+                    id: *id,
+                    sort_id: *sort_id,
+                };
             } else {
-                if let Some(info) = self.notifications.get(nid) {
+                if let Some(info) = self.notifications.get(&nid.id) {
                     self.cached_notifications.insert(*id, info.clone());
                 }
-                *nid = removed_id;
+                *nid = IdInfo {
+                    id: removed_id,
+                    sort_id: 0,
+                };
                 commands.push(iced_runtime::task::effect(Action::Window(
                     WindowAction::Close(*id),
                 )));
@@ -558,7 +570,7 @@ impl LalaMusicBar {
             let notify_id = self.showned_notifications.get(&id)?;
             Some(
                 self.notifications
-                    .get(notify_id)
+                    .get(&notify_id.id)
                     .cloned()
                     .map(|notifyw| LaLaInfo::Notify(Box::new(notifyw)))
                     .unwrap_or(LaLaInfo::ErrorHappened(id)),
@@ -572,7 +584,13 @@ impl LalaMusicBar {
                 self.launcherid = Some(id);
             }
             LaLaInfo::Notify(notify) => {
-                self.showned_notifications.insert(id, notify.unit.id);
+                self.showned_notifications.insert(
+                    id,
+                    IdInfo {
+                        id: notify.unit.id,
+                        sort_id: notify.sort_id,
+                    },
+                );
             }
             LaLaInfo::HiddenInfo => {
                 self.hiddenid = Some(id);
@@ -605,14 +623,14 @@ impl LalaMusicBar {
             if let Some(nid) = self.showned_notifications.remove(&id) {
                 if let Some(NotifyUnitWidgetInfo {
                     to_delete: false, ..
-                }) = self.notifications.get(&nid)
+                }) = self.notifications.get(&nid.id)
                 {
                     break 'clear_nid;
                 }
                 // If the widget is marked to removed
                 // Then delete it
-                self.notifications.remove(&nid);
-                self.notifications_markdown.remove(&nid);
+                self.notifications.remove(&nid.id);
+                self.notifications_markdown.remove(&nid.id);
             }
         }
         self.cached_notifications.remove(&id);
@@ -877,15 +895,16 @@ impl LalaMusicBar {
                     id,
                 });
             }
-            Message::Notify(NotifyMessage::UnitAdd(mut notify)) => {
+            Message::Notify(NotifyMessage::UnitAdd(notify)) => {
                 if let Some(onotify) = self.notifications.get_mut(&notify.id) {
                     onotify.unit = *notify;
                     return Command::none();
                 }
+                let mut sort_id = notify.id;
                 if !self.notifications.contains_key(&notify.id)
                     && let Some(keep_id) = notify.keeped_id
                 {
-                    notify.id = keep_id;
+                    sort_id = keep_id;
                 }
                 let mut commands = vec![];
                 for (_, notify) in self.notifications.iter_mut() {
@@ -915,6 +934,7 @@ impl LalaMusicBar {
                         upper: 10,
                         inline_reply: String::new(),
                         unit: *notify.clone(),
+                        sort_id,
                     },
                 );
 
@@ -926,19 +946,28 @@ impl LalaMusicBar {
                         .filter(|(_, info)| info.counter < 4 && !info.to_delete)
                         .collect();
 
-                    showned_notifications_now.sort_by(|(a, _), (b, _)| b.partial_cmp(a).unwrap());
-                    let mut showned_values: Vec<(&iced::window::Id, &mut u32)> =
+                    showned_notifications_now.sort_by(
+                        |(_, NotifyUnitWidgetInfo { sort_id: a, .. }),
+                         (_, NotifyUnitWidgetInfo { sort_id: b, .. })| {
+                            b.partial_cmp(a).unwrap()
+                        },
+                    );
+                    let mut showned_values: Vec<(&iced::window::Id, &mut IdInfo)> =
                         self.showned_notifications.iter_mut().collect();
 
-                    showned_values.sort_by(|(_, a), (_, b)| b.partial_cmp(a).unwrap());
+                    showned_values
+                        .sort_by(|(_, a), (_, b)| b.sort_id.partial_cmp(&a.sort_id).unwrap());
 
                     // NOTE: if all is shown, then do not add any commands
                     if all_shown {
                         let mut showned_values_iter = showned_values.iter_mut();
 
-                        for (nid, _unit) in showned_notifications_now {
+                        for (nid, unit) in showned_notifications_now {
                             if let Some((_, onid)) = showned_values_iter.next() {
-                                (**onid) = *nid;
+                                (**onid) = IdInfo {
+                                    id: *nid,
+                                    sort_id: unit.sort_id,
+                                };
                             }
                         }
                     } else {
@@ -965,6 +994,7 @@ impl LalaMusicBar {
                                 upper: 10,
                                 inline_reply: String::new(),
                                 unit: *notify.clone(),
+                                sort_id,
                             })),
                         );
                         // NOTE: if not all shown, then do as the way before
@@ -1115,7 +1145,7 @@ impl LalaMusicBar {
                 let Some(notify_id) = self.showned_notifications.get(&id) else {
                     return Command::none();
                 };
-                let notify = self.notifications.get_mut(notify_id).unwrap();
+                let notify = self.notifications.get_mut(&notify_id.id).unwrap();
                 notify.inline_reply = msg;
             }
             Message::ClearAllNotifications => {
@@ -1132,7 +1162,7 @@ impl LalaMusicBar {
                 }
 
                 for (id, nid) in self.showned_notifications.iter() {
-                    if let Some(info) = self.notifications.get(nid) {
+                    if let Some(info) = self.notifications.get(&nid.id) {
                         self.cached_notifications.insert(*id, info.clone());
                     }
                 }
