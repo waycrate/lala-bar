@@ -4,8 +4,8 @@ use launcher::{LaunchMessage, Launcher};
 use zbus_mpirs::ServiceInfo;
 
 use futures::channel::mpsc::Sender;
-use iced_aw::date_picker::Date;
-use iced_aw::time_picker::Time;
+//use iced_aw::date_picker::Date;
+//use iced_aw::time_picker::Time;
 use iced_layershell::to_layer_message;
 
 mod aximer;
@@ -21,7 +21,8 @@ use crate::music_bar::LalaMusicBar;
 use crate::notify::NotifyCommand;
 use notify::NotifyUnitWidgetInfo;
 
-pub fn main() -> Result<(), iced_layershell::Error> {
+#[tokio::main]
+async fn main() -> Result<(), iced_layershell::Error> {
     use tracing_subscriber::filter::LevelFilter;
     use tracing_subscriber::fmt::time::LocalTime;
     tracing_subscriber::fmt()
@@ -43,8 +44,8 @@ pub enum LaLaInfo {
     HiddenInfo,
     RightPanel,
     ErrorHappened(iced::window::Id),
-    Calendar,
-    TimePicker,
+    //Calendar,
+    //TimePicker,
 }
 
 #[to_layer_message(multi)]
@@ -55,7 +56,7 @@ pub enum Message {
     RequestPause,
     RequestPlay,
     RequestDBusInfoUpdate,
-    RequestUpdateTime,
+    //RequestUpdateTime,
     UpdateBalance,
     DBusInfoUpdate(Option<ServiceInfo>),
     BalanceChanged(u8),
@@ -76,14 +77,17 @@ pub enum Message {
     QuiteMode(bool),
     CloseErrorNotification(iced::window::Id),
     Ready(Sender<NotifyCommand>),
+    ReadyCheck(Sender<bool>),
+    CheckId(u32),
     #[allow(unused)]
     LinkClicked(markdown::Url),
     ToggleCalendar,
     CancelDate,
-    SubmitDate(Date),
+    //SubmitDate(Date),
     ToggleTime,
     CancelTime,
-    SubmitTime(Time),
+    //SubmitTime(Time),
+    WindowClosed(iced::window::Id),
 }
 
 impl From<NotifyMessage> for Message {
