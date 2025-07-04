@@ -298,7 +298,7 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
             sender: Box::new(sender),
             capabilities,
             version,
-            notify_check: Box::new(|_| false),
+            notify_check: Box::new(|_| true),
         }
     }
 
