@@ -10,7 +10,6 @@ pub struct NotifyUnitWidgetInfo {
     pub counter: usize,
     pub inline_reply: String,
     pub unit: NotifyUnit,
-    pub sort_id: u32,
 }
 
 #[derive(Debug)]
