@@ -877,15 +877,10 @@ impl LalaMusicBar {
                     id,
                 });
             }
-            Message::Notify(NotifyMessage::UnitAdd(mut notify)) => {
+            Message::Notify(NotifyMessage::UnitAdd(notify)) => {
                 if let Some(onotify) = self.notifications.get_mut(&notify.id) {
                     onotify.unit = *notify;
                     return Command::none();
-                }
-                if !self.notifications.contains_key(&notify.id)
-                    && let Some(keep_id) = notify.keeped_id
-                {
-                    notify.id = keep_id;
                 }
                 let mut commands = vec![];
                 for (_, notify) in self.notifications.iter_mut() {
