@@ -27,7 +27,6 @@ use iced_runtime::window::Action as WindowAction;
 use iced_zbus_notification::MessageSenderDefault;
 use iced_zbus_notification::{
     DEFAULT_ACTION, LaLaMako, NOTIFICATION_SERVICE_PATH, NotifyMessage, VersionInfo,
-    start_connection,
 };
 use std::collections::HashMap;
 
@@ -35,7 +34,7 @@ use iced_layershell::build_pattern::daemon;
 
 pub fn run_lalabar() -> iced_layershell::Result {
     daemon(
-        || LalaMusicBar::new(),
+        LalaMusicBar::new,
         LalaMusicBar::namespace,
         LalaMusicBar::update,
         LalaMusicBar::view,
@@ -73,6 +72,7 @@ pub struct LalaMusicBar {
     cached_notifications: HashMap<iced::window::Id, NotifyUnitWidgetInfo>,
     cached_hidden_notifications: Vec<NotifyUnitWidgetInfo>,
     sender: Option<Sender<NotifyCommand>>,
+    check_sender: Option<Sender<bool>>,
     quite_mode: bool,
     //datetime: DateTime<Local>,
     //calendar_id: Option<iced::window::Id>,
@@ -522,6 +522,7 @@ impl LalaMusicBar {
                 cached_notifications: HashMap::new(),
                 cached_hidden_notifications: Vec::new(),
                 sender: None,
+                check_sender: None,
                 quite_mode: false,
                 //datetime: Local::now(),
                 //calendar_id: None,
@@ -1147,6 +1148,11 @@ impl LalaMusicBar {
             //    self.time = self.datetime.time().into()
             //}
             Message::Ready(sender) => self.sender = Some(sender),
+            Message::ReadyCheck(check_sender) => self.check_sender = Some(check_sender),
+            Message::CheckId(id) => {
+                let contain = self.notifications.contains_key(&id);
+                let _ = self.check_sender.as_mut().unwrap().try_send(contain);
+            }
             Message::LinkClicked(link) => {
                 open::that_in_background(link.to_string());
             }
@@ -1263,10 +1269,13 @@ impl LalaMusicBar {
                 iced::stream::channel(100, |mut output: Sender<Message>| async move {
                     use iced::futures::sink::SinkExt;
                     let (sender, mut receiver) = channel(100);
+                    let (check_sender, mut check_receiver) = channel(100);
 
                     // Send the sender back to the application
                     output.send(Message::Ready(sender)).await.ok();
-                    let Ok(connection) = start_connection(
+                    output.send(Message::ReadyCheck(check_sender)).await.ok();
+                    let output_check = output.clone();
+                    let Ok(connection) = LaLaMako::new(
                         MessageSenderDefault(output),
                         vec![
                             "body".to_owned(),
@@ -1284,6 +1293,17 @@ impl LalaMusicBar {
                             spec_version: env!("CARGO_PKG_VERSION_PATCH").to_owned(),
                         },
                     )
+                    .with_check(move |id| {
+                        let mut output_check = output_check.clone();
+                        if output_check.try_send(Message::CheckId(id)).is_err() {
+                            return false;
+                        }
+                        if let Ok(Some(true)) = check_receiver.try_next() {
+                            return true;
+                        }
+                        false
+                    })
+                    .connect()
                     .await
                     else {
                         pending::<()>().await;

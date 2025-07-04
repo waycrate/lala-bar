@@ -282,6 +282,41 @@ pub struct LaLaMako<T: From<NotifyMessage> + Send> {
     capabilities: Vec<String>,
     sender: Box<dyn MessageSender<T> + Send + Sync>,
     version: VersionInfo,
+    notify_check: Box<dyn FnMut(u32) -> bool + Send + Sync>,
+}
+
+impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
+    pub fn new<MsgSender>(
+        sender: MsgSender,
+        capabilities: Vec<String>,
+        version: VersionInfo,
+    ) -> Self
+    where
+        MsgSender: MessageSender<T> + 'static + Send + Sync,
+    {
+        Self {
+            sender: Box::new(sender),
+            capabilities,
+            version,
+            notify_check: Box::new(|_| false),
+        }
+    }
+
+    /// check if the id is already existed in current state
+    /// If result is true, then the replaced_id will be keeped
+    /// If the result is no, we will use the new id
+    pub fn with_check(mut self, check: impl FnMut(u32) -> bool + Send + Sync + 'static) -> Self {
+        self.notify_check = Box::new(check);
+        self
+    }
+
+    pub async fn connect(self) -> Result<zbus::Connection, zbus::Error> {
+        connection::Builder::session()?
+            .name("org.freedesktop.Notifications")?
+            .serve_at("/org/freedesktop/Notifications", self)?
+            .build()
+            .await
+    }
 }
 
 #[interface(name = "org.freedesktop.Notifications")]
@@ -338,7 +373,11 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
         let id = if replaced_id == 0 {
             Id::unique()
         } else {
-            Id(replaced_id)
+            if (self.notify_check)(replaced_id) {
+                Id(replaced_id)
+            } else {
+                Id::unique()
+            }
         };
         let mut image_data: Option<ImageData> =
             hints.remove("image-data").and_then(|v| v.try_into().ok());
@@ -417,26 +456,3 @@ pub const NOTIFICATION_CLOSED: &str = "notification_closed";
 
 /// default action name
 pub const DEFAULT_ACTION: &str = "default";
-
-/// start a connection
-pub async fn start_connection<
-    T: From<NotifyMessage> + Send + 'static,
-    MsgSender: MessageSender<T> + 'static + Send + Sync,
->(
-    sender: MsgSender,
-    capabilities: Vec<String>,
-    version: VersionInfo,
-) -> Result<zbus::Connection, zbus::Error> {
-    connection::Builder::session()?
-        .name("org.freedesktop.Notifications")?
-        .serve_at(
-            "/org/freedesktop/Notifications",
-            LaLaMako {
-                sender: Box::new(sender),
-                capabilities,
-                version,
-            },
-        )?
-        .build()
-        .await
-}

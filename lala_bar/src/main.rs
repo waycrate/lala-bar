@@ -77,6 +77,8 @@ pub enum Message {
     QuiteMode(bool),
     CloseErrorNotification(iced::window::Id),
     Ready(Sender<NotifyCommand>),
+    ReadyCheck(Sender<bool>),
+    CheckId(u32),
     #[allow(unused)]
     LinkClicked(markdown::Url),
     ToggleCalendar,
