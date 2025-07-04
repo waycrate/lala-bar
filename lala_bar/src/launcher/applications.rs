@@ -28,7 +28,7 @@ pub struct App {
 impl App {
     pub fn launch(&self) {
         if let Err(err) = self.appinfo.launch(&[], AppLaunchContext::NONE) {
-            println!("{}", err);
+            println!("{err}");
         };
     }
 
