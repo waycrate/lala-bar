@@ -38,7 +38,7 @@ tracing-subscriber = { version = "0.3.19", features = [
 	"local-time",
 ] }
 anyhow = "1.0.95"
-alsa = "0.9.1"
+alsa = "0.10.0"
 
 gio = "0.21.1"
 regex = "1.11.1"
