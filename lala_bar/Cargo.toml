@@ -51,7 +51,4 @@ iced_zbus_notification.workspace = true
 chrono = "0.4.39"
 async-trait.workspace = true
 iced_aw = { git = "https://github.com/Decodetalkers/iced_aw", branch = "to_iced14" }
-iced_fonts = { git = "https://github.com/Decodetalkers/iced_fonts", branch = "fix_publish_failed", features = [
-	"full",
-] }
 open = "5.3.2"

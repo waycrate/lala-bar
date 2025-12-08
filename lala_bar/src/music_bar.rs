@@ -50,7 +50,7 @@ pub fn run_lalabar() -> iced_layershell::Result {
     })
     .theme(LalaMusicBar::theme)
     .subscription(LalaMusicBar::subscription)
-    .font(iced_fonts::NERD_FONT_BYTES)
+    .font(iced_aw::ICED_AW_FONT_BYTES)
     .run()
 }
 
