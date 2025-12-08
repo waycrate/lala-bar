@@ -74,6 +74,7 @@ impl NotifyUnitWidgetInfo {
             .style(notify_theme)
             .width(Length::Fill)
             .height(Length::Fill)
+            .clip(true)
             .on_press(Message::RemoveNotify(self.unit.id))
             .into(),
             Some(ImageInfo::RgbaRaw {
@@ -101,6 +102,7 @@ impl NotifyUnitWidgetInfo {
             .width(Length::Fill)
             .height(Length::Fill)
             .style(notify_theme)
+            .clip(true)
             .on_press(Message::RemoveNotify(self.unit.id))
             .into(),
             Some(ImageInfo::Png(path)) | Some(ImageInfo::Jpg(path)) => button(row![
@@ -120,6 +122,7 @@ impl NotifyUnitWidgetInfo {
             .width(Length::Fill)
             .height(Length::Fill)
             .style(button::secondary)
+            .clip(true)
             .on_press(Message::RemoveNotify(self.unit.id))
             .into(),
             _ => button(column![
@@ -129,6 +132,7 @@ impl NotifyUnitWidgetInfo {
             .width(Length::Fill)
             .height(Length::Fill)
             .style(notify_theme)
+            .clip(true)
             .on_press(Message::RemoveNotify(self.unit.id))
             .into(),
         }
