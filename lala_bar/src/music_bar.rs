@@ -8,7 +8,7 @@ use crate::slider::SliderIndex;
 use crate::zbus_mpirs::ServiceInfo;
 use crate::{LaLaInfo, Message, get_metadata_initial};
 use crate::{aximer, launcher};
-//use chrono::{DateTime, Local};
+use chrono::{DateTime, Local};
 use futures::StreamExt;
 use futures::channel::mpsc::{Sender, channel};
 use futures::future::pending;
@@ -17,8 +17,8 @@ use iced::widget::{
     text, text_input,
 };
 use iced::{Alignment, Element, Font, Length, Task as Command, Theme};
+use iced_aw::{date_picker::Date, helpers::date_picker, time_picker, time_picker::Time};
 use iced_layershell::reexport::OutputOption;
-//use iced_aw::{date_picker::Date, helpers::date_picker, time_picker, time_picker::Time};
 use iced_layershell::reexport::{Anchor, KeyboardInteractivity, Layer, NewLayerShellSettings};
 use iced_layershell::settings::LayerShellSettings;
 use iced_layershell::settings::StartMode;
@@ -74,34 +74,34 @@ pub struct LalaMusicBar {
     sender: Option<Sender<NotifyCommand>>,
     check_sender: Option<Sender<bool>>,
     quite_mode: bool,
-    //datetime: DateTime<Local>,
-    //calendar_id: Option<iced::window::Id>,
-    //date: Date,
-    //time: Time,
-    //time_picker_id: Option<iced::window::Id>,
+    datetime: DateTime<Local>,
+    calendar_id: Option<iced::window::Id>,
+    date: Date,
+    time: Time,
+    time_picker_id: Option<iced::window::Id>,
 }
 
 impl LalaMusicBar {
-    //pub fn date_widget(&self) -> Element<Message> {
-    //    let date = self.datetime.date_naive();
-    //    let dateday = date.format("%m-%d").to_string();
-    //    let week = date.format("%A").to_string();
-    //    let time = self.datetime.time();
-    //    let time_info = time.format("%H:%M").to_string();
+    pub fn date_widget(&'_ self) -> Element<'_, Message> {
+        let date = self.datetime.date_naive();
+        let dateday = date.format("%m-%d").to_string();
+        let week = date.format("%A").to_string();
+        let time = self.datetime.time();
+        let time_info = time.format("%H:%M").to_string();
 
-    //    let date_btn = button(text(format!("{week} {dateday}")))
-    //        .on_press(Message::ToggleCalendar)
-    //        .style(button::secondary);
+        let date_btn = button(text(format!("{week} {dateday}")))
+            .on_press(Message::ToggleCalendar)
+            .style(button::secondary);
 
-    //    let time_btn = button(text(time_info))
-    //        .on_press(Message::ToggleTime)
-    //        .style(button::secondary);
+        let time_btn = button(text(time_info))
+            .on_press(Message::ToggleTime)
+            .style(button::secondary);
 
-    //    container(row![time_btn, Space::with_width(5.), date_btn,])
-    //        .center_y(Length::Fill)
-    //        .height(Length::Fill)
-    //        .into()
-    //}
+        container(row![time_btn, Space::new().width(5.), date_btn,])
+            .center_y(Length::Fill)
+            .height(Length::Fill)
+            .into()
+    }
     pub fn update_hidden_notification(&mut self) {
         let mut hiddened: Vec<NotifyUnitWidgetInfo> = self
             .notifications
@@ -388,7 +388,7 @@ impl LalaMusicBar {
                 Space::new().width(Length::Fill),
                 container(sound_slider).width(600.),
                 Space::new().width(Length::Fixed(3.)),
-                //self.date_widget(),
+                self.date_widget(),
                 Space::new().width(Length::Fixed(3.)),
                 button(text(panel_text)).on_press(Message::ToggleRightPanel)
             ]
@@ -476,7 +476,7 @@ impl LalaMusicBar {
                 buttons,
                 sound_slider,
                 Space::new().width(Length::Fixed(3.)),
-                //self.date_widget(),
+                self.date_widget(),
                 Space::new().width(Length::Fixed(3.)),
                 button(text(panel_text)).on_press(Message::ToggleRightPanel)
             ]
@@ -489,7 +489,7 @@ impl LalaMusicBar {
                 buttons,
                 sound_slider,
                 Space::new().width(Length::Fixed(3.)),
-                //self.date_widget(),
+                self.date_widget(),
                 Space::new().width(Length::Fixed(1.)),
                 button(text(panel_text)).on_press(Message::ToggleRightPanel)
             ]
@@ -528,11 +528,11 @@ impl LalaMusicBar {
                 sender: None,
                 check_sender: None,
                 quite_mode: false,
-                //datetime: Local::now(),
-                //calendar_id: None,
-                //date: Date::today(),
-                //time: Time::now_hm(true),
-                //time_picker_id: None,
+                datetime: Local::now(),
+                calendar_id: None,
+                date: Date::today(),
+                time: Time::now_hm(true),
+                time_picker_id: None,
             },
             Command::batch(vec![
                 Command::done(Message::UpdateBalance),
@@ -550,12 +550,12 @@ impl LalaMusicBar {
             Some(LaLaInfo::Launcher)
         } else if self.hiddenid.is_some_and(|tid| tid == id) {
             Some(LaLaInfo::HiddenInfo)
-        //} else if self.time_picker_id.is_some_and(|tid| tid == id) {
-        //    Some(LaLaInfo::TimePicker)
+        } else if self.time_picker_id.is_some_and(|tid| tid == id) {
+            Some(LaLaInfo::TimePicker)
         } else if self.right_panel.is_some_and(|tid| tid == id) {
             Some(LaLaInfo::RightPanel)
-        //} else if self.calendar_id.is_some_and(|tid| tid == id) {
-        //    Some(LaLaInfo::Calendar)
+        } else if self.calendar_id.is_some_and(|tid| tid == id) {
+            Some(LaLaInfo::Calendar)
         } else {
             if let Some(info) = self.cached_notifications.get(&id) {
                 return Some(LaLaInfo::Notify(Box::new(info.clone())));
@@ -583,8 +583,8 @@ impl LalaMusicBar {
                 self.hiddenid = Some(id);
             }
             LaLaInfo::RightPanel => self.right_panel = Some(id),
-            //LaLaInfo::Calendar => self.calendar_id = Some(id),
-            //LaLaInfo::TimePicker => self.time_picker_id = Some(id),
+            LaLaInfo::Calendar => self.calendar_id = Some(id),
+            LaLaInfo::TimePicker => self.time_picker_id = Some(id),
             _ => unreachable!(),
         }
     }
@@ -600,12 +600,12 @@ impl LalaMusicBar {
         if self.hiddenid.is_some_and(|lid| lid == id) {
             self.hiddenid.take();
         }
-        //if self.calendar_id.is_some_and(|lid| lid == id) {
-        //    self.calendar_id.take();
-        //}
-        //if self.time_picker_id.is_some_and(|lid| lid == id) {
-        //    self.time_picker_id.take();
-        //}
+        if self.calendar_id.is_some_and(|lid| lid == id) {
+            self.calendar_id.take();
+        }
+        if self.time_picker_id.is_some_and(|lid| lid == id) {
+            self.time_picker_id.take();
+        }
         'clear_nid: {
             if let Some(nid) = self.showned_notifications.remove(&id) {
                 if let Some(NotifyUnitWidgetInfo {
@@ -629,103 +629,103 @@ impl LalaMusicBar {
             Message::RequestDBusInfoUpdate => {
                 return Command::perform(get_metadata(), Message::DBusInfoUpdate);
             }
-            //Message::ToggleCalendar => {
-            //    if let Some(calendar_id) = self.calendar_id {
-            //        return iced_runtime::task::effect(Action::Window(WindowAction::Close(
-            //            calendar_id,
-            //        )));
-            //    } else {
-            //        let id = iced::window::Id::unique();
-            //        self.set_id_info(id, LaLaInfo::Calendar);
-            //        if let Some(time_picker_id) = self.time_picker_id {
-            //            return iced_runtime::task::Task::batch([
-            //                iced_runtime::task::effect(Action::Window(WindowAction::Close(
-            //                    time_picker_id,
-            //                ))),
-            //                Command::done(Message::NewLayerShell {
-            //                    settings: NewLayerShellSettings {
-            //                        size: Some((350, 350)),
-            //                        exclusive_zone: None,
-            //                        anchor: Anchor::Right | Anchor::Bottom,
-            //                        layer: Layer::Top,
-            //                        margin: Some((10, 10, 10, 10)),
-            //                        keyboard_interactivity: KeyboardInteractivity::None,
-            //                        use_last_output: true,
-            //                        ..Default::default()
-            //                    },
-            //                    id,
-            //                }),
-            //            ]);
-            //        }
-            //        return Command::done(Message::NewLayerShell {
-            //            settings: NewLayerShellSettings {
-            //                size: Some((350, 350)),
-            //                exclusive_zone: None,
-            //                anchor: Anchor::Right | Anchor::Bottom,
-            //                layer: Layer::Top,
-            //                margin: Some((10, 10, 10, 10)),
-            //                keyboard_interactivity: KeyboardInteractivity::None,
-            //                use_last_output: true,
-            //                ..Default::default()
-            //            },
-            //            id,
-            //        });
-            //    }
-            //}
-            //Message::ToggleTime => {
-            //    if let Some(time_picker_id) = self.time_picker_id {
-            //        return iced_runtime::task::effect(Action::Window(WindowAction::Close(
-            //            time_picker_id,
-            //        )));
-            //    } else {
-            //        let id = iced::window::Id::unique();
-            //        self.set_id_info(id, LaLaInfo::TimePicker);
-            //        if let Some(calendar_id) = self.calendar_id {
-            //            return iced_runtime::task::Task::batch([
-            //                iced_runtime::task::effect(Action::Window(WindowAction::Close(
-            //                    calendar_id,
-            //                ))),
-            //                Command::done(Message::NewLayerShell {
-            //                    settings: NewLayerShellSettings {
-            //                        size: Some((350, 350)),
-            //                        exclusive_zone: None,
-            //                        anchor: Anchor::Right | Anchor::Bottom,
-            //                        layer: Layer::Top,
-            //                        margin: Some((10, 10, 10, 10)),
-            //                        keyboard_interactivity: KeyboardInteractivity::None,
-            //                        use_last_output: true,
-            //                        ..Default::default()
-            //                    },
-            //                    id,
-            //                }),
-            //            ]);
-            //        }
-            //        return Command::done(Message::NewLayerShell {
-            //            settings: NewLayerShellSettings {
-            //                size: Some((350, 350)),
-            //                exclusive_zone: None,
-            //                anchor: Anchor::Right | Anchor::Bottom,
-            //                layer: Layer::Top,
-            //                margin: Some((10, 10, 10, 10)),
-            //                keyboard_interactivity: KeyboardInteractivity::None,
-            //                use_last_output: true,
-            //                ..Default::default()
-            //            },
-            //            id,
-            //        });
-            //    }
-            //}
-            //// NOTE: it is meaningless to pick the date now
-            //Message::SubmitDate(_) | Message::CancelDate => {
-            //    if let Some(id) = self.calendar_id {
-            //        return iced_runtime::task::effect(Action::Window(WindowAction::Close(id)));
-            //    }
-            //}
-            //Message::SubmitTime(_) | Message::CancelTime => {
-            //    if let Some(id) = self.time_picker_id {
-            //        return iced_runtime::task::effect(Action::Window(WindowAction::Close(id)));
-            //    }
-            //}
+            Message::ToggleCalendar => {
+                if let Some(calendar_id) = self.calendar_id {
+                    return iced_runtime::task::effect(Action::Window(WindowAction::Close(
+                        calendar_id,
+                    )));
+                } else {
+                    let id = iced::window::Id::unique();
+                    self.set_id_info(id, LaLaInfo::Calendar);
+                    if let Some(time_picker_id) = self.time_picker_id {
+                        return iced_runtime::task::Task::batch([
+                            iced_runtime::task::effect(Action::Window(WindowAction::Close(
+                                time_picker_id,
+                            ))),
+                            Command::done(Message::NewLayerShell {
+                                settings: NewLayerShellSettings {
+                                    size: Some((350, 350)),
+                                    exclusive_zone: None,
+                                    anchor: Anchor::Right | Anchor::Bottom,
+                                    layer: Layer::Top,
+                                    margin: Some((10, 10, 10, 10)),
+                                    keyboard_interactivity: KeyboardInteractivity::None,
+                                    output_option: OutputOption::LastOutput,
+                                    ..Default::default()
+                                },
+                                id,
+                            }),
+                        ]);
+                    }
+                    return Command::done(Message::NewLayerShell {
+                        settings: NewLayerShellSettings {
+                            size: Some((350, 350)),
+                            exclusive_zone: None,
+                            anchor: Anchor::Right | Anchor::Bottom,
+                            layer: Layer::Top,
+                            margin: Some((10, 10, 10, 10)),
+                            keyboard_interactivity: KeyboardInteractivity::None,
+                            output_option: OutputOption::LastOutput,
+                            ..Default::default()
+                        },
+                        id,
+                    });
+                }
+            }
+            Message::ToggleTime => {
+                if let Some(time_picker_id) = self.time_picker_id {
+                    return iced_runtime::task::effect(Action::Window(WindowAction::Close(
+                        time_picker_id,
+                    )));
+                } else {
+                    let id = iced::window::Id::unique();
+                    self.set_id_info(id, LaLaInfo::TimePicker);
+                    if let Some(calendar_id) = self.calendar_id {
+                        return iced_runtime::task::Task::batch([
+                            iced_runtime::task::effect(Action::Window(WindowAction::Close(
+                                calendar_id,
+                            ))),
+                            Command::done(Message::NewLayerShell {
+                                settings: NewLayerShellSettings {
+                                    size: Some((350, 350)),
+                                    exclusive_zone: None,
+                                    anchor: Anchor::Right | Anchor::Bottom,
+                                    layer: Layer::Top,
+                                    margin: Some((10, 10, 10, 10)),
+                                    keyboard_interactivity: KeyboardInteractivity::None,
+                                    output_option: OutputOption::LastOutput,
+                                    ..Default::default()
+                                },
+                                id,
+                            }),
+                        ]);
+                    }
+                    return Command::done(Message::NewLayerShell {
+                        settings: NewLayerShellSettings {
+                            size: Some((350, 350)),
+                            exclusive_zone: None,
+                            anchor: Anchor::Right | Anchor::Bottom,
+                            layer: Layer::Top,
+                            margin: Some((10, 10, 10, 10)),
+                            keyboard_interactivity: KeyboardInteractivity::None,
+                            output_option: OutputOption::LastOutput,
+                            ..Default::default()
+                        },
+                        id,
+                    });
+                }
+            }
+            // NOTE: it is meaningless to pick the date now
+            Message::SubmitDate(_) | Message::CancelDate => {
+                if let Some(id) = self.calendar_id {
+                    return iced_runtime::task::effect(Action::Window(WindowAction::Close(id)));
+                }
+            }
+            Message::SubmitTime(_) | Message::CancelTime => {
+                if let Some(id) = self.time_picker_id {
+                    return iced_runtime::task::effect(Action::Window(WindowAction::Close(id)));
+                }
+            }
             Message::RequestPlay => {
                 if let Some(ref data) = self.service_data {
                     if !data.can_play {
@@ -1146,11 +1146,11 @@ impl LalaMusicBar {
             Message::CloseErrorNotification(id) => {
                 return iced_runtime::task::effect(Action::Window(WindowAction::Close(id)));
             }
-            //Message::RequestUpdateTime => {
-            //    self.datetime = Local::now();
-            //    self.date = self.datetime.date_naive().into();
-            //    self.time = self.datetime.time().into()
-            //}
+            Message::RequestUpdateTime => {
+                self.datetime = Local::now();
+                self.date = self.datetime.date_naive().into();
+                self.time = self.datetime.time().into()
+            }
             Message::Ready(sender) => self.sender = Some(sender),
             Message::ReadyCheck(check_sender) => self.check_sender = Some(check_sender),
             Message::CheckId(id) => {
@@ -1176,31 +1176,31 @@ impl LalaMusicBar {
                         return launcher.view();
                     }
                 }
-                //LaLaInfo::Calendar => {
-                //    return container(date_picker(
-                //        true,
-                //        self.date,
-                //        button(text("Pick date")),
-                //        Message::CancelDate,
-                //        Message::SubmitDate,
-                //    ))
-                //    .center_y(Length::Fill)
-                //    .center_x(Length::Fill)
-                //    .into();
-                //}
+                LaLaInfo::Calendar => {
+                    return container(date_picker(
+                        true,
+                        self.date,
+                        button(text("Pick date")),
+                        Message::CancelDate,
+                        Message::SubmitDate,
+                    ))
+                    .center_y(Length::Fill)
+                    .center_x(Length::Fill)
+                    .into();
+                }
 
-                //LaLaInfo::TimePicker => {
-                //    return container(time_picker(
-                //        true,
-                //        self.time,
-                //        button(text("Pick time")),
-                //        Message::CancelTime,
-                //        Message::SubmitTime,
-                //    ))
-                //    .center_y(Length::Fill)
-                //    .center_x(Length::Fill)
-                //    .into();
-                //}
+                LaLaInfo::TimePicker => {
+                    return container(time_picker(
+                        true,
+                        self.time,
+                        button(text("Pick time")),
+                        Message::CancelTime,
+                        Message::SubmitTime,
+                    ))
+                    .center_y(Length::Fill)
+                    .center_x(Length::Fill)
+                    .into();
+                }
                 LaLaInfo::Notify(unitwidgetinfo) => {
                     let btnwidgets: Element<Message> = unitwidgetinfo.notify_button(self);
 

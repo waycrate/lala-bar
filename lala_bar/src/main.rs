@@ -4,8 +4,8 @@ use launcher::{LaunchMessage, Launcher};
 use zbus_mpirs::ServiceInfo;
 
 use futures::channel::mpsc::Sender;
-//use iced_aw::date_picker::Date;
-//use iced_aw::time_picker::Time;
+use iced_aw::date_picker::Date;
+use iced_aw::time_picker::Time;
 use iced_layershell::to_layer_message;
 
 mod aximer;
@@ -44,8 +44,8 @@ pub enum LaLaInfo {
     HiddenInfo,
     RightPanel,
     ErrorHappened(iced::window::Id),
-    //Calendar,
-    //TimePicker,
+    Calendar,
+    TimePicker,
 }
 
 #[to_layer_message(multi)]
@@ -56,7 +56,7 @@ pub enum Message {
     RequestPause,
     RequestPlay,
     RequestDBusInfoUpdate,
-    //RequestUpdateTime,
+    RequestUpdateTime,
     UpdateBalance,
     DBusInfoUpdate(Option<ServiceInfo>),
     BalanceChanged(u8),
@@ -83,10 +83,10 @@ pub enum Message {
     LinkClicked(markdown::Uri),
     ToggleCalendar,
     CancelDate,
-    //SubmitDate(Date),
+    SubmitDate(Date),
     ToggleTime,
     CancelTime,
-    //SubmitTime(Time),
+    SubmitTime(Time),
     WindowClosed(iced::window::Id),
 }
 
