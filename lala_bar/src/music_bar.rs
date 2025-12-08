@@ -234,14 +234,14 @@ impl LalaMusicBar {
 }
 
 impl LalaMusicBar {
-    fn balance_bar(&self) -> Element<Message> {
+    fn balance_bar(&'_ self) -> Element<'_, Message> {
         row![
             button("<").on_press(Message::SliderIndexPre),
-            Space::with_width(Length::Fixed(1.)),
+            Space::new().width(Length::Fixed(1.)),
             text(&self.balance_text),
-            Space::with_width(Length::Fixed(10.)),
+            Space::new().width(Length::Fixed(10.)),
             slider(0..=100, self.balance_percent(), Message::BalanceChanged),
-            Space::with_width(Length::Fixed(10.)),
+            Space::new().width(Length::Fixed(10.)),
             button(
                 svg(svg::Handle::from_memory(RESET_SVG))
                     .height(25.)
@@ -250,40 +250,40 @@ impl LalaMusicBar {
             .height(31.)
             .width(31.)
             .on_press(Message::BalanceChanged(50)),
-            Space::with_width(Length::Fixed(1.)),
+            Space::new().width(Length::Fixed(1.)),
             button(">").on_press(Message::SliderIndexNext)
         ]
         .align_y(Alignment::Center)
         .into()
     }
-    fn left_bar(&self) -> Element<Message> {
+    fn left_bar(&'_ self) -> Element<'_, Message> {
         row![
             button("<").on_press(Message::SliderIndexPre),
-            Space::with_width(Length::Fixed(1.)),
+            Space::new().width(Length::Fixed(1.)),
             text(&self.left_text),
-            Space::with_width(Length::Fixed(10.)),
+            Space::new().width(Length::Fixed(10.)),
             slider(0..=100, self.left as u8, Message::UpdateLeft),
-            Space::with_width(Length::Fixed(10.)),
+            Space::new().width(Length::Fixed(10.)),
             button(">").on_press(Message::SliderIndexNext)
         ]
         .align_y(Alignment::Center)
         .into()
     }
-    fn right_bar(&self) -> Element<Message> {
+    fn right_bar(&'_ self) -> Element<'_, Message> {
         row![
             button("<").on_press(Message::SliderIndexPre),
-            Space::with_width(Length::Fixed(1.)),
+            Space::new().width(Length::Fixed(1.)),
             text(&self.right_text),
-            Space::with_width(Length::Fixed(10.)),
+            Space::new().width(Length::Fixed(10.)),
             slider(0..=100, self.right as u8, Message::UpdateRight),
-            Space::with_width(Length::Fixed(10.)),
+            Space::new().width(Length::Fixed(10.)),
             button(">").on_press(Message::SliderIndexNext)
         ]
         .align_y(Alignment::Center)
         .into()
     }
 
-    fn sound_slider(&self) -> Element<Message> {
+    fn sound_slider(&'_ self) -> Element<'_, Message> {
         match self.bar_index {
             SliderIndex::Left => self.left_bar(),
             SliderIndex::Right => self.right_bar(),
@@ -291,7 +291,7 @@ impl LalaMusicBar {
         }
     }
 
-    fn right_panel_view(&self) -> Element<Message> {
+    fn right_panel_view(&'_ self) -> Element<'_, Message> {
         let btns: Vec<Element<Message>> = self
             .hidden_notification()
             .iter()
@@ -321,7 +321,7 @@ impl LalaMusicBar {
                             .into(),
                     );
                 }
-                view_elements.push(Space::with_height(10.).into());
+                view_elements.push(Space::new().height(10.).into());
                 view_elements.push(
                     container(
                         text(&data.metadata.xesam_title)
@@ -339,35 +339,39 @@ impl LalaMusicBar {
                     .center_x(Length::Fill)
                     .into(),
                 );
-                view_elements.push(Space::with_height(10.).into());
+                view_elements.push(Space::new().height(10.).into());
             }
         }
         view_elements.append(&mut vec![
-            Space::with_height(10.).into(),
+            Space::new().height(10.).into(),
             scrollable(row!(
-                Space::with_width(10.),
+                Space::new().width(10.),
                 column(btns).spacing(10.),
-                Space::with_width(10.)
+                Space::new().width(10.)
             ))
             .height(Length::Fill)
             .into(),
-            container(checkbox("quite mode", self.quite_mode).on_toggle(Message::QuiteMode))
-                .width(Length::Fill)
-                .center_x(Length::Fill)
-                .into(),
-            Space::with_height(10.).into(),
+            container(
+                checkbox(self.quite_mode)
+                    .label("quite mode")
+                    .on_toggle(Message::QuiteMode),
+            )
+            .width(Length::Fill)
+            .center_x(Length::Fill)
+            .into(),
+            Space::new().height(10.).into(),
             container(button(text("clear all")).on_press(Message::ClearAllNotifications))
                 .width(Length::Fill)
                 .center_x(Length::Fill)
                 .into(),
-            Space::with_height(10.).into(),
+            Space::new().height(10.).into(),
         ]);
         column(view_elements).into()
     }
 }
 
 impl LalaMusicBar {
-    fn main_view(&self) -> Element<Message> {
+    fn main_view(&self) -> Element<'_, Message> {
         let toggle_launcher = button(
             svg(svg::Handle::from_memory(LAUNCHER_SVG))
                 .width(25.)
@@ -381,11 +385,11 @@ impl LalaMusicBar {
         let Some(service_data) = &self.service_data else {
             let col = row![
                 toggle_launcher,
-                Space::with_width(Length::Fill),
+                Space::new().width(Length::Fill),
                 container(sound_slider).width(600.),
-                Space::with_width(Length::Fixed(3.)),
+                Space::new().width(Length::Fixed(3.)),
                 //self.date_widget(),
-                Space::with_width(Length::Fixed(3.)),
+                Space::new().width(Length::Fixed(3.)),
                 button(text(panel_text)).on_press(Message::ToggleRightPanel)
             ]
             .spacing(10);
@@ -465,15 +469,15 @@ impl LalaMusicBar {
         let col = if let Some(art_url) = art_url {
             row![
                 toggle_launcher,
-                Space::with_width(Length::Fixed(5.)),
+                Space::new().width(Length::Fixed(5.)),
                 image(image::Handle::from_path(art_url)),
                 title,
-                Space::with_width(Length::Fill),
+                Space::new().width(Length::Fill),
                 buttons,
                 sound_slider,
-                Space::with_width(Length::Fixed(3.)),
+                Space::new().width(Length::Fixed(3.)),
                 //self.date_widget(),
-                Space::with_width(Length::Fixed(3.)),
+                Space::new().width(Length::Fixed(3.)),
                 button(text(panel_text)).on_press(Message::ToggleRightPanel)
             ]
             .spacing(10)
@@ -481,12 +485,12 @@ impl LalaMusicBar {
             row![
                 toggle_launcher,
                 title,
-                Space::with_width(Length::Fill),
+                Space::new().width(Length::Fill),
                 buttons,
                 sound_slider,
-                Space::with_width(Length::Fixed(3.)),
+                Space::new().width(Length::Fixed(3.)),
                 //self.date_widget(),
-                Space::with_width(Length::Fixed(1.)),
+                Space::new().width(Length::Fixed(1.)),
                 button(text(panel_text)).on_press(Message::ToggleRightPanel)
             ]
             .spacing(10)
@@ -1164,7 +1168,7 @@ impl LalaMusicBar {
         Command::none()
     }
 
-    fn view(&self, id: iced::window::Id) -> Element<Message> {
+    fn view(&'_ self, id: iced::window::Id) -> Element<'_, Message> {
         if let Some(info) = self.id_info(id) {
             match info {
                 LaLaInfo::Launcher => {
@@ -1204,7 +1208,7 @@ impl LalaMusicBar {
                     if notify.inline_reply_support() {
                         return column![
                             btnwidgets,
-                            Space::with_height(5.),
+                            Space::new().height(5.),
                             row![
                                 text_input("reply something", &unitwidgetinfo.inline_reply)
                                     .on_input(move |msg| Message::InlineReplyMsgUpdate((id, msg)))
@@ -1238,7 +1242,7 @@ impl LalaMusicBar {
                         svg(svg::Handle::from_memory(ERROR_SVG))
                             .height(Length::Fill)
                             .width(Length::Fixed(70.)),
-                        Space::with_width(4.),
+                        Space::new().width(4.),
                         text("Error Happened, LaLa cannot find notification for this window, it is a bug, and should be fixed")
                     ]).on_press(Message::CloseErrorNotification(id)).into();
                 }

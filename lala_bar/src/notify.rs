@@ -16,8 +16,8 @@ pub struct NotifyUnitWidgetInfo {
 struct CustomMarkdownView;
 
 impl<'a> markdown::Viewer<'a, Message> for CustomMarkdownView {
-    fn on_link_click(url: url::Url) -> Message {
-        Message::LinkClicked(url)
+    fn on_link_click(uri: markdown::Uri) -> Message {
+        Message::LinkClicked(uri)
     }
 }
 
@@ -59,7 +59,7 @@ impl NotifyUnitWidgetInfo {
                 svg(svg::Handle::from_path(path))
                     .height(Length::Fill)
                     .width(Length::Fixed(70.)),
-                Space::with_width(4.),
+                Space::new().width(4.),
                 column![
                     text(notify.summery.clone())
                         .shaping(text::Shaping::Advanced)
@@ -86,7 +86,7 @@ impl NotifyUnitWidgetInfo {
                     height as u32,
                     pixels
                 )),
-                Space::with_width(4.),
+                Space::new().width(4.),
                 column![
                     text(notify.summery.clone())
                         .shaping(text::Shaping::Advanced)
@@ -105,7 +105,7 @@ impl NotifyUnitWidgetInfo {
             .into(),
             Some(ImageInfo::Png(path)) | Some(ImageInfo::Jpg(path)) => button(row![
                 image(image::Handle::from_path(path)).height(Length::Fill),
-                Space::with_width(4.),
+                Space::new().width(4.),
                 column![
                     text(notify.summery.clone())
                         .shaping(text::Shaping::Advanced)

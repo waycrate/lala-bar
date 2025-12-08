@@ -80,7 +80,7 @@ pub enum Message {
     ReadyCheck(Sender<bool>),
     CheckId(u32),
     #[allow(unused)]
-    LinkClicked(markdown::Url),
+    LinkClicked(markdown::Uri),
     ToggleCalendar,
     CancelDate,
     //SubmitDate(Date),
