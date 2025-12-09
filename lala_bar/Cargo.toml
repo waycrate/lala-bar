@@ -50,5 +50,5 @@ futures.workspace = true
 iced_zbus_notification.workspace = true
 chrono = "0.4.39"
 async-trait.workspace = true
-iced_aw = { git = "https://github.com/Decodetalkers/iced_aw", branch = "to_iced14" }
+iced_aw = "0.13"
 open = "5.3.2"

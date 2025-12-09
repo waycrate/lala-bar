@@ -1508,7 +1508,7 @@ dependencies = [
  "gobject-sys",
  "libc",
  "system-deps 7.0.5",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -1781,8 +1781,9 @@ dependencies = [
 
 [[package]]
 name = "iced_aw"
-version = "0.13.0-dev"
-source = "git+https://github.com/Decodetalkers/iced_aw?branch=to_iced14#45fe45f1f0591870c76d934df3aee32bba392a35"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1cc84cc77dcb1c384c60792de025fb4a72e23c3d8c65c4a34691684875fc5403"
 dependencies = [
  "cfg-if",
  "chrono",
@@ -1869,7 +1870,8 @@ dependencies = [
 [[package]]
 name = "iced_fonts"
 version = "0.3.0"
-source = "git+https://github.com/Decodetalkers/iced_fonts?branch=fix_publish_failed#b7683c8fdefe5f261f3db847d07d902b6a9a0bbd"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "214cff7c8499e328774216690e58e315a1a5f8f6fdd1035aed6298e62ffc4c1d"
 dependencies = [
  "iced_core",
  "iced_fonts_macros",
@@ -1879,7 +1881,8 @@ dependencies = [
 [[package]]
 name = "iced_fonts_macros"
 version = "0.3.0"
-source = "git+https://github.com/Decodetalkers/iced_fonts?branch=fix_publish_failed#b7683c8fdefe5f261f3db847d07d902b6a9a0bbd"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7ef5125e110cb19cd1910a28298661c98c5d9ab02eef43594968352940e8752e"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -4444,7 +4447,7 @@ dependencies = [
  "getrandom 0.3.3",
  "once_cell",
  "rustix 1.0.7",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
