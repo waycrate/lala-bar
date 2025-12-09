@@ -18,6 +18,7 @@ use iced::widget::{
 };
 use iced::{Alignment, Element, Font, Length, Task as Command, Theme};
 use iced_aw::{date_picker::Date, helpers::date_picker, time_picker, time_picker::Time};
+use iced_layershell::reexport::OutputOption;
 use iced_layershell::reexport::{Anchor, KeyboardInteractivity, Layer, NewLayerShellSettings};
 use iced_layershell::settings::LayerShellSettings;
 use iced_layershell::settings::StartMode;
@@ -26,7 +27,6 @@ use iced_runtime::window::Action as WindowAction;
 use iced_zbus_notification::MessageSenderDefault;
 use iced_zbus_notification::{
     DEFAULT_ACTION, LaLaMako, NOTIFICATION_SERVICE_PATH, NotifyMessage, VersionInfo,
-    start_connection,
 };
 use std::collections::HashMap;
 
@@ -34,10 +34,10 @@ use iced_layershell::build_pattern::daemon;
 
 pub fn run_lalabar() -> iced_layershell::Result {
     daemon(
+        LalaMusicBar::new,
         LalaMusicBar::namespace,
         LalaMusicBar::update,
         LalaMusicBar::view,
-        LalaMusicBar::remove_id,
     )
     .layer_settings(LayerShellSettings {
         size: Some((0, 35)),
@@ -50,8 +50,8 @@ pub fn run_lalabar() -> iced_layershell::Result {
     })
     .theme(LalaMusicBar::theme)
     .subscription(LalaMusicBar::subscription)
-    .font(iced_fonts::REQUIRED_FONT_BYTES)
-    .run_with(LalaMusicBar::new)
+    .font(iced_aw::ICED_AW_FONT_BYTES)
+    .run()
 }
 
 pub struct LalaMusicBar {
@@ -72,6 +72,7 @@ pub struct LalaMusicBar {
     cached_notifications: HashMap<iced::window::Id, NotifyUnitWidgetInfo>,
     cached_hidden_notifications: Vec<NotifyUnitWidgetInfo>,
     sender: Option<Sender<NotifyCommand>>,
+    check_sender: Option<Sender<bool>>,
     quite_mode: bool,
     datetime: DateTime<Local>,
     calendar_id: Option<iced::window::Id>,
@@ -81,7 +82,7 @@ pub struct LalaMusicBar {
 }
 
 impl LalaMusicBar {
-    pub fn date_widget(&self) -> Element<Message> {
+    pub fn date_widget(&'_ self) -> Element<'_, Message> {
         let date = self.datetime.date_naive();
         let dateday = date.format("%m-%d").to_string();
         let week = date.format("%A").to_string();
@@ -96,7 +97,7 @@ impl LalaMusicBar {
             .on_press(Message::ToggleTime)
             .style(button::secondary);
 
-        container(row![time_btn, Space::with_width(5.), date_btn,])
+        container(row![time_btn, Space::new().width(5.), date_btn,])
             .center_y(Length::Fill)
             .height(Length::Fill)
             .into()
@@ -233,14 +234,14 @@ impl LalaMusicBar {
 }
 
 impl LalaMusicBar {
-    fn balance_bar(&self) -> Element<Message> {
+    fn balance_bar(&'_ self) -> Element<'_, Message> {
         row![
             button("<").on_press(Message::SliderIndexPre),
-            Space::with_width(Length::Fixed(1.)),
+            Space::new().width(Length::Fixed(1.)),
             text(&self.balance_text),
-            Space::with_width(Length::Fixed(10.)),
+            Space::new().width(Length::Fixed(10.)),
             slider(0..=100, self.balance_percent(), Message::BalanceChanged),
-            Space::with_width(Length::Fixed(10.)),
+            Space::new().width(Length::Fixed(10.)),
             button(
                 svg(svg::Handle::from_memory(RESET_SVG))
                     .height(25.)
@@ -249,40 +250,40 @@ impl LalaMusicBar {
             .height(31.)
             .width(31.)
             .on_press(Message::BalanceChanged(50)),
-            Space::with_width(Length::Fixed(1.)),
+            Space::new().width(Length::Fixed(1.)),
             button(">").on_press(Message::SliderIndexNext)
         ]
         .align_y(Alignment::Center)
         .into()
     }
-    fn left_bar(&self) -> Element<Message> {
+    fn left_bar(&'_ self) -> Element<'_, Message> {
         row![
             button("<").on_press(Message::SliderIndexPre),
-            Space::with_width(Length::Fixed(1.)),
+            Space::new().width(Length::Fixed(1.)),
             text(&self.left_text),
-            Space::with_width(Length::Fixed(10.)),
+            Space::new().width(Length::Fixed(10.)),
             slider(0..=100, self.left as u8, Message::UpdateLeft),
-            Space::with_width(Length::Fixed(10.)),
+            Space::new().width(Length::Fixed(10.)),
             button(">").on_press(Message::SliderIndexNext)
         ]
         .align_y(Alignment::Center)
         .into()
     }
-    fn right_bar(&self) -> Element<Message> {
+    fn right_bar(&'_ self) -> Element<'_, Message> {
         row![
             button("<").on_press(Message::SliderIndexPre),
-            Space::with_width(Length::Fixed(1.)),
+            Space::new().width(Length::Fixed(1.)),
             text(&self.right_text),
-            Space::with_width(Length::Fixed(10.)),
+            Space::new().width(Length::Fixed(10.)),
             slider(0..=100, self.right as u8, Message::UpdateRight),
-            Space::with_width(Length::Fixed(10.)),
+            Space::new().width(Length::Fixed(10.)),
             button(">").on_press(Message::SliderIndexNext)
         ]
         .align_y(Alignment::Center)
         .into()
     }
 
-    fn sound_slider(&self) -> Element<Message> {
+    fn sound_slider(&'_ self) -> Element<'_, Message> {
         match self.bar_index {
             SliderIndex::Left => self.left_bar(),
             SliderIndex::Right => self.right_bar(),
@@ -290,7 +291,7 @@ impl LalaMusicBar {
         }
     }
 
-    fn right_panel_view(&self) -> Element<Message> {
+    fn right_panel_view(&'_ self) -> Element<'_, Message> {
         let btns: Vec<Element<Message>> = self
             .hidden_notification()
             .iter()
@@ -320,7 +321,7 @@ impl LalaMusicBar {
                             .into(),
                     );
                 }
-                view_elements.push(Space::with_height(10.).into());
+                view_elements.push(Space::new().height(10.).into());
                 view_elements.push(
                     container(
                         text(&data.metadata.xesam_title)
@@ -338,35 +339,39 @@ impl LalaMusicBar {
                     .center_x(Length::Fill)
                     .into(),
                 );
-                view_elements.push(Space::with_height(10.).into());
+                view_elements.push(Space::new().height(10.).into());
             }
         }
         view_elements.append(&mut vec![
-            Space::with_height(10.).into(),
+            Space::new().height(10.).into(),
             scrollable(row!(
-                Space::with_width(10.),
+                Space::new().width(10.),
                 column(btns).spacing(10.),
-                Space::with_width(10.)
+                Space::new().width(10.)
             ))
             .height(Length::Fill)
             .into(),
-            container(checkbox("quite mode", self.quite_mode).on_toggle(Message::QuiteMode))
-                .width(Length::Fill)
-                .center_x(Length::Fill)
-                .into(),
-            Space::with_height(10.).into(),
+            container(
+                checkbox(self.quite_mode)
+                    .label("quite mode")
+                    .on_toggle(Message::QuiteMode),
+            )
+            .width(Length::Fill)
+            .center_x(Length::Fill)
+            .into(),
+            Space::new().height(10.).into(),
             container(button(text("clear all")).on_press(Message::ClearAllNotifications))
                 .width(Length::Fill)
                 .center_x(Length::Fill)
                 .into(),
-            Space::with_height(10.).into(),
+            Space::new().height(10.).into(),
         ]);
         column(view_elements).into()
     }
 }
 
 impl LalaMusicBar {
-    fn main_view(&self) -> Element<Message> {
+    fn main_view(&self) -> Element<'_, Message> {
         let toggle_launcher = button(
             svg(svg::Handle::from_memory(LAUNCHER_SVG))
                 .width(25.)
@@ -380,11 +385,11 @@ impl LalaMusicBar {
         let Some(service_data) = &self.service_data else {
             let col = row![
                 toggle_launcher,
-                Space::with_width(Length::Fill),
+                Space::new().width(Length::Fill),
                 container(sound_slider).width(600.),
-                Space::with_width(Length::Fixed(3.)),
+                Space::new().width(Length::Fixed(3.)),
                 self.date_widget(),
-                Space::with_width(Length::Fixed(3.)),
+                Space::new().width(Length::Fixed(3.)),
                 button(text(panel_text)).on_press(Message::ToggleRightPanel)
             ]
             .spacing(10);
@@ -464,15 +469,15 @@ impl LalaMusicBar {
         let col = if let Some(art_url) = art_url {
             row![
                 toggle_launcher,
-                Space::with_width(Length::Fixed(5.)),
+                Space::new().width(Length::Fixed(5.)),
                 image(image::Handle::from_path(art_url)),
                 title,
-                Space::with_width(Length::Fill),
+                Space::new().width(Length::Fill),
                 buttons,
                 sound_slider,
-                Space::with_width(Length::Fixed(3.)),
+                Space::new().width(Length::Fixed(3.)),
                 self.date_widget(),
-                Space::with_width(Length::Fixed(3.)),
+                Space::new().width(Length::Fixed(3.)),
                 button(text(panel_text)).on_press(Message::ToggleRightPanel)
             ]
             .spacing(10)
@@ -480,12 +485,12 @@ impl LalaMusicBar {
             row![
                 toggle_launcher,
                 title,
-                Space::with_width(Length::Fill),
+                Space::new().width(Length::Fill),
                 buttons,
                 sound_slider,
-                Space::with_width(Length::Fixed(3.)),
+                Space::new().width(Length::Fixed(3.)),
                 self.date_widget(),
-                Space::with_width(Length::Fixed(1.)),
+                Space::new().width(Length::Fixed(1.)),
                 button(text(panel_text)).on_press(Message::ToggleRightPanel)
             ]
             .spacing(10)
@@ -521,6 +526,7 @@ impl LalaMusicBar {
                 cached_notifications: HashMap::new(),
                 cached_hidden_notifications: Vec::new(),
                 sender: None,
+                check_sender: None,
                 quite_mode: false,
                 datetime: Local::now(),
                 calendar_id: None,
@@ -535,7 +541,7 @@ impl LalaMusicBar {
         )
     }
 
-    fn namespace(&self) -> String {
+    fn namespace() -> String {
         String::from("Mpirs_panel")
     }
 
@@ -644,7 +650,7 @@ impl LalaMusicBar {
                                     layer: Layer::Top,
                                     margin: Some((10, 10, 10, 10)),
                                     keyboard_interactivity: KeyboardInteractivity::None,
-                                    use_last_output: true,
+                                    output_option: OutputOption::LastOutput,
                                     ..Default::default()
                                 },
                                 id,
@@ -659,14 +665,13 @@ impl LalaMusicBar {
                             layer: Layer::Top,
                             margin: Some((10, 10, 10, 10)),
                             keyboard_interactivity: KeyboardInteractivity::None,
-                            use_last_output: true,
+                            output_option: OutputOption::LastOutput,
                             ..Default::default()
                         },
                         id,
                     });
                 }
             }
-
             Message::ToggleTime => {
                 if let Some(time_picker_id) = self.time_picker_id {
                     return iced_runtime::task::effect(Action::Window(WindowAction::Close(
@@ -688,7 +693,7 @@ impl LalaMusicBar {
                                     layer: Layer::Top,
                                     margin: Some((10, 10, 10, 10)),
                                     keyboard_interactivity: KeyboardInteractivity::None,
-                                    use_last_output: true,
+                                    output_option: OutputOption::LastOutput,
                                     ..Default::default()
                                 },
                                 id,
@@ -703,7 +708,7 @@ impl LalaMusicBar {
                             layer: Layer::Top,
                             margin: Some((10, 10, 10, 10)),
                             keyboard_interactivity: KeyboardInteractivity::None,
-                            use_last_output: true,
+                            output_option: OutputOption::LastOutput,
                             ..Default::default()
                         },
                         id,
@@ -820,7 +825,6 @@ impl LalaMusicBar {
                             layer: Layer::Top,
                             margin: None,
                             keyboard_interactivity: KeyboardInteractivity::Exclusive,
-                            use_last_output: false,
                             ..Default::default()
                         },
                         id,
@@ -848,7 +852,6 @@ impl LalaMusicBar {
                             anchor: Anchor::Left | Anchor::Bottom | Anchor::Right | Anchor::Top,
                             layer: Layer::Top,
                             keyboard_interactivity: KeyboardInteractivity::Exclusive,
-                            use_last_output: false,
                             ..Default::default()
                         },
                         id,
@@ -873,7 +876,7 @@ impl LalaMusicBar {
                         layer: Layer::Top,
                         margin: None,
                         keyboard_interactivity: KeyboardInteractivity::None,
-                        use_last_output: false,
+                        output_option: OutputOption::None,
                         ..Default::default()
                     },
                     id,
@@ -973,8 +976,9 @@ impl LalaMusicBar {
                                 layer: Layer::Top,
                                 margin: Some((10, 10, 10, 10)),
                                 keyboard_interactivity: KeyboardInteractivity::OnDemand,
-                                use_last_output: true,
+                                output_option: OutputOption::LastOutput,
                                 events_transparent: false,
+                                ..Default::default()
                             },
                             id,
                         }));
@@ -997,7 +1001,7 @@ impl LalaMusicBar {
                             layer: Layer::Top,
                             margin: Some((EXTRAINF_MARGIN, 10, 10, 10)),
                             keyboard_interactivity: KeyboardInteractivity::OnDemand,
-                            use_last_output: true,
+                            output_option: iced_layershell::reexport::OutputOption::LastOutput,
                             ..Default::default()
                         },
                         id,
@@ -1037,7 +1041,7 @@ impl LalaMusicBar {
                                 layer: Layer::Top,
                                 margin: Some((notify_info.upper, 10, 10, 10)),
                                 keyboard_interactivity: KeyboardInteractivity::OnDemand,
-                                use_last_output: true,
+                                output_option: OutputOption::LastOutput,
                                 ..Default::default()
                             },
                             id,
@@ -1057,7 +1061,7 @@ impl LalaMusicBar {
                                 layer: Layer::Top,
                                 margin: Some((EXTRAINF_MARGIN, 10, 10, 10)),
                                 keyboard_interactivity: KeyboardInteractivity::None,
-                                use_last_output: true,
+                                output_option: OutputOption::LastOutput,
                                 ..Default::default()
                             },
                             id,
@@ -1148,15 +1152,23 @@ impl LalaMusicBar {
                 self.time = self.datetime.time().into()
             }
             Message::Ready(sender) => self.sender = Some(sender),
-            Message::LinkClicked(_link) => {
-                // I do not care
+            Message::ReadyCheck(check_sender) => self.check_sender = Some(check_sender),
+            Message::CheckId(id) => {
+                let contain = self.notifications.contains_key(&id);
+                let _ = self.check_sender.as_mut().unwrap().try_send(contain);
+            }
+            Message::LinkClicked(link) => {
+                open::that_in_background(link.to_string());
+            }
+            Message::WindowClosed(id) => {
+                self.remove_id(id);
             }
             _ => unreachable!(),
         }
         Command::none()
     }
 
-    fn view(&self, id: iced::window::Id) -> Element<Message> {
+    fn view(&'_ self, id: iced::window::Id) -> Element<'_, Message> {
         if let Some(info) = self.id_info(id) {
             match info {
                 LaLaInfo::Launcher => {
@@ -1196,7 +1208,7 @@ impl LalaMusicBar {
                     if notify.inline_reply_support() {
                         return column![
                             btnwidgets,
-                            Space::with_height(5.),
+                            Space::new().height(5.),
                             row![
                                 text_input("reply something", &unitwidgetinfo.inline_reply)
                                     .on_input(move |msg| Message::InlineReplyMsgUpdate((id, msg)))
@@ -1230,7 +1242,7 @@ impl LalaMusicBar {
                         svg(svg::Handle::from_memory(ERROR_SVG))
                             .height(Length::Fill)
                             .width(Length::Fixed(70.)),
-                        Space::with_width(4.),
+                        Space::new().width(4.),
                         text("Error Happened, LaLa cannot find notification for this window, it is a bug, and should be fixed")
                     ]).on_press(Message::CloseErrorNotification(id)).into();
                 }
@@ -1243,8 +1255,8 @@ impl LalaMusicBar {
         iced::Subscription::batch([
             iced::time::every(std::time::Duration::from_secs(1))
                 .map(|_| Message::RequestDBusInfoUpdate),
-            iced::time::every(std::time::Duration::from_secs(10))
-                .map(|_| Message::RequestUpdateTime),
+            //iced::time::every(std::time::Duration::from_secs(10))
+            //    .map(|_| Message::RequestUpdateTime),
             iced::time::every(std::time::Duration::from_secs(5)).map(|_| Message::UpdateBalance),
             iced::event::listen()
                 .map(|event| Message::LauncherInfo(LaunchMessage::IcedEvent(event))),
@@ -1256,14 +1268,18 @@ impl LalaMusicBar {
                     unreachable!()
                 })
             }),
+            iced::window::close_events().map(Message::WindowClosed),
             iced::Subscription::run(|| {
-                iced::stream::channel(100, |mut output| async move {
+                iced::stream::channel(100, |mut output: Sender<Message>| async move {
                     use iced::futures::sink::SinkExt;
                     let (sender, mut receiver) = channel(100);
+                    let (check_sender, mut check_receiver) = channel(100);
 
                     // Send the sender back to the application
                     output.send(Message::Ready(sender)).await.ok();
-                    let Ok(connection) = start_connection(
+                    output.send(Message::ReadyCheck(check_sender)).await.ok();
+                    let output_check = output.clone();
+                    let Ok(connection) = LaLaMako::new(
                         MessageSenderDefault(output),
                         vec![
                             "body".to_owned(),
@@ -1281,6 +1297,17 @@ impl LalaMusicBar {
                             spec_version: env!("CARGO_PKG_VERSION_PATCH").to_owned(),
                         },
                     )
+                    .with_check(move |id| {
+                        let mut output_check = output_check.clone();
+                        if output_check.try_send(Message::CheckId(id)).is_err() {
+                            return false;
+                        }
+                        if let Ok(Some(true)) = check_receiver.try_next() {
+                            return true;
+                        }
+                        false
+                    })
+                    .connect()
                     .await
                     else {
                         pending::<()>().await;
@@ -1334,7 +1361,7 @@ impl LalaMusicBar {
         ])
     }
 
-    pub fn theme(&self) -> iced::Theme {
+    pub fn theme(&self, _id: iced::window::Id) -> iced::Theme {
         Theme::TokyoNight
     }
 }

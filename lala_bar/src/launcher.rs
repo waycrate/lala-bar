@@ -10,8 +10,10 @@ use super::Message;
 
 use std::sync::LazyLock;
 
-static SCROLLABLE_ID: LazyLock<scrollable::Id> = LazyLock::new(scrollable::Id::unique);
-pub static INPUT_ID: LazyLock<text_input::Id> = LazyLock::new(text_input::Id::unique);
+use iced::widget::operation::focus;
+
+static SCROLLABLE_ID: LazyLock<iced::widget::Id> = LazyLock::new(iced::widget::Id::unique);
+pub static INPUT_ID: LazyLock<iced::widget::Id> = LazyLock::new(iced::widget::Id::unique);
 
 pub struct Launcher {
     text: String,
@@ -39,7 +41,7 @@ impl Launcher {
     }
 
     pub fn focus_input(&self) -> Command<super::Message> {
-        text_input::focus(INPUT_ID.clone())
+        focus(INPUT_ID.clone())
     }
 
     pub fn update(&mut self, message: LaunchMessage, id: iced::window::Id) -> Command<Message> {
@@ -120,12 +122,12 @@ impl Launcher {
                         _ => {}
                     }
                 }
-                text_input::focus(INPUT_ID.clone())
+                focus(INPUT_ID.clone())
             }
         }
     }
 
-    pub fn view(&self) -> Element<Message> {
+    pub fn view(&'_ self) -> Element<'_, Message> {
         let re = regex::Regex::new(&self.text).ok();
         let text_ip: Element<Message> = text_input("put the launcher name", &self.text)
             .padding(10)

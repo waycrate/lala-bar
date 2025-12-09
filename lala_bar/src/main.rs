@@ -21,7 +21,8 @@ use crate::music_bar::LalaMusicBar;
 use crate::notify::NotifyCommand;
 use notify::NotifyUnitWidgetInfo;
 
-pub fn main() -> Result<(), iced_layershell::Error> {
+#[tokio::main]
+async fn main() -> Result<(), iced_layershell::Error> {
     use tracing_subscriber::filter::LevelFilter;
     use tracing_subscriber::fmt::time::LocalTime;
     tracing_subscriber::fmt()
@@ -76,14 +77,17 @@ pub enum Message {
     QuiteMode(bool),
     CloseErrorNotification(iced::window::Id),
     Ready(Sender<NotifyCommand>),
+    ReadyCheck(Sender<bool>),
+    CheckId(u32),
     #[allow(unused)]
-    LinkClicked(markdown::Url),
+    LinkClicked(markdown::Uri),
     ToggleCalendar,
     CancelDate,
     SubmitDate(Date),
     ToggleTime,
     CancelTime,
     SubmitTime(Time),
+    WindowClosed(iced::window::Id),
 }
 
 impl From<NotifyMessage> for Message {
