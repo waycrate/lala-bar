@@ -1255,8 +1255,8 @@ impl LalaMusicBar {
         iced::Subscription::batch([
             iced::time::every(std::time::Duration::from_secs(1))
                 .map(|_| Message::RequestDBusInfoUpdate),
-            //iced::time::every(std::time::Duration::from_secs(10))
-            //    .map(|_| Message::RequestUpdateTime),
+            iced::time::every(std::time::Duration::from_secs(10))
+                .map(|_| Message::RequestUpdateTime),
             iced::time::every(std::time::Duration::from_secs(5)).map(|_| Message::UpdateBalance),
             iced::event::listen()
                 .map(|event| Message::LauncherInfo(LaunchMessage::IcedEvent(event))),
@@ -1355,7 +1355,6 @@ impl LalaMusicBar {
                         }
                     }
                     pending::<()>().await;
-                    unreachable!()
                 })
             }),
         ])
