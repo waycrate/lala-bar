@@ -30,7 +30,8 @@ async fn main() -> Result<(), iced_layershell::Error> {
             tracing_subscriber::filter::EnvFilter::builder()
                 .with_default_directive(LevelFilter::INFO.into())
                 .from_env_lossy()
-                .add_directive("usvg=off".parse().unwrap()),
+                .add_directive("usvg=off".parse().unwrap())
+                .add_directive("wgpu_hal::vulkan=off".parse().unwrap()),
         )
         .with_timer(LocalTime::rfc_3339())
         .init();

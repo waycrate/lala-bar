@@ -665,7 +665,7 @@ impl LalaMusicBar {
                             layer: Layer::Top,
                             margin: Some((10, 10, 10, 10)),
                             keyboard_interactivity: KeyboardInteractivity::None,
-                            output_option: OutputOption::LastOutput,
+                            output_option: OutputOption::None,
                             ..Default::default()
                         },
                         id,
@@ -708,7 +708,7 @@ impl LalaMusicBar {
                             layer: Layer::Top,
                             margin: Some((10, 10, 10, 10)),
                             keyboard_interactivity: KeyboardInteractivity::None,
-                            output_option: OutputOption::LastOutput,
+                            output_option: OutputOption::None,
                             ..Default::default()
                         },
                         id,
@@ -1078,9 +1078,7 @@ impl LalaMusicBar {
             }
 
             Message::CheckOutput => {
-                if self.notifications.is_empty() {
-                    return Command::done(Message::ForgetLastOutput);
-                }
+                return Command::done(Message::ForgetLastOutput);
             }
             Message::LauncherInfo(message) => {
                 if let Some(launcher) = self.launcher.as_mut() {
