@@ -1,6 +1,6 @@
 [package]
 name = "lala-bar"
-version = "0.4.1"
+version = "0.4.3"
 edition.workspace = true
 description = "a bar on layershell with iced-rs"
 authors.workspace = true
