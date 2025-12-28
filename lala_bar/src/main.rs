@@ -12,6 +12,7 @@ mod aximer;
 mod config;
 mod dbusbackend;
 mod launcher;
+mod localize;
 mod music_bar;
 mod notify;
 mod slider;
@@ -35,6 +36,9 @@ async fn main() -> Result<(), iced_layershell::Error> {
         )
         .with_timer(LocalTime::rfc_3339())
         .init();
+
+    localize::localize();
+
     music_bar::run_lalabar()
 }
 

@@ -1,6 +1,7 @@
 use crate::Launcher;
 use crate::config::*;
 use crate::dbusbackend;
+use crate::fl;
 use crate::get_metadata;
 use crate::launcher::LaunchMessage;
 use crate::notify::{NotifyCommand, NotifyUnitWidgetInfo};
@@ -133,9 +134,10 @@ impl LalaMusicBar {
     fn update_balance(&mut self) {
         self.left = aximer::get_left().unwrap_or(0);
         self.right = aximer::get_right().unwrap_or(0);
-        self.left_text = format!("left {}%", self.left);
-        self.right_text = format!("right {}%", self.right);
-        self.balance_text = format!("balance {}%", self.balance_percent());
+
+        self.left_text = format!("{} {}%", fl!("left"), self.left);
+        self.right_text = format!("{} {}%", fl!("right"), self.right);
+        self.balance_text = format!("{} {}%", fl!("balance"), self.balance_percent());
     }
 
     fn set_balance(&mut self, balance: u8) {

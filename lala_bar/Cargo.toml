@@ -1,6 +1,6 @@
 [package]
 name = "lala-bar"
-version.workspace = true
+version = "0.4.3"
 edition.workspace = true
 description = "a bar on layershell with iced-rs"
 authors.workspace = true
@@ -26,29 +26,36 @@ iced_layershell = "0.14.2"
 iced_runtime = "0.14.0"
 tokio = { version = "1.48", features = ["full"] }
 iced_futures = "0.14.0"
-env_logger = "0.11.6"
-tracing = "0.1.41"
+env_logger = "0.11.8"
+tracing = "0.1.44"
 
 futures-util.workspace = true
 serde.workspace = true
 
 zbus.workspace = true
-tracing-subscriber = { version = "0.3.19", features = [
+tracing-subscriber = { version = "0.3.22", features = [
 	"std",
 	"env-filter",
 	"fmt",
 	"local-time",
 ] }
-anyhow = "1.0.95"
-alsa = "0.10.0"
+anyhow = "1.0.100"
+alsa = "0.11.0"
 
-gio = "0.21.1"
+gio = "0.21.5"
 regex = "1.12.2"
 xdg = "3.0.0"
 url.workspace = true
 futures.workspace = true
 iced_zbus_notification.workspace = true
-chrono = "0.4.39"
+chrono = "0.4.42"
 async-trait.workspace = true
 iced_aw = "0.13"
-open = "5.3.2"
+open = "5.3.3"
+tracing-journald = "0.3.2"
+i18n-embed = { version = "0.16.0", features = [
+	"fluent-system",
+	"desktop-requester",
+] }
+i18n-embed-fl = "0.10.0"
+rust-embed = "8.9.0"
