@@ -379,9 +379,11 @@ impl LalaMusicBar {
         )
         .on_press(Message::ToggleLauncher);
 
-        let sound_slider = self.sound_slider();
+        let sound_slider = container(self.sound_slider()).center_y(Length::Fill);
         let panel_text = if self.right_panel.is_some() { ">" } else { "<" };
 
+        let panel_btn = container(button(text(panel_text)).on_press(Message::ToggleRightPanel))
+            .center_y(Length::Fill);
         let Some(service_data) = &self.service_data else {
             let col = row![
                 toggle_launcher,
@@ -390,7 +392,7 @@ impl LalaMusicBar {
                 Space::new().width(Length::Fixed(3.)),
                 self.date_widget(),
                 Space::new().width(Length::Fixed(3.)),
-                button(text(panel_text)).on_press(Message::ToggleRightPanel)
+                panel_btn
             ]
             .spacing(10);
             return container(col)
@@ -464,7 +466,8 @@ impl LalaMusicBar {
         };
         let buttons = container(row![button_pre, button_play, button_next].spacing(5))
             .width(Length::Fill)
-            .center_x(Length::Fill);
+            .center_x(Length::Fill)
+            .center_y(Length::Fill);
 
         let col = if let Some(art_url) = art_url {
             row![
@@ -478,7 +481,7 @@ impl LalaMusicBar {
                 Space::new().width(Length::Fixed(3.)),
                 self.date_widget(),
                 Space::new().width(Length::Fixed(3.)),
-                button(text(panel_text)).on_press(Message::ToggleRightPanel)
+                panel_btn
             ]
             .spacing(10)
         } else {
@@ -491,7 +494,7 @@ impl LalaMusicBar {
                 Space::new().width(Length::Fixed(3.)),
                 self.date_widget(),
                 Space::new().width(Length::Fixed(1.)),
-                button(text(panel_text)).on_press(Message::ToggleRightPanel)
+                panel_btn
             ]
             .spacing(10)
         };
