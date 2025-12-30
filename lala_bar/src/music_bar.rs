@@ -237,11 +237,12 @@ impl LalaMusicBar {
 
         // NOTE: we should delete to be deleted notification
         if notifications_count <= MAX_SHOWN_NOTIFICATIONS_COUNT
-            && let Some(id) = self.hiddenid {
-                commands.push(iced_runtime::task::effect(Action::Window(
-                    WindowAction::Close(id),
-                )));
-            }
+            && let Some(id) = self.hiddenid
+        {
+            commands.push(iced_runtime::task::effect(Action::Window(
+                WindowAction::Close(id),
+            )));
+        }
 
         if notifications_count == 0 {
             commands.push(Command::perform(async {}, |_| Message::CheckOutput));
@@ -1164,9 +1165,10 @@ impl LalaMusicBar {
             }
             Message::LauncherInfo(message) => {
                 if let Some(launcher) = self.launcher.as_mut()
-                    && let Some(id) = self.launcherid {
-                        return launcher.update(message, id);
-                    }
+                    && let Some(id) = self.launcherid
+                {
+                    return launcher.update(message, id);
+                }
             }
             Message::InlineReply((notify_id, text)) => {
                 self.sender
