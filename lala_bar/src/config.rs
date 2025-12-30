@@ -9,6 +9,10 @@ pub const EXTRAINF_MARGIN: i32 = BEGINNING_UP_MARGIN + 4 * UNIT_MARGIN;
 
 pub const LAUNCHER_SVG: &[u8] = include_bytes!("../asserts/launcher.svg");
 
+pub const NOTIFICATION_SVG: &[u8] = include_bytes!("../asserts/notification.svg");
+
+pub const SETTINGS_SVG: &[u8] = include_bytes!("../asserts/settings.svg");
+
 pub const RESET_SVG: &[u8] = include_bytes!("../asserts/reset.svg");
 
 pub const ERROR_SVG: &[u8] = include_bytes!("../asserts/error.svg");

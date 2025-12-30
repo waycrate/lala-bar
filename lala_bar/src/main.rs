@@ -16,6 +16,7 @@ mod music_bar;
 mod notify;
 mod slider;
 mod zbus_mpirs;
+mod settings;
 
 use crate::music_bar::LalaMusicBar;
 use crate::notify::NotifyCommand;
@@ -47,6 +48,18 @@ pub enum LaLaInfo {
     ErrorHappened(iced::window::Id),
     Calendar,
     TimePicker,
+}
+
+#[derive(Debug, Clone, PartialEq, Copy)]
+pub enum RightPanelFilter {
+    Notifications,
+    Settings,
+}
+
+#[derive(Debug,Clone)]
+pub enum ColorPickerResult {
+    Color(iced::Color),
+    Failed
 }
 
 #[to_layer_message(multi)]
@@ -89,6 +102,9 @@ pub enum Message {
     CancelTime,
     SubmitTime(Time),
     WindowClosed(iced::window::Id),
+    RightPanelFilterChanged(RightPanelFilter),
+    PickerColor,
+    PickerColorDone(ColorPickerResult)
 }
 
 impl From<NotifyMessage> for Message {

@@ -1,9 +1,12 @@
+use crate::ColorPickerResult;
 use crate::Launcher;
+use crate::RightPanelFilter;
 use crate::config::*;
 use crate::dbusbackend;
 use crate::get_metadata;
 use crate::launcher::LaunchMessage;
 use crate::notify::{NotifyCommand, NotifyUnitWidgetInfo};
+use crate::settings::SettingsConfig;
 use crate::slider::SliderIndex;
 use crate::zbus_mpirs::ServiceInfo;
 use crate::{LaLaInfo, Message, get_metadata_initial};
@@ -79,6 +82,24 @@ pub struct LalaMusicBar {
     date: Date,
     time: Time,
     time_picker_id: Option<iced::window::Id>,
+    right_filter: RightPanelFilter,
+
+    bar_settings: SettingsConfig,
+}
+
+async fn color_pick() -> ColorPickerResult {
+    use ashpd::desktop::Color;
+    let Ok(response) = Color::pick().send().await else {
+        return ColorPickerResult::Failed;
+    };
+    let Ok(color) = response.response() else {
+        return ColorPickerResult::Failed;
+    };
+    ColorPickerResult::Color(iced::Color::from_rgb(
+        color.red() as f32,
+        color.green() as f32,
+        color.blue() as f32,
+    ))
 }
 
 impl LalaMusicBar {
@@ -290,8 +311,61 @@ impl LalaMusicBar {
             SliderIndex::Balance => self.balance_bar(),
         }
     }
+}
 
+impl LalaMusicBar {
     fn right_panel_view(&'_ self) -> Element<'_, Message> {
+        let filter_button = |bytes, filter, current_filter| {
+            button(svg(svg::Handle::from_memory(bytes)))
+                .style(if filter == current_filter {
+                    button::primary
+                } else {
+                    button::text
+                })
+                .width(40.)
+                .height(40.)
+                .on_press(Message::RightPanelFilterChanged(filter))
+        };
+        let notification_btn = filter_button(
+            NOTIFICATION_SVG,
+            RightPanelFilter::Notifications,
+            self.right_filter,
+        );
+        let settings_btn =
+            filter_button(SETTINGS_SVG, RightPanelFilter::Settings, self.right_filter);
+        let buttons = container(
+            column![Space::new().height(10.), notification_btn, settings_btn].spacing(10.),
+        )
+        .style(|_| container::Style {
+            background: Some(iced::Background::Color(iced::Color::from_rgb(
+                0.3, 0.4, 0.4,
+            ))),
+            ..Default::default()
+        })
+        .height(Length::Fill);
+        let main_view = match self.right_filter {
+            RightPanelFilter::Settings => self.right_settings(),
+            RightPanelFilter::Notifications => self.right_notification(),
+        };
+        container(row![main_view, buttons])
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .into()
+    }
+    fn right_settings(&'_ self) -> Element<'_, Message> {
+        let color_settings = container(row![
+            container(text("picker_color:")).center_y(Length::Fill),
+            Space::new().width(20.),
+            button("pick").on_press(Message::PickerColor)
+        ])
+        .center_y(30.)
+        .center_x(Length::Fill);
+        container(column![Space::new().height(30.), color_settings])
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .into()
+    }
+    fn right_notification(&'_ self) -> Element<'_, Message> {
         let btns: Vec<Element<Message>> = self
             .hidden_notification()
             .iter()
@@ -536,6 +610,8 @@ impl LalaMusicBar {
                 date: Date::today(),
                 time: Time::now_hm(true),
                 time_picker_id: None,
+                right_filter: RightPanelFilter::Notifications,
+                bar_settings: SettingsConfig::read_from_file(),
             },
             Command::batch(vec![
                 Command::done(Message::UpdateBalance),
@@ -1164,6 +1240,19 @@ impl LalaMusicBar {
             Message::WindowClosed(id) => {
                 self.remove_id(id);
             }
+            Message::RightPanelFilterChanged(filter) => {
+                self.right_filter = filter;
+            }
+            Message::PickerColor => {
+                return Command::perform(color_pick(), Message::PickerColorDone);
+            }
+            Message::PickerColorDone(info) => {
+                let ColorPickerResult::Color(color) = info else {
+                    return Command::none();
+                };
+                self.bar_settings.set_background(color);
+                self.bar_settings.write_to_file();
+            }
             _ => unreachable!(),
         }
         Command::none()
@@ -1361,7 +1450,19 @@ impl LalaMusicBar {
         ])
     }
 
-    pub fn theme(&self, _id: iced::window::Id) -> iced::Theme {
-        Theme::TokyoNight
+    pub fn theme(&self, id: iced::window::Id) -> iced::Theme {
+        if self.id_info(id).is_some() {
+            return Theme::TokyoNight;
+        }
+        let Some(background) = self.bar_settings.background() else {
+            return Theme::TokyoNight;
+        };
+        iced::Theme::custom(
+            "sakura",
+            iced::theme::Palette {
+                background,
+                ..Theme::TokyoNight.palette()
+            },
+        )
     }
 }
