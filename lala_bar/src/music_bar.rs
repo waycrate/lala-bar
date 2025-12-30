@@ -258,11 +258,8 @@ impl LalaMusicBar {
     fn balance_bar(&'_ self) -> Element<'_, Message> {
         row![
             button("<").on_press(Message::SliderIndexPre),
-            Space::new().width(Length::Fixed(1.)),
             text(&self.balance_text),
-            Space::new().width(Length::Fixed(10.)),
             slider(0..=100, self.balance_percent(), Message::BalanceChanged),
-            Space::new().width(Length::Fixed(10.)),
             button(
                 svg(svg::Handle::from_memory(RESET_SVG))
                     .height(25.)
@@ -271,35 +268,31 @@ impl LalaMusicBar {
             .height(31.)
             .width(31.)
             .on_press(Message::BalanceChanged(50)),
-            Space::new().width(Length::Fixed(1.)),
             button(">").on_press(Message::SliderIndexNext)
         ]
+        .spacing(5.)
         .align_y(Alignment::Center)
         .into()
     }
     fn left_bar(&'_ self) -> Element<'_, Message> {
         row![
             button("<").on_press(Message::SliderIndexPre),
-            Space::new().width(Length::Fixed(1.)),
             text(&self.left_text),
-            Space::new().width(Length::Fixed(10.)),
             slider(0..=100, self.left as u8, Message::UpdateLeft),
-            Space::new().width(Length::Fixed(10.)),
             button(">").on_press(Message::SliderIndexNext)
         ]
+        .spacing(5.)
         .align_y(Alignment::Center)
         .into()
     }
     fn right_bar(&'_ self) -> Element<'_, Message> {
         row![
             button("<").on_press(Message::SliderIndexPre),
-            Space::new().width(Length::Fixed(1.)),
             text(&self.right_text),
-            Space::new().width(Length::Fixed(10.)),
             slider(0..=100, self.right as u8, Message::UpdateRight),
-            Space::new().width(Length::Fixed(10.)),
             button(">").on_press(Message::SliderIndexNext)
         ]
+        .spacing(5.)
         .align_y(Alignment::Center)
         .into()
     }
