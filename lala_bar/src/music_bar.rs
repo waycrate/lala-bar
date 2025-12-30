@@ -354,7 +354,7 @@ impl LalaMusicBar {
     }
     fn right_settings(&'_ self) -> Element<'_, Message> {
         let color_settings = container(row![
-            container(text("picker_color:")).center_y(Length::Fill),
+            container(text("background color:")).center_y(Length::Fill),
             Space::new().width(20.),
             button("pick").on_press(Message::PickerColor)
         ])
