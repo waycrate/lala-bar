@@ -53,10 +53,14 @@ impl SettingsConfig {
             .join(".config")
             .join("lala-bar")
             .join("config.toml");
-        let Ok(mut file) = std::fs::OpenOptions::new().write(true).open(config_path) else {
+        let Ok(mut file) = std::fs::OpenOptions::new()
+            .write(true)
+            .truncate(true)
+            .open(config_path)
+        else {
             return;
         };
-        let _ = file.write(context.as_bytes());
+        let _ = file.write_all(context.as_bytes());
     }
     pub fn background(&self) -> Option<iced::Color> {
         let background_color = self.background_color.as_ref()?;
