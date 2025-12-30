@@ -2078,7 +2078,7 @@ dependencies = [
 
 [[package]]
 name = "iced_zbus_notification"
-version = "0.4.3"
+version = "0.4.4"
 dependencies = [
  "async-trait",
  "futures",
@@ -2428,7 +2428,7 @@ dependencies = [
 
 [[package]]
 name = "lala-bar"
-version = "0.4.3"
+version = "0.4.4"
 dependencies = [
  "alsa",
  "anyhow",
