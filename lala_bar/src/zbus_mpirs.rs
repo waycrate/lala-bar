@@ -300,7 +300,6 @@ pub async fn init_mpirs() -> Result<()> {
     let names: Vec<String> = names
         .iter()
         .filter(|name| name.starts_with("org.mpris.MediaPlayer2") && **name != PLAYCTLD)
-        .cloned()
         .map(|name| name.to_string())
         .collect();
 

@@ -14,9 +14,9 @@ mod dbusbackend;
 mod launcher;
 mod music_bar;
 mod notify;
+mod settings;
 mod slider;
 mod zbus_mpirs;
-mod settings;
 
 use crate::music_bar::LalaMusicBar;
 use crate::notify::NotifyCommand;
@@ -56,10 +56,10 @@ pub enum RightPanelFilter {
     Settings,
 }
 
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 pub enum ColorPickerResult {
     Color(iced::Color),
-    Failed
+    Failed,
 }
 
 #[to_layer_message(multi)]
@@ -104,7 +104,8 @@ pub enum Message {
     WindowClosed(iced::window::Id),
     RightPanelFilterChanged(RightPanelFilter),
     PickerColor,
-    PickerColorDone(ColorPickerResult)
+    PickerColorDone(ColorPickerResult),
+    ResetConfig,
 }
 
 impl From<NotifyMessage> for Message {

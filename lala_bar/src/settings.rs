@@ -60,7 +60,7 @@ impl SettingsConfig {
     }
     pub fn background(&self) -> Option<iced::Color> {
         let background_color = self.background_color.as_ref()?;
-        let color = csscolorparser::parse(&background_color).ok()?;
+        let color = csscolorparser::parse(background_color).ok()?;
         Some(iced::Color::from_rgb(color.r, color.g, color.b))
     }
     pub fn set_background(&mut self, color: iced::Color) {
@@ -69,5 +69,9 @@ impl SettingsConfig {
         let b = (color.b * 255.) as i32;
         let color = format!("#{:02x}{:02x}{:02x}", r, g, b);
         self.background_color = Some(color)
+    }
+    pub fn reset(&mut self) {
+        *self = Self::default();
+        self.write_to_file();
     }
 }

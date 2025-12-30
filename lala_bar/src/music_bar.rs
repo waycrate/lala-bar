@@ -236,13 +236,12 @@ impl LalaMusicBar {
             .count();
 
         // NOTE: we should delete to be deleted notification
-        if notifications_count <= MAX_SHOWN_NOTIFICATIONS_COUNT {
-            if let Some(id) = self.hiddenid {
+        if notifications_count <= MAX_SHOWN_NOTIFICATIONS_COUNT
+            && let Some(id) = self.hiddenid {
                 commands.push(iced_runtime::task::effect(Action::Window(
                     WindowAction::Close(id),
                 )));
             }
-        }
 
         if notifications_count == 0 {
             commands.push(Command::perform(async {}, |_| Message::CheckOutput));
@@ -360,7 +359,11 @@ impl LalaMusicBar {
         ])
         .center_y(30.)
         .center_x(Length::Fill);
-        container(column![Space::new().height(30.), color_settings])
+        let settings =
+            scrollable(column![Space::new().height(30.), color_settings]).height(Length::Fill);
+        let reset_button =
+            container(button(text("reset")).on_press(Message::ResetConfig)).center_x(Length::Fill);
+        container(column![settings, reset_button, Space::new().height(10.)])
             .width(Length::Fill)
             .height(Length::Fill)
             .into()
@@ -1160,11 +1163,10 @@ impl LalaMusicBar {
                 return Command::done(Message::ForgetLastOutput);
             }
             Message::LauncherInfo(message) => {
-                if let Some(launcher) = self.launcher.as_mut() {
-                    if let Some(id) = self.launcherid {
+                if let Some(launcher) = self.launcher.as_mut()
+                    && let Some(id) = self.launcherid {
                         return launcher.update(message, id);
                     }
-                }
             }
             Message::InlineReply((notify_id, text)) => {
                 self.sender
@@ -1217,7 +1219,7 @@ impl LalaMusicBar {
                 self.notifications_markdown.clear();
                 self.notifications.clear();
                 self.update_hidden_notification();
-                commands.push(Command::perform(async {}, |_| Message::CheckOutput));
+                commands.push(Command::done(Message::CheckOutput));
                 return Command::batch(commands);
             }
             Message::CloseErrorNotification(id) => {
@@ -1235,7 +1237,7 @@ impl LalaMusicBar {
                 let _ = self.check_sender.as_mut().unwrap().try_send(contain);
             }
             Message::LinkClicked(link) => {
-                open::that_in_background(link.to_string());
+                open::that_in_background(&link);
             }
             Message::WindowClosed(id) => {
                 self.remove_id(id);
@@ -1252,6 +1254,9 @@ impl LalaMusicBar {
                 };
                 self.bar_settings.set_background(color);
                 self.bar_settings.write_to_file();
+            }
+            Message::ResetConfig => {
+                self.bar_settings.reset();
             }
             _ => unreachable!(),
         }
