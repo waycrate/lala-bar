@@ -129,10 +129,6 @@ impl<Message> canvas::Program<Message> for WavState {
                     Stroke {
                         width: 3.,
                         style: stroke::Style::Solid(data.color),
-                        line_dash: canvas::LineDash {
-                            offset: 0,
-                            segments: &[3.0, 6.0],
-                        },
                         ..Default::default()
                     },
                 );
