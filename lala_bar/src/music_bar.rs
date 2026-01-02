@@ -8,6 +8,9 @@ use crate::launcher::LaunchMessage;
 use crate::notify::{NotifyCommand, NotifyUnitWidgetInfo};
 use crate::settings::SettingsConfig;
 use crate::slider::SliderIndex;
+use crate::wav_canvars;
+use crate::wav_canvars::PwEvent;
+use crate::wav_canvars::WavState;
 use crate::zbus_mpirs::ServiceInfo;
 use crate::{LaLaInfo, Message, get_metadata_initial};
 use crate::{aximer, launcher};
@@ -15,6 +18,7 @@ use chrono::{DateTime, Local};
 use futures::StreamExt;
 use futures::channel::mpsc::{Sender, channel};
 use futures::future::pending;
+use iced::widget::canvas;
 use iced::widget::{
     Space, button, checkbox, column, container, image, markdown, row, scrollable, slider, svg,
     text, text_input,
@@ -85,6 +89,8 @@ pub struct LalaMusicBar {
     right_filter: RightPanelFilter,
 
     bar_settings: SettingsConfig,
+
+    wav_data: wav_canvars::WavState,
 }
 
 async fn color_pick() -> ColorPickerResult {
@@ -502,6 +508,10 @@ impl LalaMusicBar {
         )
         .width(Length::Fill)
         .center_x(Length::Fill);
+        let wav_chat = canvas(&self.wav_data)
+            .width(Length::Fixed(350.))
+            .height(Length::Fill);
+
         let can_play = service_data.can_play;
         let can_pause = service_data.can_pause;
         let can_go_next = service_data.can_go_next;
@@ -546,7 +556,7 @@ impl LalaMusicBar {
                 Space::new().width(Length::Fixed(5.)),
                 image(image::Handle::from_path(art_url)),
                 title,
-                Space::new().width(Length::Fill),
+                wav_chat,
                 buttons,
                 sound_slider,
                 Space::new().width(Length::Fixed(3.)),
@@ -559,7 +569,7 @@ impl LalaMusicBar {
             row![
                 toggle_launcher,
                 title,
-                Space::new().width(Length::Fill),
+                wav_chat,
                 buttons,
                 sound_slider,
                 Space::new().width(Length::Fixed(3.)),
@@ -609,6 +619,7 @@ impl LalaMusicBar {
                 time_picker_id: None,
                 right_filter: RightPanelFilter::Notifications,
                 bar_settings: SettingsConfig::read_from_file(),
+                wav_data: WavState::new(),
             },
             Command::batch(vec![
                 Command::done(Message::UpdateBalance),
@@ -701,6 +712,19 @@ impl LalaMusicBar {
 
     fn update(&mut self, message: Message) -> Command<Message> {
         match message {
+            Message::Tick => {
+                self.wav_data.update_canvas();
+            }
+            Message::Pw(PwEvent::FormatChange(format)) => {
+                let channel = format.channels();
+                self.wav_data.reset_matrix(500, channel as usize);
+            }
+            Message::Pw(PwEvent::DataNew(data)) => {
+                self.wav_data.append_data(data);
+            }
+            Message::Pw(PwEvent::PwErr) => {
+                tracing::warn!("pw connection is broken");
+            }
             Message::DBusInfoUpdate(data) => self.service_data = data,
             Message::RequestDBusInfoUpdate => {
                 return Command::perform(get_metadata(), Message::DBusInfoUpdate);
@@ -1343,6 +1367,8 @@ impl LalaMusicBar {
 
     fn subscription(&self) -> iced::Subscription<Message> {
         iced::Subscription::batch([
+            iced::window::frames().map(|_| Message::Tick),
+            wav_canvars::listen_pw().map(Message::Pw),
             iced::time::every(std::time::Duration::from_secs(1))
                 .map(|_| Message::RequestDBusInfoUpdate),
             iced::time::every(std::time::Duration::from_secs(10))

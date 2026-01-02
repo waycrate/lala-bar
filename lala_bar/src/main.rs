@@ -16,10 +16,12 @@ mod music_bar;
 mod notify;
 mod settings;
 mod slider;
+mod wav_canvars;
 mod zbus_mpirs;
 
 use crate::music_bar::LalaMusicBar;
 use crate::notify::NotifyCommand;
+use crate::wav_canvars::PwEvent;
 use notify::NotifyUnitWidgetInfo;
 
 #[tokio::main]
@@ -65,12 +67,17 @@ pub enum ColorPickerResult {
 #[to_layer_message(multi)]
 #[derive(Debug, Clone)]
 pub enum Message {
+    // MUSIC PLAY
     RequestPre,
     RequestNext,
     RequestPause,
     RequestPlay,
     RequestDBusInfoUpdate,
     RequestUpdateTime,
+    // WAV CHAT
+    Tick,
+    Pw(PwEvent),
+    // SOUNCD CONTROL
     UpdateBalance,
     DBusInfoUpdate(Option<ServiceInfo>),
     BalanceChanged(u8),
@@ -78,30 +85,37 @@ pub enum Message {
     UpdateRight(u8),
     SliderIndexNext,
     SliderIndexPre,
+    // LAUNCHER
     ToggleLauncher,
     ToggleLauncherDBus,
     ToggleRightPanel,
+    // NOTIFY
     LauncherInfo(LaunchMessage),
     Notify(NotifyMessage),
     RemoveNotify(u32),
     InlineReply((u32, String)),
     InlineReplyMsgUpdate((iced::window::Id, String)),
-    CheckOutput,
-    ClearAllNotifications,
-    QuiteMode(bool),
     CloseErrorNotification(iced::window::Id),
     Ready(Sender<NotifyCommand>),
     ReadyCheck(Sender<bool>),
     CheckId(u32),
+    QuiteMode(bool),
+    ClearAllNotifications,
+    // BASE WAYLAND
+    CheckOutput,
+    // UTILS
     #[allow(unused)]
     LinkClicked(markdown::Uri),
+    // CALENDAR AND DATE
     ToggleCalendar,
     CancelDate,
     SubmitDate(Date),
     ToggleTime,
     CancelTime,
     SubmitTime(Time),
+    // BASE WINDOW EVENT
     WindowClosed(iced::window::Id),
+    // MENU
     RightPanelFilterChanged(RightPanelFilter),
     PickerColor,
     PickerColorDone(ColorPickerResult),

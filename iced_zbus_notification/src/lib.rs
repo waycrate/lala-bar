@@ -155,9 +155,9 @@ pub enum ImageInfo {
     Jpg(PathBuf),
 }
 
-fn keep_rgba(has_alpha: bool, data: &Vec<u8>) -> Vec<u8> {
+fn keep_rgba(has_alpha: bool, data: &[u8]) -> Vec<u8> {
     if has_alpha {
-        return data.clone();
+        return data.to_owned();
     }
     let mut new_data = vec![];
     for chunk in data.chunks(3) {
@@ -372,12 +372,10 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
     ) -> zbus::fdo::Result<u32> {
         let id = if replaced_id == 0 {
             Id::unique()
+        } else if (self.notify_check)(replaced_id) {
+            Id(replaced_id)
         } else {
-            if (self.notify_check)(replaced_id) {
-                Id(replaced_id)
-            } else {
-                Id::unique()
-            }
+            Id::unique()
         };
         let mut image_data: Option<ImageData> =
             hints.remove("image-data").and_then(|v| v.try_into().ok());

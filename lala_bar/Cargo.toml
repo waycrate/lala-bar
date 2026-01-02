@@ -19,6 +19,7 @@ iced = { features = [
 	"advanced",
 	"svg",
 	"markdown",
+	"canvas",
 ], version = "0.14.0" }
 
 iced_layershell = "0.14.2"
@@ -55,3 +56,4 @@ open = "5.3.2"
 ashpd = "0.12.0"
 toml = "0.9.10"
 csscolorparser = "0.8.1"
+pipewire = "0.9.2"
