@@ -218,7 +218,8 @@ fn connect_inner(sender: StdSender<PwEvent>) -> Result<(), pw::Error> {
                 .parse(param)
                 .expect("Failed to parse param changed to AudioInfoRaw");
 
-            let pw_audio_info = PwAudioInfo::new(user_data.format.channels(), user_data.format.rate());
+            let pw_audio_info =
+                PwAudioInfo::new(user_data.format.channels(), user_data.format.rate());
             let _ = user_data.sender.send(PwEvent::FormatChange(pw_audio_info));
             tracing::info!(
                 "capturing rate:{} channels:{}",
