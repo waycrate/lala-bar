@@ -273,7 +273,8 @@ impl<T: Send> MessageSenderDefault<T> {
 #[async_trait]
 impl<T: Send> MessageSender<T> for MessageSenderDefault<T> {
     async fn try_send(&mut self, message: T) -> Option<()> {
-        self.0.try_send(message).ok()
+        use futures::SinkExt;
+        self.0.send(message).await.ok()
     }
 }
 
