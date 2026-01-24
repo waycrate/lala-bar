@@ -8,6 +8,7 @@ use std::sync::LazyLock;
 
 use tokio::sync::Mutex;
 
+use iced::widget::image;
 use zbus::{
     Result,
     fdo::{DBusProxy, NameOwnerChangedArgs},
@@ -21,7 +22,7 @@ const PLAYCTLD: &str = "org.mpris.MediaPlayer2.playerctld";
 #[derive(Debug, Clone)]
 pub struct Metadata {
     mpris_trackid: OwnedObjectPath,
-    pub mpris_arturl: String,
+    pub mpris_image: Option<image::Handle>,
     pub xesam_title: String,
     xesam_album: String,
     xesam_artist: Vec<String>,
@@ -30,9 +31,18 @@ pub struct Metadata {
 impl Metadata {
     fn from_hashmap(mut value: HashMap<String, OwnedValue>) -> Self {
         let art_url = value.remove("mpris:artUrl");
-        let mut mpris_arturl = String::new();
+        let mut mpris_image = None;
         if let Some(art_url) = art_url {
-            mpris_arturl = art_url.try_into().unwrap_or_default()
+            let mpris_arturl: String = art_url.try_into().unwrap_or_default();
+            if let Some(art_url) = url::Url::parse(&mpris_arturl)
+                .ok()
+                .and_then(|url| url.to_file_path().ok())
+            {
+                use std::fs;
+                if let Ok(data) = fs::read(art_url) {
+                    mpris_image = Some(image::Handle::from_bytes(data));
+                }
+            }
         }
 
         let trackid = value.remove("mpris:trackid");
@@ -61,7 +71,7 @@ impl Metadata {
             xesam_title,
             xesam_artist,
             xesam_album,
-            mpris_arturl,
+            mpris_image,
         }
     }
 }
