@@ -22,7 +22,7 @@ iced = { features = [
 	"canvas",
 ], version = "0.14.0" }
 
-iced_layershell = "0.14.2"
+iced_layershell = "0.15.0-rc1"
 
 iced_runtime = "0.14.0"
 tokio = { version = "1.49", features = ["full"] }
