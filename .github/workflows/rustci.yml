@@ -1,56 +1,71 @@
-name: Build
+name: CI & Release
 
 on:
-    push:
-        branches:
-            - master
-        tags:
-            - v*
-    pull_request:
-        branches:
-            - master
+  push:
+    branches:
+      - master
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - master
+
 concurrency:
-    group: ${{ github.ref }}
-    cancel-in-progress: true
+  group: ${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-    build:
-        name: Build Binary
-        runs-on: ubuntu-latest
-        container:
-          image: archlinux:latest
-        steps:
-            - uses: actions/checkout@v6
-            - uses: dtolnay/rust-toolchain@stable
-              with:
-                components: clippy rustfmt
-            - name: Install Deps
-              run: pacman -Syu --noconfirm base-devel git sudo libxkbcommon wayland alsa-lib alsa-utils pipewire libpipewire clang
-            - name: Run fmt check
-              run: cargo fmt --all -- --check
-            - name: Run clippy check
-              run: cargo clippy
-            - name: Run tests
-              run: cargo test --verbose
+  test_and_lint:
+    name: Lint and Test (Ubuntu)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    release:
-        permissions:
-            contents: write
-        if: startsWith(github.ref, 'refs/tags/v')
-        needs:
-            - build
-        runs-on: ubuntu-latest
-        container:
-          image: archlinux:latest
-        steps:
-            - uses: actions/checkout@v6
-            - uses: dtolnay/rust-toolchain@stable
-            - name: Install Deps
-              run: pacman -Syu --noconfirm base-devel git sudo libxkbcommon wayland alsa-lib alsa-utils pipewire libpipewire clang
-            - name: Publish to crate
-              run: |
-                cargo publish -p iced_zbus_notification --token ${{ secrets.CRATES_TOKEN }}
-                cargo publish -p lala-bar --token ${{ secrets.CRATES_TOKEN }}
-            - uses: softprops/action-gh-release@v2
-              with:
-                draft: false
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libxkbcommon-dev \
+            libwayland-dev \
+            libasound2-dev \
+            libpipewire-0.3-dev \
+            clang \
+            pkg-config
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - name: Check Formatting
+        run: cargo fmt --all -- --check
+
+      - name: Run Lints (Clippy)
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Build and Test
+        run: cargo test --verbose
+
+  release:
+    name: Publish Release (Arch)
+    needs: test_and_lint
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install Arch Deps
+        run: pacman -Syu --noconfirm base-devel git sudo libxkbcommon wayland alsa-lib alsa-utils pipewire libpipewire clang
+      - name: Publish to crates.io
+        run: |
+          cargo publish -p iced_zbus_notification --token ${{ secrets.CRATES_TOKEN }}
+          cargo publish -p lala-bar --token ${{ secrets.CRATES_TOKEN }}
+      - name: GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: false
