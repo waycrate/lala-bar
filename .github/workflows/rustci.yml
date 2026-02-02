@@ -11,27 +11,21 @@ on:
       - master
 
 concurrency:
-  group: ${{ github.ref }}
-  cancel-in-progress: true
+    group: ${{ github.ref }}
+    cancel-in-progress: true
 
 jobs:
   test_and_lint:
-    name: Lint and Test (Ubuntu)
+    name: Lint and Test (Arch)
     runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Install System Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libxkbcommon-dev \
-            libwayland-dev \
-            libasound2-dev \
-            libpipewire-0.3-dev \
-            clang \
-            pkg-config
+        run: pacman -Syu --noconfirm base-devel git sudo libxkbcommon wayland alsa-lib alsa-utils pipewire libpipewire clang
 
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
