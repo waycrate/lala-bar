@@ -12,6 +12,7 @@ mod aximer;
 mod config;
 mod dbusbackend;
 mod launcher;
+mod localization;
 mod music_bar;
 mod notify;
 mod settings;

@@ -5,6 +5,7 @@ use crate::config::*;
 use crate::dbusbackend;
 use crate::get_metadata;
 use crate::launcher::LaunchMessage;
+use crate::localization::{fl, fl_args};
 use crate::notify::{NotifyCommand, NotifyUnitWidgetInfo};
 use crate::settings::SettingsConfig;
 use crate::slider::SliderIndex;
@@ -15,6 +16,7 @@ use crate::zbus_mpirs::ServiceInfo;
 use crate::{LaLaInfo, Message, get_metadata_initial};
 use crate::{aximer, launcher};
 use chrono::{DateTime, Local};
+use fluent_bundle::FluentArgs;
 use futures::StreamExt;
 use futures::channel::mpsc::{Sender, channel};
 use futures::future::pending;
@@ -160,9 +162,17 @@ impl LalaMusicBar {
     fn update_balance(&mut self) {
         self.left = aximer::get_left().unwrap_or(0);
         self.right = aximer::get_right().unwrap_or(0);
-        self.left_text = format!("left {}%", self.left);
-        self.right_text = format!("right {}%", self.right);
-        self.balance_text = format!("balance {}%", self.balance_percent());
+        let mut args = FluentArgs::new();
+        args.set("percent", self.left);
+        self.left_text = fl_args("balance-left", args);
+
+        let mut args = FluentArgs::new();
+        args.set("percent", self.right);
+        self.right_text = fl_args("balance-right", args);
+
+        let mut args = FluentArgs::new();
+        args.set("percent", self.balance_percent());
+        self.balance_text = fl_args("balance-combined", args);
     }
 
     fn set_balance(&mut self, balance: u8) {
@@ -353,16 +363,16 @@ impl LalaMusicBar {
     }
     fn right_settings(&'_ self) -> Element<'_, Message> {
         let color_settings = container(row![
-            container(text("background color:")).center_y(Length::Fill),
+            container(text(fl("background-color"))).center_y(Length::Fill),
             Space::new().width(20.),
-            button("pick").on_press(Message::PickerColor)
+            button(text(fl("pick-color"))).on_press(Message::PickerColor)
         ])
         .center_y(30.)
         .center_x(Length::Fill);
         let settings =
             scrollable(column![Space::new().height(30.), color_settings]).height(Length::Fill);
-        let reset_button =
-            container(button(text("reset")).on_press(Message::ResetConfig)).center_x(Length::Fill);
+        let reset_button = container(button(text(fl("reset"))).on_press(Message::ResetConfig))
+            .center_x(Length::Fill);
         container(column![settings, reset_button, Space::new().height(10.)])
             .width(Length::Fill)
             .height(Length::Fill)
@@ -420,14 +430,14 @@ impl LalaMusicBar {
             .into(),
             container(
                 checkbox(self.quite_mode)
-                    .label("quite mode")
+                    .label(fl("quiet-mode"))
                     .on_toggle(Message::QuiteMode),
             )
             .width(Length::Fill)
             .center_x(Length::Fill)
             .into(),
             Space::new().height(10.).into(),
-            container(button(text("clear all")).on_press(Message::ClearAllNotifications))
+            container(button(text(fl("clear-all"))).on_press(Message::ClearAllNotifications))
                 .width(Length::Fill)
                 .center_x(Length::Fill)
                 .into(),
@@ -1272,7 +1282,7 @@ impl LalaMusicBar {
                     return container(date_picker(
                         true,
                         self.date,
-                        button(text("Pick date")),
+                        button(text(fl("pick-date"))),
                         Message::CancelDate,
                         Message::SubmitDate,
                     ))
@@ -1285,7 +1295,7 @@ impl LalaMusicBar {
                     return container(time_picker(
                         true,
                         self.time,
-                        button(text("Pick time")),
+                        button(text(fl("pick-time"))),
                         Message::CancelTime,
                         Message::SubmitTime,
                     ))
@@ -1302,13 +1312,16 @@ impl LalaMusicBar {
                             btnwidgets,
                             Space::new().height(5.),
                             row![
-                                text_input("reply something", &unitwidgetinfo.inline_reply)
-                                    .on_input(move |msg| Message::InlineReplyMsgUpdate((id, msg)))
-                                    .on_submit(Message::InlineReply((
-                                        notify.id,
-                                        unitwidgetinfo.inline_reply.clone()
-                                    ))),
-                                button("send").on_press(Message::InlineReply((
+                                text_input(
+                                    &fl("inline-reply-placeholder"),
+                                    &unitwidgetinfo.inline_reply
+                                )
+                                .on_input(move |msg| Message::InlineReplyMsgUpdate((id, msg)))
+                                .on_submit(Message::InlineReply((
+                                    notify.id,
+                                    unitwidgetinfo.inline_reply.clone()
+                                ))),
+                                button(text(fl("send"))).on_press(Message::InlineReply((
                                     notify.id,
                                     unitwidgetinfo.inline_reply.clone()
                                 ))),
@@ -1319,11 +1332,9 @@ impl LalaMusicBar {
                     return btnwidgets;
                 }
                 LaLaInfo::HiddenInfo => {
-                    return text(format!(
-                        "hidden notifications {}",
-                        self.hidden_notification().len()
-                    ))
-                    .into();
+                    let mut args = FluentArgs::new();
+                    args.set("count", self.hidden_notification().len());
+                    return text(fl_args("hidden-notifications", args)).into();
                 }
                 LaLaInfo::RightPanel => {
                     return self.right_panel_view();
@@ -1335,8 +1346,10 @@ impl LalaMusicBar {
                             .height(Length::Fill)
                             .width(Length::Fixed(70.)),
                         Space::new().width(4.),
-                        text("Error Happened, LaLa cannot find notification for this window, it is a bug, and should be fixed")
-                    ]).on_press(Message::CloseErrorNotification(id)).into();
+                        text(fl("error-notification-not-found"))
+                    ])
+                    .on_press(Message::CloseErrorNotification(id))
+                    .into();
                 }
             }
         }

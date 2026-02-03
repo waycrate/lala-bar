@@ -7,31 +7,31 @@ pub const UNIT_MARGIN: i32 = 135;
 
 pub const EXTRAINF_MARGIN: i32 = BEGINNING_UP_MARGIN + 4 * UNIT_MARGIN;
 
-pub const LAUNCHER_SVG: &[u8] = include_bytes!("../asserts/launcher.svg");
+pub const LAUNCHER_SVG: &[u8] = include_bytes!("../assets/images/launcher.svg");
 
-pub const NOTIFICATION_SVG: &[u8] = include_bytes!("../asserts/notification.svg");
+pub const NOTIFICATION_SVG: &[u8] = include_bytes!("../assets/images/notification.svg");
 
-pub const SETTINGS_SVG: &[u8] = include_bytes!("../asserts/settings.svg");
+pub const SETTINGS_SVG: &[u8] = include_bytes!("../assets/images/settings.svg");
 
-pub const RESET_SVG: &[u8] = include_bytes!("../asserts/reset.svg");
+pub const RESET_SVG: &[u8] = include_bytes!("../assets/images/reset.svg");
 
-pub const ERROR_SVG: &[u8] = include_bytes!("../asserts/error.svg");
+pub const ERROR_SVG: &[u8] = include_bytes!("../assets/images/error.svg");
 
-pub const GO_NEXT: &[u8] = include_bytes!("../asserts/go-next.svg");
+pub const GO_NEXT: &[u8] = include_bytes!("../assets/images/go-next.svg");
 
 pub static GO_NEXT_HANDLE: LazyLock<svg::Handle> =
     LazyLock::new(|| svg::Handle::from_memory(GO_NEXT));
 
-pub const GO_PREVIOUS: &[u8] = include_bytes!("../asserts/go-previous.svg");
+pub const GO_PREVIOUS: &[u8] = include_bytes!("../assets/images/go-previous.svg");
 
 pub static GO_PREVIOUS_HANDLE: LazyLock<svg::Handle> =
     LazyLock::new(|| svg::Handle::from_memory(GO_PREVIOUS));
 
-pub const PLAY: &[u8] = include_bytes!("../asserts/play.svg");
+pub const PLAY: &[u8] = include_bytes!("../assets/images/play.svg");
 
 pub static PLAY_HANDLE: LazyLock<svg::Handle> = LazyLock::new(|| svg::Handle::from_memory(PLAY));
 
-pub const PAUSE: &[u8] = include_bytes!("../asserts/pause.svg");
+pub const PAUSE: &[u8] = include_bytes!("../assets/images/pause.svg");
 
 pub static PAUSE_HANDLE: LazyLock<svg::Handle> = LazyLock::new(|| svg::Handle::from_memory(PAUSE));
 
