@@ -113,7 +113,7 @@ mod tests {
             let source = std::str::from_utf8(file.data.as_ref()).unwrap();
             let res = FluentResource::try_new(source.to_string())
                 .expect(&format!("Failed to parse {}", path));
-            
+
             res.entries()
                 .filter_map(|entry| {
                     if let Entry::Message(msg) = entry {
@@ -126,9 +126,9 @@ mod tests {
         };
 
         //en-US as a base reference
-        let base_path = "en-US/lala-bar.ftl"; 
+        let base_path = "en-US/lala-bar.ftl";
         let expected_keys = get_keys(base_path);
-        
+
         //iteration over all other langs
         let mut missing_stuff = false;
 
@@ -144,6 +144,9 @@ mod tests {
                 }
             });
 
-        assert!(!missing_stuff, "Localization consistency check failed. See stderr.");
+        assert!(
+            !missing_stuff,
+            "Localization consistency check failed. See stderr."
+        );
     }
 }

@@ -390,34 +390,40 @@ impl LalaMusicBar {
             .collect();
         let mut view_elements: Vec<Element<Message>> = vec![];
 
-        if let Some(data) = &self.service_data {
-            if let Some(handle) = &data.metadata.mpris_image {
-                view_elements.push(
-                    container(image(handle).width(Length::Fill))
-                        .padding(10)
-                        .width(Length::Fill)
-                        .into(),
-                );
-                view_elements.push(Space::new().height(10.).into());
-                view_elements.push(
-                    container(
-                        text(&data.metadata.xesam_title)
-                            .size(20)
-                            .font(Font {
-                                weight: iced::font::Weight::Bold,
-                                ..Default::default()
-                            })
-                            .shaping(text::Shaping::Advanced)
-                            .style(|_theme| text::Style {
-                                color: Some(iced::Color::WHITE),
-                            }),
-                    )
+        if let Some(handle) = self
+            .service_data
+            .as_ref()
+            .and_then(|data| data.metadata.mpris_image.as_ref())
+        {
+            // we can safely unwrap service_data here because the pattern match above
+            // already verified it exists via as_ref().and_then()
+            let data = self.service_data.as_ref().unwrap();
+
+            view_elements.push(
+                container(image(handle.clone()).width(Length::Fill))
+                    .padding(10)
                     .width(Length::Fill)
-                    .center_x(Length::Fill)
                     .into(),
-                );
-                view_elements.push(Space::new().height(10.).into());
-            }
+            );
+            view_elements.push(Space::new().height(10.).into());
+            view_elements.push(
+                container(
+                    text(&data.metadata.xesam_title)
+                        .size(20)
+                        .font(Font {
+                            weight: iced::font::Weight::Bold,
+                            ..Default::default()
+                        })
+                        .shaping(text::Shaping::Advanced)
+                        .style(|_theme| text::Style {
+                            color: Some(iced::Color::WHITE),
+                        }),
+                )
+                .width(Length::Fill)
+                .center_x(Length::Fill)
+                .into(),
+            );
+            view_elements.push(Space::new().height(10.).into());
         }
         view_elements.append(&mut vec![
             Space::new().height(10.).into(),
