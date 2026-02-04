@@ -389,18 +389,14 @@ impl LalaMusicBar {
             })
             .collect();
         let mut view_elements: Vec<Element<Message>> = vec![];
-
-        if let Some(handle) = self
-            .service_data
-            .as_ref()
-            .and_then(|data| data.metadata.mpris_image.as_ref())
-        {
-            // we can safely unwrap service_data here because the pattern match above
-            // already verified it exists via as_ref().and_then()
-            let data = self.service_data.as_ref().unwrap();
-
+        if let (Some(data), Some(handle)) = (
+            &self.service_data,
+            self.service_data
+                .as_ref()
+                .and_then(|d| d.metadata.mpris_image.as_ref()),
+        ) {
             view_elements.push(
-                container(image(handle.clone()).width(Length::Fill))
+                container(image(handle).width(Length::Fill))
                     .padding(10)
                     .width(Length::Fill)
                     .into(),
