@@ -1,5 +1,7 @@
-use fluent_bundle::FluentResource;
-use intl_memoizer::concurrent::IntlLangMemoizer;
+use i18n_embed::{
+    DesktopLanguageRequester,
+    fluent::{FluentLanguageLoader, fluent_language_loader},
+};
 use rust_embed::RustEmbed;
 use std::sync::LazyLock;
 
@@ -11,55 +13,45 @@ struct Asset;
 pub static LOCALIZER: LazyLock<Localizer> = LazyLock::new(Localizer::new);
 
 pub struct Localizer {
-    bundle: fluent_bundle::bundle::FluentBundle<FluentResource, IntlLangMemoizer>,
+    loader: FluentLanguageLoader,
 }
 
 impl Localizer {
     pub fn new() -> Self {
-        let mut bundle =
-            fluent_bundle::bundle::FluentBundle::new_concurrent(vec!["en-US".parse().unwrap()]);
+        let loader: FluentLanguageLoader = fluent_language_loader!();
 
-        let path = "en-US/main.ftl";
-        let file = Asset::get(path).expect("Failed to load English locale");
-        let source = std::str::from_utf8(file.data.as_ref()).unwrap().to_string();
-        let resource = FluentResource::try_new(source).expect("Failed to parse ftl");
+        let requested_languages = DesktopLanguageRequester::requested_languages();
 
-        bundle.add_resource(resource).unwrap();
-        Self { bundle }
+        if let Err(e) = i18n_embed::select(&loader, &Asset, &requested_languages) {
+            tracing::warn!(
+                "Localized strings not found for system lang, falling back to English: {}",
+                e
+            );
+        }
+        
+        Self { loader }
     }
 
     //for static strings without args
     //returns key as a string if no match found
     pub fn tr(&self, key: &str) -> String {
-        // using the key to fetch the msg from bundle
-        match self.bundle.get_message(key) {
-            Some(m) => {
-                if let Some(value) = m.value() {
-                    self.bundle
-                        .format_pattern(value, None, &mut vec![])
-                        .to_string()
-                } else {
-                    key.to_string()
-                }
-            }
-            None => key.to_string(),
+        if self.loader.has(key) {
+            self.loader.get(key)
+        } else {
+            key.to_string()
         }
     }
 
     //for strings with args (For ex: battery percentage)
     pub fn tr_with_args(&self, key: &str, args: &fluent_bundle::FluentArgs) -> String {
-        match self.bundle.get_message(key) {
-            Some(m) => {
-                if let Some(value) = m.value() {
-                    let mut errors = vec![];
-                    self.bundle
-                        .format_pattern(value, Some(args), &mut errors)
-                        .to_string()
-                } else {
-                    key.to_string()
-                }
+        if self.loader.has(key) {
+            let mut map = std::collections::HashMap::new();
+            for (k, v) in args.iter() {
+                map.insert(k.to_string(), v.clone());
             }
-            None => key.to_string(),
+            self.loader.get_args(key, map)
+        } else {
+            key.to_string()
         }
     }
 }
@@ -105,5 +97,53 @@ mod tests {
         // checking fallback
         let result = fl("non-existent-key");
         assert_eq!(result, "non-existent-key", "Should return key if missing");
+    }
+
+    #[test]
+    fn test_language_consistency() {
+        // this test uses en-US as a base reference
+        // checks if all the keys are present in all the other langs
+        use fluent_bundle::FluentResource;
+        use fluent_syntax::ast::Entry;
+        use std::collections::HashSet;
+
+        // helper to extract keys from a file path
+        let get_keys = |path: &str| -> HashSet<String> {
+            let file = Asset::get(path).expect(&format!("File {} not found", path));
+            let source = std::str::from_utf8(file.data.as_ref()).unwrap();
+            let res = FluentResource::try_new(source.to_string())
+                .expect(&format!("Failed to parse {}", path));
+            
+            res.entries()
+                .filter_map(|entry| {
+                    if let Entry::Message(msg) = entry {
+                        Some(msg.id.name.to_string())
+                    } else {
+                        None
+                    }
+                })
+                .collect()
+        };
+
+        //en-US as a base reference
+        let base_path = "en-US/lala-bar.ftl"; 
+        let expected_keys = get_keys(base_path);
+        
+        //iteration over all other langs
+        let mut missing_stuff = false;
+
+        Asset::iter()
+            .filter(|path| path.ends_with(".ftl") && path.as_ref() != base_path)
+            .for_each(|path| {
+                let found_keys = get_keys(path.as_ref());
+                let missing: Vec<_> = expected_keys.difference(&found_keys).collect();
+
+                if !missing.is_empty() {
+                    missing_stuff = true;
+                    eprintln!("FAIL: {} is missing keys: {:?}", path, missing);
+                }
+            });
+
+        assert!(!missing_stuff, "Localization consistency check failed. See stderr.");
     }
 }
