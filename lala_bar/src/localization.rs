@@ -109,10 +109,10 @@ mod tests {
 
         // helper to extract keys from a file path
         let get_keys = |path: &str| -> HashSet<String> {
-            let file = Asset::get(path).expect(&format!("File {} not found", path));
+            let file = Asset::get(path).unwrap_or_else(|| panic!("File {} not found", path));
             let source = std::str::from_utf8(file.data.as_ref()).unwrap();
             let res = FluentResource::try_new(source.to_string())
-                .expect(&format!("Failed to parse {}", path));
+                .unwrap_or_else(|_| panic!("Failed to parse {}", path));
 
             res.entries()
                 .filter_map(|entry| {
