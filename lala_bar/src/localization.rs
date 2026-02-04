@@ -28,7 +28,7 @@ impl Localizer {
                 e
             );
         }
-        
+
         Self { loader }
     }
 
