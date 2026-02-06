@@ -1,8 +1,10 @@
+pub use crate::fl;
 use i18n_embed::{
     DesktopLanguageRequester,
     fluent::{FluentLanguageLoader, fluent_language_loader},
 };
 use rust_embed::RustEmbed;
+use std::collections::HashMap;
 use std::sync::LazyLock;
 
 #[derive(RustEmbed)]
@@ -13,7 +15,7 @@ struct Asset;
 pub static LOCALIZER: LazyLock<Localizer> = LazyLock::new(Localizer::new);
 
 pub struct Localizer {
-    loader: FluentLanguageLoader,
+    pub loader: FluentLanguageLoader,
 }
 
 impl Localizer {
@@ -31,57 +33,49 @@ impl Localizer {
 
         Self { loader }
     }
-
-    //for static strings without args
-    //returns key as a string if no match found
-    pub fn tr(&self, key: &str) -> String {
-        if self.loader.has(key) {
-            self.loader.get(key)
-        } else {
-            key.to_string()
-        }
-    }
-
-    //for strings with args (For ex: battery percentage)
-    pub fn tr_with_args(&self, key: &str, args: &fluent_bundle::FluentArgs) -> String {
-        if self.loader.has(key) {
-            let mut map = std::collections::HashMap::new();
-            for (k, v) in args.iter() {
-                map.insert(k.to_string(), v.clone());
-            }
-            self.loader.get_args(key, map)
-        } else {
-            key.to_string()
-        }
-    }
 }
 
-pub fn fl(key: &str) -> String {
-    LOCALIZER.tr(key)
+pub fn localize_with_args(id: &str, args: &fluent_bundle::FluentArgs) -> String {
+    let mut map = HashMap::new();
+    for (k, v) in args.iter() {
+        map.insert(k.to_string(), v.clone());
+    }
+    LOCALIZER.loader.get_args(id, map)
 }
 
-pub fn fl_args(key: &str, args: fluent_bundle::FluentArgs) -> String {
-    LOCALIZER.tr_with_args(key, &args)
+#[macro_export]
+macro_rules! fl {
+    // for static strings
+    ($message_id:literal) => {{
+        i18n_embed_fl::fl!($crate::localization::LOCALIZER.loader, $message_id)
+    }};
+
+    //for cases with single arg
+    ($message_id:literal, $key:ident = $value:expr $(, $rest:tt)*) => {{
+        i18n_embed_fl::fl!($crate::localization::LOCALIZER.loader, $message_id, $key = $value $(, $rest)*)
+    }};
+
+    //for complex edge cases when multiple args are needed
+    ($message_id:literal, $args:expr) => {{
+        $crate::localization::localize_with_args($message_id, &$args)
+    }};
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use fluent_bundle::FluentArgs;
 
     #[test]
     fn test_simple_translation() {
         // testing a simple static string
-        let result = fl("app-name");
+        let result = fl!("app-name");
         assert_eq!(result, "Lala Bar", "Should translate app-name correctly");
     }
 
     #[test]
     fn test_args_translation() {
         // testing a string with arguments
-        let mut args = FluentArgs::new();
-        args.set("percent", 50);
-        let result = fl_args("balance-left", args);
+        let result = fl!("balance-left", percent = 50);
 
         // test was failing multiple times
         // realised it was due to BiDi markers being included in the output
@@ -90,13 +84,6 @@ mod tests {
             clean_result, "Left: 50%",
             "Should translate balance-left correctly after stripping BiDi markers"
         );
-    }
-
-    #[test]
-    fn test_missing_key() {
-        // checking fallback
-        let result = fl("non-existent-key");
-        assert_eq!(result, "non-existent-key", "Should return key if missing");
     }
 
     #[test]

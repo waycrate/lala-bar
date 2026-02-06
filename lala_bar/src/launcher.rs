@@ -39,7 +39,7 @@ impl Launcher {
             apps: all_apps(),
             scrollpos: 0,
             should_delete: false,
-            placeholder: fl("launcher-placeholder"),
+            placeholder: fl!("launcher-placeholder"),
         }
     }
 
