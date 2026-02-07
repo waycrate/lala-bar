@@ -1,5 +1,6 @@
 mod applications;
 
+use crate::localization::fl;
 use applications::{App, all_apps};
 use iced::widget::{column, scrollable, text_input};
 use iced::{Element, Event, Length, Task as Command};
@@ -20,6 +21,7 @@ pub struct Launcher {
     apps: Vec<App>,
     scrollpos: usize,
     pub should_delete: bool,
+    placeholder: String,
 }
 
 #[derive(Debug, Clone)]
@@ -37,6 +39,7 @@ impl Launcher {
             apps: all_apps(),
             scrollpos: 0,
             should_delete: false,
+            placeholder: fl!("launcher-placeholder"),
         }
     }
 
@@ -129,7 +132,7 @@ impl Launcher {
 
     pub fn view(&'_ self) -> Element<'_, Message> {
         let re = regex::Regex::new(&self.text).ok();
-        let text_ip: Element<Message> = text_input("put the launcher name", &self.text)
+        let text_ip: Element<Message> = text_input(&self.placeholder, &self.text)
             .padding(10)
             .on_input(|msg| Message::LauncherInfo(LaunchMessage::SearchEditChanged(msg)))
             .on_submit(Message::LauncherInfo(LaunchMessage::SearchSubmit))
