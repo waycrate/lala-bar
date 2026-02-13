@@ -71,7 +71,7 @@ pub fn apply_blackman_harris(block: &mut [f32]) {
 fn smooth_spectrum(data: &[f32]) -> Vec<f32> {
     let len = data.len();
     let mut output = vec![0.; len];
-    for index in 0..len {
+    for (index, db) in output.iter_mut().enumerate() {
         let mut start = 0;
         let mut end = len;
         if index > 10 {
@@ -82,8 +82,8 @@ fn smooth_spectrum(data: &[f32]) -> Vec<f32> {
         }
         let step = end - start;
         let slice = &data[start..end];
-        let db_all: f32 = slice.iter().map(|v| *v).sum();
-        output[index] = db_all / step as f32;
+        let db_all: f32 = slice.iter().copied().sum();
+        *db = db_all / step as f32;
     }
     output
 }
