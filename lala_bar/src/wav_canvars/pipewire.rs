@@ -102,7 +102,12 @@ impl UserData {
         apply_blackman_harris(&mut block);
         let mut spectrum = fft.make_output_vec();
         if fft.process(&mut block, &mut spectrum).is_ok() {
-            let data: Vec<f32> = spectrum.iter().map(|v| v.norm()).collect();
+            // NOTE: let we use the log absolute instead
+            let data: Vec<f32> = spectrum.iter().map(|v| (v.norm() + 1e-7).log10()).collect();
+            let len = data.len();
+
+            // NOTE: only use half of spectrum
+            let data = data[0..len / 2 + 1].to_vec();
 
             let smooth_data = smooth_spectrum(&data);
             let _ = self.sender.send(PwEvent::Spectrum(smooth_data));

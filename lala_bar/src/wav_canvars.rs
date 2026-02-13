@@ -50,6 +50,7 @@ impl LineDatas {
     fn generate_spectrum(&self, size: iced::Size) -> LineData {
         let rate = self.rate as f64;
 
+        // NOTE: the max frequency of spectrum is half of the rate
         let log_min = MIN_FREQ.log10();
         let log_max = rate.log10();
 
@@ -59,7 +60,7 @@ impl LineDatas {
         let color = COLOR_ALL[1];
         let data: Vec<Point> = (0..num_points)
             .zip(&self.spectrum)
-            .map(|(index, db)| Point::new(index as f32 * step as f32, db * -3.))
+            .map(|(index, db)| Point::new(index as f32 * step as f32, db * -30.))
             .collect();
 
         LineData { data, color }
