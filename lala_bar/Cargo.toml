@@ -63,3 +63,4 @@ intl-memoizer = "0.5.3"
 i18n-embed = { version = "0.16", features = ["fluent-system", "desktop-requester"] }
 i18n-embed-fl = "0.10"
 fluent-syntax = "0.12"
+realfft = "3.5.0"

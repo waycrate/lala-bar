@@ -707,10 +707,14 @@ impl LalaMusicBar {
             }
             Message::Pw(PwEvent::FormatChange(format)) => {
                 let channel = format.channels();
-                self.wav_data.reset_matrix(500, channel as usize);
+                let rate = format.rate();
+                self.wav_data.reset_format(500, channel as usize, rate);
             }
             Message::Pw(PwEvent::DataNew(data)) => {
                 self.wav_data.append_data(data);
+            }
+            Message::Pw(PwEvent::Spectrum(spectrum)) => {
+                self.wav_data.set_spectrum(spectrum);
             }
             Message::Pw(PwEvent::PwErr) => {
                 tracing::warn!("pw connection is broken");
