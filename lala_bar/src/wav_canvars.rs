@@ -59,7 +59,7 @@ impl LineDatas {
         let color = COLOR_ALL[1];
         let data: Vec<Point> = (0..num_points)
             .zip(&self.spectrum)
-            .map(|(index, db)| Point::new(index as f32 * step as f32, db * -10.))
+            .map(|(index, db)| Point::new(index as f32 * step as f32, db * -3.))
             .collect();
 
         LineData { data, color }

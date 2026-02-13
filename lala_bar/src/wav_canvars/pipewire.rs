@@ -68,6 +68,26 @@ pub fn apply_blackman_harris(block: &mut [f32]) {
     }
 }
 
+fn smooth_spectrum(data: &[f32]) -> Vec<f32> {
+    let len = data.len();
+    let mut output = vec![0.; len];
+    for index in 0..len {
+        let mut start = 0;
+        let mut end = len;
+        if index > 10 {
+            start = index - 10;
+        }
+        if index + 10 < len - 1 {
+            end = index + 10;
+        }
+        let step = end - start;
+        let slice = &data[start..end];
+        let db_all: f32 = slice.iter().map(|v| *v).sum();
+        output[index] = db_all / step as f32;
+    }
+    output
+}
+
 impl UserData {
     fn append_spectrum(&mut self, datas: &[f32]) {
         for data in datas {
@@ -84,7 +104,8 @@ impl UserData {
         if fft.process(&mut block, &mut spectrum).is_ok() {
             let data: Vec<f32> = spectrum.iter().map(|v| v.norm()).collect();
 
-            let _ = self.sender.send(PwEvent::Spectrum(data));
+            let smooth_data = smooth_spectrum(&data);
+            let _ = self.sender.send(PwEvent::Spectrum(smooth_data));
         }
     }
 }
