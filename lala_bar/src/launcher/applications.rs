@@ -147,13 +147,9 @@ pub fn all_apps() -> Vec<App> {
         .iter()
         .filter(|entry| !entry.no_display() && !entry.hidden())
         .flat_map(|entry| {
-            let Ok(cmds) = entry.parse_exec() else {
-                return None;
-            };
+            let cmds = entry.parse_exec().ok()?;
             let id = entry.id().to_string();
-            let Some(name) = entry.name(&LOCALE).map(|n| n.to_string()) else {
-                return None;
-            };
+            let name = entry.name(&LOCALE).map(|n| n.to_string())?;
             let description = entry
                 .comment(&LOCALE)
                 .map(|c| c.to_string())
