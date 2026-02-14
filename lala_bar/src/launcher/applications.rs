@@ -39,11 +39,7 @@ impl App {
     fn icon(&self) -> Element<'_, Message> {
         match &self.icon {
             Some(path) => {
-                if path
-                    .as_os_str()
-                    .to_str()
-                    .is_some_and(|pathname| pathname.ends_with("png"))
-                {
+                if path.extension().is_some_and(|extension| extension == "png") {
                     image(image::Handle::from_path(path))
                         .width(Length::Fixed(80.))
                         .height(Length::Fixed(80.))
