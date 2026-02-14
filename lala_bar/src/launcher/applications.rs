@@ -157,7 +157,7 @@ pub fn all_apps() -> Vec<App> {
             let description = entry
                 .comment(&LOCALE)
                 .map(|c| c.to_string())
-                .unwrap_or(format!("Run {id}"));
+                .unwrap_or(format!("Run {name}"));
             let categrades: Option<Vec<String>> = entry
                 .categories()
                 .map(|c| c.iter().map(|i| i.to_string()).collect::<Vec<String>>());
