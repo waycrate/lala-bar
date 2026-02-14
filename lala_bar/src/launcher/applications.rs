@@ -17,6 +17,7 @@ static DEFAULT_ICON: &[u8] = include_bytes!("../../assets/images/text-plain.svg"
 #[allow(unused)]
 #[derive(Debug, Clone)]
 pub struct App {
+    id: String,
     name: String,
     cmds: Vec<String>,
     description: String,
@@ -27,7 +28,7 @@ pub struct App {
 
 impl App {
     pub async fn launch(&self) {
-        if let Err(err) = systemd::launch(&self.name, &self.cmds, &self.description).await {
+        if let Err(err) = systemd::launch(&self.id, &self.cmds, &self.description).await {
             tracing::error!("{err}");
         };
     }
@@ -149,11 +150,14 @@ pub fn all_apps() -> Vec<App> {
             let Ok(cmds) = entry.parse_exec() else {
                 return None;
             };
-            let name = entry.id().to_string();
+            let id = entry.id().to_string();
+            let Some(name) = entry.name(&LOCALE).map(|n| n.to_string()) else {
+                return None;
+            };
             let description = entry
                 .comment(&LOCALE)
                 .map(|c| c.to_string())
-                .unwrap_or(format!("Run {name}"));
+                .unwrap_or(format!("Run {id}"));
             let categrades: Option<Vec<String>> = entry
                 .categories()
                 .map(|c| c.iter().map(|i| i.to_string()).collect::<Vec<String>>());
@@ -164,6 +168,7 @@ pub fn all_apps() -> Vec<App> {
                 entry.icon().unwrap_or_default(),
             ));
             Some(App {
+                id,
                 name,
                 description,
                 cmds,
