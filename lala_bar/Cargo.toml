@@ -33,7 +33,7 @@ tracing = "0.1.44"
 futures-util.workspace = true
 serde.workspace = true
 
-zbus = { workspace = true, features = ["blocking-api"] }
+zbus.workspace = true
 tracing-subscriber = { version = "0.3.22", features = [
 	"std",
 	"env-filter",

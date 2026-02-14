@@ -10,7 +10,7 @@ use iced::Pixels;
 use iced::widget::{button, column, image, row, svg, text};
 use iced::{Element, Length};
 
-static LOCALE: LazyLock<Vec<String>> = LazyLock::new(|| fde::get_languages_from_env());
+static LOCALE: LazyLock<Vec<String>> = LazyLock::new(fde::get_languages_from_env);
 
 static DEFAULT_ICON: &[u8] = include_bytes!("../../assets/images/text-plain.svg");
 

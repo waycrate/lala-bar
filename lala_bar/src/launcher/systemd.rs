@@ -64,7 +64,7 @@ impl<'a> serde::Serialize for Properties<'a> {
         let mut starts: Vec<zvariant::Structure<'_>> = vec![];
         for start in &self.exec_start {
             let value: zvariant::Structure<'_> = start.clone().into();
-            starts.push(value.try_into().unwrap());
+            starts.push(value);
         }
         if !starts.is_empty() {
             let signature = starts[0].signature();
@@ -101,13 +101,12 @@ struct ExecCommand {
 
 impl<'a> From<ExecCommand> for zvariant::Structure<'a> {
     fn from(value: ExecCommand) -> Self {
-        let ret_value = zvariant::StructureBuilder::new()
+        zvariant::StructureBuilder::new()
             .add_field(value.path)
             .add_field(value.args)
             .add_field(value.unclean)
             .build()
-            .unwrap();
-        ret_value
+            .unwrap()
     }
 }
 
@@ -137,7 +136,7 @@ async fn get_connection() -> zbus::Result<zbus::Connection> {
     }
 }
 
-pub async fn launch(id: &str, cmd: &Vec<String>, description: &str) -> anyhow::Result<()> {
+pub async fn launch(id: &str, cmd: &[String], description: &str) -> anyhow::Result<()> {
     let conn = get_connection().await?;
     let systemd = Systemd1ManagerProxy::builder(&conn)
         .destination("org.freedesktop.systemd1")?
@@ -153,7 +152,7 @@ pub async fn launch(id: &str, cmd: &Vec<String>, description: &str) -> anyhow::R
                 description,
                 exec_start: vec![ExecCommand {
                     path: cmd[0].clone(),
-                    args: cmd.clone(),
+                    args: cmd.to_owned(),
                     unclean: false,
                 }],
                 environment: vec![],
