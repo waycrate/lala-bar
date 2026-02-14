@@ -317,6 +317,7 @@ fn connect_inner(sender: StdSender<PwEvent>) -> Result<(), pw::Error> {
                 let Some(samples) = data.data() else {
                     return;
                 };
+                let mut spectrum_source = vec![];
                 let mut matrix_inner =
                     vec![vec![0.; (n_samples / n_channels) as usize]; n_channels as usize];
                 for c in 0..n_channels {
@@ -326,9 +327,11 @@ fn connect_inner(sender: StdSender<PwEvent>) -> Result<(), pw::Error> {
                         let chan = &samples[start..end];
                         let f = f32::from_le_bytes(chan.try_into().unwrap());
                         matrix_inner[c as usize][index] = f;
+
+                        spectrum_source.push(f);
                     }
                 }
-                user_data.append_spectrum(&matrix_inner[0]);
+                user_data.append_spectrum(&spectrum_source);
                 let matrix = Matrix {
                     inner: matrix_inner,
                 };
