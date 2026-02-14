@@ -6,6 +6,7 @@ use iced::widget::{column, scrollable, text_input};
 use iced::{Element, Event, Length, Task as Command};
 use iced_runtime::Action;
 use iced_runtime::window::Action as WindowAction;
+mod systemd;
 
 use super::Message;
 
@@ -69,9 +70,17 @@ impl Launcher {
                     .enumerate()
                     .find(|(index, _)| *index == self.scrollpos);
                 if let Some((_, (_, app))) = index {
-                    app.launch();
+                    let app = app.clone();
                     self.should_delete = true;
-                    iced_runtime::task::effect(Action::Window(WindowAction::Close(id)))
+                    Command::batch(vec![
+                        Command::perform(
+                            async move {
+                                app.launch().await;
+                            },
+                            |_| Message::LaunchFinished,
+                        ),
+                        iced_runtime::task::effect(Action::Window(WindowAction::Close(id))),
+                    ])
                 } else {
                     Command::none()
                 }
@@ -82,9 +91,17 @@ impl Launcher {
                 Command::none()
             }
             LaunchMessage::Launch(index) => {
-                self.apps[index].launch();
+                let app = self.apps[index].clone();
                 self.should_delete = true;
-                iced_runtime::task::effect(Action::Window(WindowAction::Close(id)))
+                Command::batch(vec![
+                    Command::perform(
+                        async move {
+                            app.launch().await;
+                        },
+                        |_| Message::LaunchFinished,
+                    ),
+                    iced_runtime::task::effect(Action::Window(WindowAction::Close(id))),
+                ])
             }
             LaunchMessage::IcedEvent(event) => {
                 let mut len = self.apps.len();

@@ -1271,6 +1271,7 @@ impl LalaMusicBar {
             Message::ResetConfig => {
                 self.bar_settings.reset();
             }
+            Message::LaunchFinished => {}
             _ => unreachable!(),
         }
         Command::none()

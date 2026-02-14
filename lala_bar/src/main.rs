@@ -121,6 +121,8 @@ pub enum Message {
     PickerColor,
     PickerColorDone(ColorPickerResult),
     ResetConfig,
+
+    LaunchFinished
 }
 
 impl From<NotifyMessage> for Message {
