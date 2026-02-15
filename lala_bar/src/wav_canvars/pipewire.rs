@@ -39,15 +39,14 @@ impl PwAudioInfo {
 #[derive(Debug, Clone)]
 pub enum PwEvent {
     FormatChange(PwAudioInfo),
-    DataNew(Matrix<f32>),
-    Spectrum(Vec<f32>),
+    Spectrum(Vec<Vec<f32>>),
     PwErr,
 }
 
 struct UserData {
     format: spa::param::audio::AudioInfoRaw,
     sender: StdSender<PwEvent>,
-    spectrum_data: VecDeque<f32>,
+    spectrum_data: MatrixFixed,
 }
 pub fn apply_blackman_harris(block: &mut [f32]) {
     let n = block.len().saturating_sub(1) as f32;
@@ -89,19 +88,18 @@ fn smooth_spectrum(data: &[f32]) -> Vec<f32> {
 }
 
 impl UserData {
-    fn append_spectrum(&mut self, datas: &[f32]) {
-        for data in datas {
-            self.spectrum_data.push_back(*data);
-            self.spectrum_data.pop_front();
-        }
+    fn append_spectrum(&mut self, matrix: Matrix) {
+        self.spectrum_data.append(matrix);
     }
-    fn send_spectrum(&self) {
-        let mut block: Vec<f32> = self.spectrum_data.iter().copied().collect();
-        let mut planner: RealFftPlanner<f32> = RealFftPlanner::new();
-        let fft = planner.plan_fft_forward(FFT_SIZE);
-        apply_blackman_harris(&mut block);
-        let mut spectrum = fft.make_output_vec();
-        if fft.process(&mut block, &mut spectrum).is_ok() {
+    fn send_spectrum(&self) -> Option<()> {
+        let mut spectrums = vec![];
+        for spectrum_data in self.spectrum_data.data() {
+            let mut block: Vec<f32> = spectrum_data.iter().copied().collect();
+            let mut planner: RealFftPlanner<f32> = RealFftPlanner::new();
+            let fft = planner.plan_fft_forward(FFT_SIZE);
+            apply_blackman_harris(&mut block);
+            let mut spectrum = fft.make_output_vec();
+            fft.process(&mut block, &mut spectrum).ok()?;
             // NOTE: let we use the log absolute instead
             let data: Vec<f32> = spectrum.iter().map(|v| (v.norm() + 1e-7).log10()).collect();
             let len = data.len();
@@ -110,8 +108,10 @@ impl UserData {
             let data = data[0..len / 2 + 1].to_vec();
 
             let smooth_data = smooth_spectrum(&data);
-            let _ = self.sender.send(PwEvent::Spectrum(smooth_data));
+            spectrums.push(smooth_data);
         }
+        let _ = self.sender.send(PwEvent::Spectrum(spectrums));
+        Some(())
     }
 }
 
@@ -147,6 +147,13 @@ impl<T> MatrixFixed<T>
 where
     T: Clone + Copy + Default,
 {
+    pub fn update_channel(&mut self, channel: usize) {
+        if self.channel() == channel {
+            return;
+        }
+        self.channel = channel;
+        self.inner = vec![vec![Default::default(); self.len].into(); channel];
+    }
     pub fn new(len: usize, channel: usize) -> Self {
         Self {
             inner: vec![vec![Default::default(); len].into(); channel],
@@ -157,6 +164,7 @@ where
     pub fn channel(&self) -> usize {
         self.channel
     }
+    #[allow(unused)]
     pub fn len(&self) -> usize {
         self.len
     }
@@ -240,7 +248,7 @@ fn connect_inner(sender: StdSender<PwEvent>) -> Result<(), pw::Error> {
     let data = UserData {
         format: Default::default(),
         sender,
-        spectrum_data: VecDeque::from_iter(vec![0_f32; FFT_SIZE].iter().copied()),
+        spectrum_data: MatrixFixed::new(FFT_SIZE, 2),
     };
 
     /* Create a simple stream, the simple stream manages the core and remote
@@ -328,15 +336,11 @@ fn connect_inner(sender: StdSender<PwEvent>) -> Result<(), pw::Error> {
                         matrix_inner[c as usize][index] = f;
                     }
                 }
-                user_data.append_spectrum(&matrix_inner[0]);
-                let matrix = Matrix {
-                    inner: matrix_inner,
-                };
-                for data in matrix.chunks(1200) {
-                    let data_new: Vec<Vec<f32>> = data.iter().map(|data| data.to_vec()).collect();
-                    let data_chunk: Matrix<f32> = Matrix::init(data_new);
-                    let _ = user_data.sender.send(PwEvent::DataNew(data_chunk));
-                }
+                let matrix = Matrix::init(matrix_inner);
+                user_data
+                    .spectrum_data
+                    .update_channel(user_data.format.channels() as usize);
+                user_data.append_spectrum(matrix);
                 user_data.send_spectrum();
             }
         })

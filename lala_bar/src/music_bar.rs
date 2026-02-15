@@ -706,13 +706,10 @@ impl LalaMusicBar {
                 self.wav_data.update_canvas();
             }
             Message::Pw(PwEvent::FormatChange(format)) => {
-                let channel = format.channels();
                 let rate = format.rate();
-                self.wav_data.reset_format(500, channel as usize, rate);
+                self.wav_data.reset_format(rate);
             }
-            Message::Pw(PwEvent::DataNew(data)) => {
-                self.wav_data.append_data(data);
-            }
+
             Message::Pw(PwEvent::Spectrum(spectrum)) => {
                 self.wav_data.set_spectrum(spectrum);
             }
