@@ -78,7 +78,8 @@ pub enum Message {
     Pw(PwEvent),
     // SOUNCD CONTROL
     UpdateData,
-    DBusInfoUpdate(Option<ServiceInfo>),
+    RequestMprisInfoUpdate,
+    MpirsInfoUpdate(Option<ServiceInfo>),
     BalanceChanged(u8),
     UpdateLeft(u8),
     UpdateRight(u8),

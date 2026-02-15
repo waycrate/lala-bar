@@ -613,7 +613,7 @@ impl LalaMusicBar {
             },
             Command::batch(vec![
                 Command::done(Message::UpdateData),
-                Command::perform(get_metadata_initial(), Message::DBusInfoUpdate),
+                Command::perform(get_metadata_initial(), Message::MpirsInfoUpdate),
             ]),
         )
     }
@@ -716,7 +716,7 @@ impl LalaMusicBar {
             Message::Pw(PwEvent::PwErr) => {
                 tracing::warn!("pw connection is broken");
             }
-            Message::DBusInfoUpdate(data) => self.service_data = data,
+            Message::MpirsInfoUpdate(data) => self.service_data = data,
             Message::ToggleCalendar => {
                 if let Some(calendar_id) = self.calendar_id {
                     return iced_runtime::task::effect(Action::Window(WindowAction::Close(
@@ -825,7 +825,7 @@ impl LalaMusicBar {
                             data.play().await.ok();
                             get_metadata().await
                         },
-                        Message::DBusInfoUpdate,
+                        Message::MpirsInfoUpdate,
                     );
                 }
             }
@@ -840,7 +840,7 @@ impl LalaMusicBar {
                             data.pause().await.ok();
                             get_metadata().await
                         },
-                        Message::DBusInfoUpdate,
+                        Message::MpirsInfoUpdate,
                     );
                 }
             }
@@ -855,7 +855,7 @@ impl LalaMusicBar {
                             data.go_previous().await.ok();
                             get_metadata().await
                         },
-                        Message::DBusInfoUpdate,
+                        Message::MpirsInfoUpdate,
                     );
                 }
             }
@@ -870,7 +870,7 @@ impl LalaMusicBar {
                             data.go_next().await.ok();
                             get_metadata().await
                         },
-                        Message::DBusInfoUpdate,
+                        Message::MpirsInfoUpdate,
                     );
                 }
             }
@@ -888,9 +888,9 @@ impl LalaMusicBar {
                 self.datetime = Local::now();
                 self.date = self.datetime.date_naive().into();
                 self.time = self.datetime.time().into();
-
-                // NOTE: dbus
-                return Command::perform(get_metadata(), Message::DBusInfoUpdate);
+            }
+            Message::RequestMprisInfoUpdate => {
+                return Command::perform(get_metadata(), Message::MpirsInfoUpdate);
             }
             Message::UpdateLeft(percent) => {
                 aximer::set_left(percent as i64);
@@ -1365,7 +1365,9 @@ impl LalaMusicBar {
             iced::window::frames().map(|_| Message::Tick),
             wav_canvars::listen_pw().map(Message::Pw),
             // NOTE: update the base data
-            iced::time::every(std::time::Duration::from_secs(10)).map(|_| Message::UpdateData),
+            iced::time::every(std::time::Duration::from_secs(5)).map(|_| Message::UpdateData),
+            iced::time::every(std::time::Duration::from_secs(1))
+                .map(|_| Message::RequestMprisInfoUpdate),
             iced::event::listen()
                 .map(|event| Message::LauncherInfo(LaunchMessage::IcedEvent(event))),
             iced::window::close_events().map(Message::WindowClosed),
