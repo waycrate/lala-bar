@@ -118,6 +118,7 @@ pub enum Message {
     // MENU
     RightPanelFilterChanged(RightPanelFilter),
     PickerColor,
+    ToggleSpectrum(bool),
     PickerColorDone(ColorPickerResult),
     ResetConfig,
 

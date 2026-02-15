@@ -363,14 +363,32 @@ impl LalaMusicBar {
     }
     fn right_settings(&'_ self) -> Element<'_, Message> {
         let color_settings = container(row![
-            container(text(fl!("background-color"))).center_y(Length::Fill),
+            container(text(fl!("background-color")).align_x(Alignment::End)).center_y(Length::Fill),
             Space::new().width(20.),
-            button(text(fl!("pick-color"))).on_press(Message::PickerColor)
+            button(text(fl!("pick-color")))
+                .on_press(Message::PickerColor)
+                .width(Length::Fixed(50.))
+        ])
+        .center_y(Length::Fill)
+        .center_x(Length::Fill);
+        let spectrum_setting = container(row![
+            container(text(fl!("spectrum-enable")).align_x(Alignment::End)).center_y(Length::Fill),
+            Space::new().width(20.),
+            container(
+                checkbox(self.bar_settings.spectrum_enable()).on_toggle(Message::ToggleSpectrum)
+            )
+            .center_y(Length::Fill)
+            .center_x(Length::Fill)
+            .width(Length::Fixed(50.))
         ])
         .center_y(30.)
         .center_x(Length::Fill);
-        let settings =
-            scrollable(column![Space::new().height(30.), color_settings]).height(Length::Fill);
+        let settings = scrollable(column![
+            Space::new().height(30.),
+            color_settings,
+            spectrum_setting
+        ])
+        .height(Length::Fill);
         let reset_button = container(button(text(fl!("reset"))).on_press(Message::ResetConfig))
             .center_x(Length::Fill);
         container(column![settings, reset_button, Space::new().height(10.)])
@@ -498,9 +516,15 @@ impl LalaMusicBar {
         )
         .width(Length::Fill)
         .center_x(Length::Fill);
-        let wav_chat = canvas(&self.wav_data)
-            .width(Length::Fixed(350.))
-            .height(Length::Fill);
+        let wav_chat: Element<'_, Message> = if self.bar_settings.spectrum_enable() {
+            // NOTE: since drawing the canvas cost lots of cpu, so now we allow you to disable it
+            canvas(&self.wav_data)
+                .width(Length::Fixed(350.))
+                .height(Length::Fill)
+                .into()
+        } else {
+            Space::new().into()
+        };
 
         let can_play = service_data.can_play;
         let can_pause = service_data.can_pause;
@@ -1257,6 +1281,10 @@ impl LalaMusicBar {
             }
             Message::PickerColor => {
                 return Command::perform(color_pick(), Message::PickerColorDone);
+            }
+            Message::ToggleSpectrum(enable) => {
+                self.bar_settings.set_spectrum(enable);
+                self.bar_settings.write_to_file();
             }
             Message::PickerColorDone(info) => {
                 let ColorPickerResult::Color(color) = info else {

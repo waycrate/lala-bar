@@ -5,6 +5,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq, Default)]
 pub struct SettingsConfig {
     pub(crate) background_color: Option<String>,
+    #[serde(default)]
+    pub(crate) spectrum_chart: bool,
 }
 
 fn ensure_file() {
@@ -66,6 +68,12 @@ impl SettingsConfig {
         let background_color = self.background_color.as_ref()?;
         let color = csscolorparser::parse(background_color).ok()?;
         Some(iced::Color::from_rgb(color.r, color.g, color.b))
+    }
+    pub fn spectrum_enable(&self) -> bool {
+        self.spectrum_chart
+    }
+    pub fn set_spectrum(&mut self, enable: bool) {
+        self.spectrum_chart = enable;
     }
     pub fn set_background(&mut self, color: iced::Color) {
         let r = (color.r * 255.) as i32;

@@ -16,6 +16,7 @@ quiet-mode = quiet mode
 pick-color = pick
 reset = reset
 background-color = background color:
+spectrum-enable = spectrum enable:
 
 #date and time
 pick-date = Pick date
