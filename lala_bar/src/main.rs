@@ -73,13 +73,11 @@ pub enum Message {
     RequestNext,
     RequestPause,
     RequestPlay,
-    RequestDBusInfoUpdate,
-    RequestUpdateTime,
     // WAV CHAT
     Tick,
     Pw(PwEvent),
     // SOUNCD CONTROL
-    UpdateBalance,
+    UpdateData,
     DBusInfoUpdate(Option<ServiceInfo>),
     BalanceChanged(u8),
     UpdateLeft(u8),

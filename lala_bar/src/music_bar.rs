@@ -612,7 +612,7 @@ impl LalaMusicBar {
                 wav_data: WavState::new(),
             },
             Command::batch(vec![
-                Command::done(Message::UpdateBalance),
+                Command::done(Message::UpdateData),
                 Command::perform(get_metadata_initial(), Message::DBusInfoUpdate),
             ]),
         )
@@ -717,9 +717,6 @@ impl LalaMusicBar {
                 tracing::warn!("pw connection is broken");
             }
             Message::DBusInfoUpdate(data) => self.service_data = data,
-            Message::RequestDBusInfoUpdate => {
-                return Command::perform(get_metadata(), Message::DBusInfoUpdate);
-            }
             Message::ToggleCalendar => {
                 if let Some(calendar_id) = self.calendar_id {
                     return iced_runtime::task::effect(Action::Window(WindowAction::Close(
@@ -884,8 +881,16 @@ impl LalaMusicBar {
                 }
                 self.set_balance(balance)
             }
-            Message::UpdateBalance => {
+            Message::UpdateData => {
+                // BALANCE
                 self.update_balance();
+                // TIME
+                self.datetime = Local::now();
+                self.date = self.datetime.date_naive().into();
+                self.time = self.datetime.time().into();
+
+                // NOTE: dbus
+                return Command::perform(get_metadata(), Message::DBusInfoUpdate);
             }
             Message::UpdateLeft(percent) => {
                 aximer::set_left(percent as i64);
@@ -1235,11 +1240,6 @@ impl LalaMusicBar {
             Message::CloseErrorNotification(id) => {
                 return iced_runtime::task::effect(Action::Window(WindowAction::Close(id)));
             }
-            Message::RequestUpdateTime => {
-                self.datetime = Local::now();
-                self.date = self.datetime.date_naive().into();
-                self.time = self.datetime.time().into()
-            }
             Message::Ready(sender) => self.sender = Some(sender),
             Message::ReadyCheck(check_sender) => self.check_sender = Some(check_sender),
             Message::CheckId(id) => {
@@ -1364,25 +1364,21 @@ impl LalaMusicBar {
         iced::Subscription::batch([
             iced::window::frames().map(|_| Message::Tick),
             wav_canvars::listen_pw().map(Message::Pw),
-            iced::time::every(std::time::Duration::from_secs(1))
-                .map(|_| Message::RequestDBusInfoUpdate),
-            iced::time::every(std::time::Duration::from_secs(10))
-                .map(|_| Message::RequestUpdateTime),
-            iced::time::every(std::time::Duration::from_secs(5)).map(|_| Message::UpdateBalance),
+            // NOTE: update the base data
+            iced::time::every(std::time::Duration::from_secs(10)).map(|_| Message::UpdateData),
             iced::event::listen()
                 .map(|event| Message::LauncherInfo(LaunchMessage::IcedEvent(event))),
-            iced::Subscription::run(|| {
-                iced::stream::channel(100, |output| async move {
-                    use dbusbackend::start_backend;
-                    let _conn = start_backend(output).await.expect("already registered");
-                    pending::<()>().await;
-                    unreachable!()
-                })
-            }),
             iced::window::close_events().map(Message::WindowClosed),
+            // NOTE: dbus connections
             iced::Subscription::run(|| {
                 iced::stream::channel(100, |mut output: Sender<Message>| async move {
                     use iced::futures::sink::SinkExt;
+
+                    use dbusbackend::start_backend;
+                    let _backend_conn = start_backend(output.clone())
+                        .await
+                        .expect("already registered");
+
                     let (sender, mut receiver) = channel(100);
                     let (check_sender, mut check_receiver) = channel(100);
 
