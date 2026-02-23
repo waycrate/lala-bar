@@ -164,6 +164,15 @@ async fn get_connection() -> zbus::Result<zbus::Connection> {
 pub static MPIRS_CONNECTIONS: LazyLock<Arc<Mutex<Vec<ServiceInfo>>>> =
     LazyLock::new(|| Arc::new(Mutex::new(Vec::new())));
 
+#[allow(clippy::type_complexity)]
+pub static ZBUS_HANDLES: LazyLock<
+    Arc<
+        Mutex<
+            HashMap<String, Vec<tokio::task::JoinHandle<std::result::Result<(), anyhow::Error>>>>,
+        >,
+    >,
+> = LazyLock::new(|| Arc::new(Mutex::new(HashMap::new())));
+
 async fn mpirs_is_ready_in<T: ToString>(path: T) -> bool {
     let conns = MPIRS_CONNECTIONS.lock().await;
     conns
@@ -189,6 +198,7 @@ async fn add_mpirs_connection(mpirs_service_info: ServiceInfo) -> Result<()> {
 }
 
 async fn connect_to_signal(mpirs_service_info: &ServiceInfo) -> Result<()> {
+    let service_path0 = mpirs_service_info.service_path.clone();
     let service_path = mpirs_service_info.service_path.clone();
     let service_path2 = mpirs_service_info.service_path.clone();
     let service_path3 = mpirs_service_info.service_path.clone();
@@ -199,7 +209,13 @@ async fn connect_to_signal(mpirs_service_info: &ServiceInfo) -> Result<()> {
         .build()
         .await?;
     let mut statuschanged = instance.receive_playback_status_changed().await;
-    tokio::spawn(async move {
+    let mut handle_pool = ZBUS_HANDLES.lock().await;
+    if let Some(pre_handles) = handle_pool.get(&service_path) {
+        for handle in pre_handles {
+            handle.abort();
+        }
+    }
+    let status_handle = tokio::spawn(async move {
         while let Some(signal) = statuschanged.next().await {
             let status: String = signal.get().await?;
             let mut conns = MPIRS_CONNECTIONS.lock().await;
@@ -215,7 +231,7 @@ async fn connect_to_signal(mpirs_service_info: &ServiceInfo) -> Result<()> {
         Ok::<(), anyhow::Error>(())
     });
     let mut metadatachanged = instance.receive_metadata_changed().await;
-    tokio::spawn(async move {
+    let metadata_handle = tokio::spawn(async move {
         while let Some(signal) = metadatachanged.next().await {
             let metadatamap = signal.get().await?;
             let metadata = Metadata::from_hashmap(metadatamap);
@@ -232,7 +248,7 @@ async fn connect_to_signal(mpirs_service_info: &ServiceInfo) -> Result<()> {
         Ok::<(), anyhow::Error>(())
     });
     let mut can_go_next_changed = instance.receive_can_go_next_changed().await;
-    tokio::spawn(async move {
+    let go_next_handle = tokio::spawn(async move {
         while let Some(signal) = can_go_next_changed.next().await {
             let can_go_next = signal.get().await?;
             let mut conns = MPIRS_CONNECTIONS.lock().await;
@@ -248,7 +264,7 @@ async fn connect_to_signal(mpirs_service_info: &ServiceInfo) -> Result<()> {
         Ok::<(), anyhow::Error>(())
     });
     let mut can_go_pre_changed = instance.receive_can_go_previous_changed().await;
-    tokio::spawn(async move {
+    let go_pre_handle = tokio::spawn(async move {
         while let Some(signal) = can_go_pre_changed.next().await {
             let can_go_pre = signal.get().await?;
             let mut conns = MPIRS_CONNECTIONS.lock().await;
@@ -263,12 +279,27 @@ async fn connect_to_signal(mpirs_service_info: &ServiceInfo) -> Result<()> {
         }
         Ok::<(), anyhow::Error>(())
     });
+    handle_pool.insert(
+        service_path0,
+        vec![
+            status_handle,
+            metadata_handle,
+            go_next_handle,
+            go_pre_handle,
+        ],
+    );
     Ok(())
 }
 
-async fn remove_mpirs_connection<T: ToString>(conn: T) {
+async fn remove_mpirs_connection(conn: &str) {
+    let mut handle_pool = ZBUS_HANDLES.lock().await;
+    if let Some(pre_handles) = handle_pool.remove(conn) {
+        for handle in pre_handles {
+            handle.abort();
+        }
+    }
     let mut conns = MPIRS_CONNECTIONS.lock().await;
-    conns.retain(|iter| iter.service_path != conn.to_string());
+    conns.retain(|iter| iter.service_path != conn);
 }
 
 #[proxy(
@@ -352,7 +383,7 @@ pub async fn init_mpirs() -> Result<()> {
                 continue;
             }
             if old_owner.is_some() {
-                remove_mpirs_connection(&interfacename).await;
+                remove_mpirs_connection(interfacename.as_str()).await;
             } else if new_owner.is_some() && !mpirs_is_ready_in(interfacename.as_str()).await {
                 let instance = MediaPlayer2DbusProxy::builder(&conn)
                     .destination(interfacename.as_str())?
