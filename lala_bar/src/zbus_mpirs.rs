@@ -221,7 +221,7 @@ async fn connect_to_signal(mpirs_service_info: &ServiceInfo) -> Result<()> {
             let mut conns = MPIRS_CONNECTIONS.lock().await;
             if let Some(index) = conns
                 .iter()
-                .position(|info| info.service_path == service_path.clone())
+                .position(|info| info.service_path == service_path)
             {
                 conns[index].playback_status = status;
             } else {
@@ -238,7 +238,7 @@ async fn connect_to_signal(mpirs_service_info: &ServiceInfo) -> Result<()> {
             let mut conns = MPIRS_CONNECTIONS.lock().await;
             if let Some(index) = conns
                 .iter()
-                .position(|info| info.service_path == service_path2.clone())
+                .position(|info| info.service_path == service_path2)
             {
                 conns[index].metadata = metadata;
             } else {
@@ -254,7 +254,7 @@ async fn connect_to_signal(mpirs_service_info: &ServiceInfo) -> Result<()> {
             let mut conns = MPIRS_CONNECTIONS.lock().await;
             if let Some(index) = conns
                 .iter()
-                .position(|info| info.service_path == service_path3.clone())
+                .position(|info| info.service_path == service_path3)
             {
                 conns[index].can_go_next = can_go_next;
             } else {
