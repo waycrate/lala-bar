@@ -108,6 +108,10 @@ fn get_icon_path_from_xdgicon(iconname: &str) -> Option<PathBuf> {
     if let Some(iconpath) = scalable_icon_path.find_data_file(format!("{iconname}.svg")) {
         return Some(iconpath);
     }
+    let symbolic_icon_path = xdg::BaseDirectories::with_prefix("icons/hicolor/symbolic/apps");
+    if let Some(iconpath) = symbolic_icon_path.find_data_file(format!("{iconname}.svg")) {
+        return Some(iconpath);
+    }
     for prefix in ICONS_SIZE {
         let iconpath = xdg::BaseDirectories::with_prefix(format!("icons/hicolor/{prefix}/apps"));
         if let Some(iconpath) = iconpath.find_data_file(format!("{iconname}.png")) {

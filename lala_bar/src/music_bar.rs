@@ -1439,10 +1439,7 @@ impl LalaMusicBar {
                         if output_check.try_send(Message::CheckId(id)).is_err() {
                             return false;
                         }
-                        if let Ok(Some(true)) = check_receiver.try_next() {
-                            return true;
-                        }
-                        false
+                        check_receiver.try_recv().unwrap_or(false)
                     })
                     .connect()
                     .await

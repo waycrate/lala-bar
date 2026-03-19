@@ -12,9 +12,9 @@ readme = "README.md"
 
 [workspace.dependencies]
 iced_zbus_notification = { version = "0.4.4", path = "iced_zbus_notification" }
-futures = "0.3.31"
+futures = "0.3.32"
 serde = { version = "1.0.228", features = ["derive"] }
 url = "2.5.8"
 zbus = { version = "5.14.0", default-features = false, features = ["tokio"] }
-futures-util = "0.3.31"
+futures-util = "0.3.32"
 async-trait = "0.1.89"
