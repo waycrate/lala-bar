@@ -11,7 +11,7 @@ use std::path::{Path, PathBuf};
 use async_trait::async_trait;
 use glob::glob;
 use serde::{Deserialize, Serialize};
-use zbus::{interface, object_server::SignalEmitter, zvariant::OwnedValue};
+use zbus::{interface, object_server::SignalEmitter, zvariant::OwnedVariant};
 
 use futures::channel::mpsc::Sender;
 use std::sync::{Arc, LazyLock, RwLock};
@@ -52,7 +52,7 @@ impl Id {
 }
 
 /// Describe the image information.
-#[derive(Type, Debug, OwnedValue, Clone, PartialEq)]
+#[derive(Type, Debug, OwnedVariant, Clone, PartialEq)]
 struct ImageData {
     width: i32,
     height: i32,
@@ -130,7 +130,7 @@ pub struct NotifyHint {
     urgency: Urgency,
 }
 
-#[derive(Deserialize, Serialize, Type, Debug, Clone, OwnedValue, PartialEq)]
+#[derive(Deserialize, Serialize, Type, Debug, Clone, OwnedVariant, PartialEq)]
 #[repr(u8)]
 pub enum Urgency {
     Low = 0,
@@ -304,7 +304,7 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
     }
 
     /// check if the id is already existed in current state
-    /// If result is true, then the replaced_id will be keeped
+    /// If result is true, then the replaced_id will be kept
     /// If the result is no, we will use the new id
     pub fn with_check(mut self, check: impl FnMut(u32) -> bool + Send + Sync + 'static) -> Self {
         self.notify_check = Box::new(check);
@@ -312,9 +312,9 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
     }
 
     pub async fn connect(self) -> Result<zbus::Connection, zbus::Error> {
-        connection::Builder::session()?
-            .name("org.freedesktop.Notifications")?
-            .serve_at("/org/freedesktop/Notifications", self)?
+        connection::Builder::session()
+            .name("org.freedesktop.Notifications")
+            .serve_at("/org/freedesktop/Notifications", self)
             .build()
             .await
     }
@@ -368,7 +368,7 @@ impl<T: From<NotifyMessage> + Send + 'static> LaLaMako<T> {
         summery: &str,
         body: &str,
         actions: Vec<&str>,
-        mut hints: std::collections::HashMap<&str, OwnedValue>,
+        mut hints: std::collections::HashMap<&str, OwnedVariant>,
         timeout: i32,
     ) -> zbus::fdo::Result<u32> {
         let id = if replaced_id == 0 {

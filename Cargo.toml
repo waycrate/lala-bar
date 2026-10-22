@@ -15,6 +15,6 @@ iced_zbus_notification = { version = "0.4.4", path = "iced_zbus_notification" }
 futures = "0.3.34"
 serde = { version = "1.0.229", features = ["derive"] }
 url = "2.5.8"
-zbus = { version = "5.19.0", default-features = false, features = ["tokio"] }
+zbus = "6.0"
 futures-util = "0.3.34"
 async-trait = "0.1.92"

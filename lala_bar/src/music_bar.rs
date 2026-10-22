@@ -25,7 +25,7 @@ use iced::{Alignment, Element, Font, Length, Task as Command, Theme};
 use iced_aw::{date_picker::Date, helpers::date_picker, time_picker, time_picker::Time};
 use iced_exwlshell::reexport::OutputOption;
 use iced_exwlshell::reexport::{
-    Anchor, KeyboardInteractivity, Layer, LayerSize, NewLayerShellSettings,
+    Anchor, KeyboardInteractivity, Layer, LayerSize, Margin, NewLayerShellSettings,
 };
 use iced_exwlshell::settings::LayerShellSettings;
 use iced_exwlshell::settings::StartMode;
@@ -736,7 +736,12 @@ impl LalaMusicBar {
                                     exclusive_zone: None,
                                     anchor: Anchor::Right | Anchor::Bottom,
                                     layer: Layer::Top,
-                                    margin: Some((10, 10, 10, 10)),
+                                    margin: Some(Margin {
+                                        top: 10,
+                                        right: 10,
+                                        bottom: 10,
+                                        left: 10,
+                                    }),
                                     keyboard_interactivity: KeyboardInteractivity::None,
                                     output_option: OutputOption::LastOutput,
                                     ..Default::default()
@@ -751,7 +756,12 @@ impl LalaMusicBar {
                             exclusive_zone: None,
                             anchor: Anchor::Right | Anchor::Bottom,
                             layer: Layer::Top,
-                            margin: Some((10, 10, 10, 10)),
+                            margin: Some(Margin {
+                                top: 10,
+                                right: 10,
+                                bottom: 10,
+                                left: 10,
+                            }),
                             keyboard_interactivity: KeyboardInteractivity::None,
                             output_option: OutputOption::Active,
                             ..Default::default()
@@ -779,7 +789,12 @@ impl LalaMusicBar {
                                     exclusive_zone: None,
                                     anchor: Anchor::Right | Anchor::Bottom,
                                     layer: Layer::Top,
-                                    margin: Some((10, 10, 10, 10)),
+                                    margin: Some(Margin {
+                                        top: 10,
+                                        right: 10,
+                                        bottom: 10,
+                                        left: 10,
+                                    }),
                                     keyboard_interactivity: KeyboardInteractivity::None,
                                     output_option: OutputOption::LastOutput,
                                     ..Default::default()
@@ -794,7 +809,12 @@ impl LalaMusicBar {
                             exclusive_zone: None,
                             anchor: Anchor::Right | Anchor::Bottom,
                             layer: Layer::Top,
-                            margin: Some((10, 10, 10, 10)),
+                            margin: Some(Margin {
+                                top: 10,
+                                right: 10,
+                                bottom: 10,
+                                left: 10,
+                            }),
                             keyboard_interactivity: KeyboardInteractivity::None,
                             output_option: OutputOption::Active,
                             ..Default::default()
@@ -1047,7 +1067,12 @@ impl LalaMusicBar {
                         {
                             commands.push(Command::done(Message::MarginChange {
                                 id: **id,
-                                margin: (unit.upper, 10, 10, 10),
+                                margin: Margin {
+                                    top: unit.upper,
+                                    right: 10,
+                                    bottom: 10,
+                                    left: 10,
+                                },
                             }));
                         }
 
@@ -1072,7 +1097,12 @@ impl LalaMusicBar {
                                 exclusive_zone: None,
                                 anchor: Anchor::Right | Anchor::Top,
                                 layer: Layer::Top,
-                                margin: Some((10, 10, 10, 10)),
+                                margin: Some(Margin {
+                                    top: 10,
+                                    right: 10,
+                                    bottom: 10,
+                                    left: 10,
+                                }),
                                 keyboard_interactivity: KeyboardInteractivity::OnDemand,
                                 output_option: OutputOption::LastOutput,
                                 events_transparent: false,
@@ -1097,7 +1127,12 @@ impl LalaMusicBar {
                             exclusive_zone: None,
                             anchor: Anchor::Right | Anchor::Top,
                             layer: Layer::Top,
-                            margin: Some((EXTRAINF_MARGIN, 10, 10, 10)),
+                            margin: Some(Margin {
+                                top: EXTRAINF_MARGIN,
+                                right: 10,
+                                bottom: 10,
+                                left: 10,
+                            }),
                             keyboard_interactivity: KeyboardInteractivity::OnDemand,
                             output_option: iced_exwlshell::reexport::OutputOption::LastOutput,
                             ..Default::default()
@@ -1137,7 +1172,12 @@ impl LalaMusicBar {
                                 exclusive_zone: None,
                                 anchor: Anchor::Right | Anchor::Top,
                                 layer: Layer::Top,
-                                margin: Some((notify_info.upper, 10, 10, 10)),
+                                margin: Some(Margin {
+                                    top: notify_info.upper,
+                                    right: 10,
+                                    bottom: 10,
+                                    left: 10,
+                                }),
                                 keyboard_interactivity: KeyboardInteractivity::OnDemand,
                                 output_option: OutputOption::LastOutput,
                                 ..Default::default()
@@ -1157,7 +1197,12 @@ impl LalaMusicBar {
                                 exclusive_zone: None,
                                 anchor: Anchor::Right | Anchor::Top,
                                 layer: Layer::Top,
-                                margin: Some((EXTRAINF_MARGIN, 10, 10, 10)),
+                                margin: Some(Margin {
+                                    top: EXTRAINF_MARGIN,
+                                    right: 10,
+                                    bottom: 10,
+                                    left: 10,
+                                }),
                                 keyboard_interactivity: KeyboardInteractivity::None,
                                 output_option: OutputOption::LastOutput,
                                 ..Default::default()

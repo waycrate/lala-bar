@@ -22,7 +22,7 @@ iced = { features = [
 	"canvas",
 ], version = "0.14.0" }
 
-iced_exwlshell = "0.20.0"
+iced_exwlshell = "0.21.0-rc2"
 
 iced_runtime = "0.14.0"
 tokio = { version = "1.53", features = ["full"] }
@@ -33,7 +33,13 @@ tracing = "0.1.44"
 futures-util.workspace = true
 serde.workspace = true
 
-zbus.workspace = true
+zbus = { workspace = true, default-features = false, features = [
+	"tokio",
+	"proxy",
+	"service",
+	"object-manager",
+	"tracing",
+] }
 tracing-subscriber = { version = "0.3.23", features = [
 	"std",
 	"env-filter",

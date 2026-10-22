@@ -10,10 +10,9 @@ use tokio::sync::Mutex;
 
 use iced::widget::image;
 use zbus::{
-    Result,
+    OwnedObjectPath, OwnedVariant, Result,
     fdo::{DBusProxy, NameOwnerChangedArgs},
     proxy,
-    zvariant::{OwnedObjectPath, OwnedValue},
 };
 
 const PLAYCTLD: &str = "org.mpris.MediaPlayer2.playerctld";
@@ -29,7 +28,7 @@ pub struct Metadata {
 }
 
 impl Metadata {
-    fn from_hashmap(mut value: HashMap<String, OwnedValue>) -> Self {
+    fn from_hashmap(mut value: HashMap<String, OwnedVariant>) -> Self {
         let art_url = value.remove("mpris:artUrl");
         let mut mpris_image = None;
         if let Some(art_url) = art_url {
@@ -95,7 +94,7 @@ impl ServiceInfo {
         can_go_previous: bool,
         can_go_next: bool,
         playback_status: String,
-        value: HashMap<String, OwnedValue>,
+        value: HashMap<String, OwnedVariant>,
     ) -> Self {
         Self {
             service_path: path.to_owned(),
@@ -111,7 +110,7 @@ impl ServiceInfo {
     pub async fn pause(&self) -> Result<()> {
         let conn = get_connection().await?;
         let instance = MediaPlayer2DbusProxy::builder(&conn)
-            .destination(self.service_path.as_str())?
+            .destination(self.service_path.as_str())
             .build()
             .await?;
         instance.pause().await?;
@@ -121,7 +120,7 @@ impl ServiceInfo {
     pub async fn play(&self) -> Result<()> {
         let conn = get_connection().await?;
         let instance = MediaPlayer2DbusProxy::builder(&conn)
-            .destination(self.service_path.as_str())?
+            .destination(self.service_path.as_str())
             .build()
             .await?;
         instance.play().await?;
@@ -131,7 +130,7 @@ impl ServiceInfo {
     pub async fn go_next(&self) -> Result<()> {
         let conn = get_connection().await?;
         let instance = MediaPlayer2DbusProxy::builder(&conn)
-            .destination(self.service_path.as_str())?
+            .destination(self.service_path.as_str())
             .build()
             .await?;
         instance.next().await?;
@@ -141,7 +140,7 @@ impl ServiceInfo {
     pub async fn go_previous(&self) -> Result<()> {
         let conn = get_connection().await?;
         let instance = MediaPlayer2DbusProxy::builder(&conn)
-            .destination(self.service_path.as_str())?
+            .destination(self.service_path.as_str())
             .build()
             .await?;
         instance.previous().await?;
@@ -205,7 +204,7 @@ async fn connect_to_signal(mpirs_service_info: &ServiceInfo) -> Result<()> {
     let service_path4 = mpirs_service_info.service_path.clone();
     let conn = get_connection().await?;
     let instance = MediaPlayer2DbusProxy::builder(&conn)
-        .destination(service_path.clone())?
+        .destination(service_path.clone())
         .build()
         .await?;
     let mut statuschanged = instance.receive_playback_status_changed().await;
@@ -323,7 +322,7 @@ trait MediaPlayer2Dbus {
     fn can_go_previous(&self) -> Result<bool>;
 
     #[zbus(property)]
-    fn metadata(&self) -> Result<HashMap<String, OwnedValue>>;
+    fn metadata(&self) -> Result<HashMap<String, OwnedVariant>>;
 
     fn pause(&self) -> Result<()>;
 
@@ -347,7 +346,7 @@ pub async fn init_mpirs() -> Result<()> {
     let mut serviceinfos = Vec::new();
     for name in names.iter() {
         let instance = MediaPlayer2DbusProxy::builder(&conn)
-            .destination(name.as_str())?
+            .destination(name.as_str())
             .build()
             .await?;
 
@@ -386,7 +385,7 @@ pub async fn init_mpirs() -> Result<()> {
                 remove_mpirs_connection(interfacename.as_str()).await;
             } else if new_owner.is_some() && !mpirs_is_ready_in(interfacename.as_str()).await {
                 let instance = MediaPlayer2DbusProxy::builder(&conn)
-                    .destination(interfacename.as_str())?
+                    .destination(interfacename.as_str())
                     .build()
                     .await?;
 

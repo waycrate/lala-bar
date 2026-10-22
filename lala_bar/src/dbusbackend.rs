@@ -14,9 +14,9 @@ impl LalaBarBackend {
 }
 
 pub async fn start_backend(sender: Sender<Message>) -> Result<zbus::Connection, zbus::Error> {
-    connection::Builder::session()?
-        .name("org.lalabar.backend")?
-        .serve_at("/org/lalabar/Backend", LalaBarBackend { sender })?
+    connection::Builder::session()
+        .name("org.lalabar.backend")
+        .serve_at("/org/lalabar/Backend", LalaBarBackend { sender })
         .build()
         .await
 }
