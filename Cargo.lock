@@ -1381,9 +1381,9 @@ dependencies = [
 
 [[package]]
 name = "exwlshellev"
-version = "0.21.0-rc2"
+version = "0.21.0-rc3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c394f89dbedbb1bb7a797679c895b1fc3102a0c563c7551579508ba81b4efa2f"
+checksum = "2381849fd7fe7f3908a647bbc7bf8fcd67a39909bf7de3a0bf5245a038940bc1"
 dependencies = [
  "calloop 0.14.5",
  "calloop-wayland-source 0.4.1",
@@ -2166,9 +2166,9 @@ dependencies = [
 
 [[package]]
 name = "iced_exdevtools"
-version = "0.21.0-rc2"
+version = "0.21.0-rc3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "96c886775edf009bc6cd47d638fe2812bba81bcb6a1963665fb7692a88634e74"
+checksum = "91133fbb76c3158052146d42b73768d4bd493ded40279eee4aa344be9ac48645"
 dependencies = [
  "iced_debug",
  "iced_devtools",
@@ -2180,9 +2180,9 @@ dependencies = [
 
 [[package]]
 name = "iced_exwlshell"
-version = "0.21.0-rc2"
+version = "0.21.0-rc3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b8fab680575a5abaf5a706d10a2d6c118aecdbe6eba52bf2ce4deda41bdf9c5b"
+checksum = "774318c674f39ef169aecbc946ca9468bcf71ee960d7ffabfc5b48d9d629e013"
 dependencies = [
  "enumflags2",
  "exwlshellev",
@@ -2207,9 +2207,9 @@ dependencies = [
 
 [[package]]
 name = "iced_exwlshell_macros"
-version = "0.21.0-rc2"
+version = "0.21.0-rc3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "594fdf8093251c6ff9b298562d4febd377688e592ce05cd56e9d04be8b9d7c4b"
+checksum = "8fb400a058c5de6f6a04620199974ed42ffa36ba64202f5efdf48f52f0cf0cda"
 dependencies = [
  "darling",
  "manyhow",
@@ -2334,9 +2334,9 @@ dependencies = [
 
 [[package]]
 name = "iced_wayland_subscriber"
-version = "0.21.0-rc2"
+version = "0.21.0-rc3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ac60bff09421d13c4978978738fc6a8474a40c97d5d23c0a1c6426af2a932d24"
+checksum = "f2e694c272c7088fb888ff0a38dcf285c30c51c5b04ea3c04a44fe6adb444f22"
 dependencies = [
  "exwlshellev",
  "futures",
@@ -2406,7 +2406,7 @@ dependencies = [
 
 [[package]]
 name = "iced_zbus_notification"
-version = "0.4.4"
+version = "0.5.0"
 dependencies = [
  "async-trait",
  "futures",
@@ -2837,7 +2837,7 @@ dependencies = [
 
 [[package]]
 name = "lala-bar"
-version = "0.4.4"
+version = "0.5.0"
 dependencies = [
  "alsa",
  "anyhow",
@@ -5928,9 +5928,9 @@ dependencies = [
 
 [[package]]
 name = "waycrate_xkbkeycode"
-version = "0.21.0-rc2"
+version = "0.21.0-rc3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e1226c2f754be8c41a17d99f5f07d68d42c780533c69b009db93f7ba0b73dd42"
+checksum = "579b7162ac61a78ce0e11cb275c4351b1c09428c16db61cc08c25eeaf13f6a55"
 dependencies = [
  "calloop 0.14.5",
  "log",
