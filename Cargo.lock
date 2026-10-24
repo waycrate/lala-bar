@@ -1381,9 +1381,9 @@ dependencies = [
 
 [[package]]
 name = "exwlshellev"
-version = "0.21.0-rc3"
+version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2381849fd7fe7f3908a647bbc7bf8fcd67a39909bf7de3a0bf5245a038940bc1"
+checksum = "b07d1c6fdcdf98e7b90e3fb295939c4cf379852cc22110fc4722506dea40586f"
 dependencies = [
  "calloop 0.14.5",
  "calloop-wayland-source 0.4.1",
@@ -2166,9 +2166,9 @@ dependencies = [
 
 [[package]]
 name = "iced_exdevtools"
-version = "0.21.0-rc3"
+version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "91133fbb76c3158052146d42b73768d4bd493ded40279eee4aa344be9ac48645"
+checksum = "d87366f47f1dedd2ef6a551209082918519724be8e08e28d7534340ba3ec149c"
 dependencies = [
  "iced_debug",
  "iced_devtools",
@@ -2180,9 +2180,9 @@ dependencies = [
 
 [[package]]
 name = "iced_exwlshell"
-version = "0.21.0-rc3"
+version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "774318c674f39ef169aecbc946ca9468bcf71ee960d7ffabfc5b48d9d629e013"
+checksum = "ae8ef8289ecc970c70ecb56ff3a6e1c59bb7f601d3407b0898358b2d6483a7f7"
 dependencies = [
  "enumflags2",
  "exwlshellev",
@@ -2207,9 +2207,9 @@ dependencies = [
 
 [[package]]
 name = "iced_exwlshell_macros"
-version = "0.21.0-rc3"
+version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8fb400a058c5de6f6a04620199974ed42ffa36ba64202f5efdf48f52f0cf0cda"
+checksum = "52e3a246d92c82fa9eb09869ea2471ab8ec442d70a2bb8794ba1dc77856f78ac"
 dependencies = [
  "darling",
  "manyhow",
@@ -2334,9 +2334,9 @@ dependencies = [
 
 [[package]]
 name = "iced_wayland_subscriber"
-version = "0.21.0-rc3"
+version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f2e694c272c7088fb888ff0a38dcf285c30c51c5b04ea3c04a44fe6adb444f22"
+checksum = "316c777033a2a8fe4e23be76850b4387fd78e7b0c9b84e8d947596f6921a42c1"
 dependencies = [
  "exwlshellev",
  "futures",
@@ -5928,9 +5928,9 @@ dependencies = [
 
 [[package]]
 name = "waycrate_xkbkeycode"
-version = "0.21.0-rc3"
+version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "579b7162ac61a78ce0e11cb275c4351b1c09428c16db61cc08c25eeaf13f6a55"
+checksum = "b5ad955dc6f85425a3d2fa766eb32dd843b87d313be5f15d78911ad7a6510698"
 dependencies = [
  "calloop 0.14.5",
  "log",
