@@ -1,13 +1,13 @@
 project(
   'lala-bar',
   'rust',
-  version: '0.3.10',
+  version: '0.4.0',
   license: 'MIT',
   meson_version: '>= 1.0',
 )
 
-cargo = find_program('cargo', required: true, version: '>=1.80')
-find_program('rustc', required: true, version: '>=1.80')
+cargo = find_program('cargo', required: true, version: '>=1.90')
+find_program('rustc', required: true, version: '>=1.90')
 if get_option('debug')
   command = [
     cargo,
