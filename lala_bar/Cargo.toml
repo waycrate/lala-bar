@@ -23,10 +23,10 @@ iced = { features = [
 	"canvas",
 ], version = "0.14.0" }
 
-iced_exwlshell = "0.21.0"
+iced_exwlshell = "0.21.4"
 
 iced_runtime = "0.14.0"
-tokio = { version = "1.53", features = ["full"] }
+tokio = { version = "1.54", features = ["full"] }
 iced_futures = "0.14.0"
 env_logger = "0.11.11"
 tracing = "0.1.44"
@@ -58,13 +58,13 @@ iced_zbus_notification.workspace = true
 chrono = "0.4.45"
 async-trait.workspace = true
 iced_aw = "0.14"
-open = "5.4.1"
-ashpd = { version = "0.13.13", features = ["screenshot", "screencast"] }
-toml = "1.1.4"
-csscolorparser = "0.8.3"
+open = "5.4.5"
+ashpd = { version = "0.14.0", features = ["screenshot", "screencast"] }
+toml = "1.2.1"
+csscolorparser = "0.9.0"
 pipewire = "0.10.1"
 fluent-bundle = "0.16.0"
-rust-embed = "8.12.0"
+rust-embed = "8.13.0"
 intl-memoizer = "0.5.3"
 i18n-embed = { version = "0.16", features = [
 	"fluent-system",
@@ -72,6 +72,6 @@ i18n-embed = { version = "0.16", features = [
 ] }
 i18n-embed-fl = "0.10"
 fluent-syntax = "0.12"
-realfft = "3.5.0"
-freedesktop-desktop-entry = "0.8.1"
-rand = "0.10.2"
+realfft = "3.5.1"
+freedesktop-desktop-entry = "0.8.4"
+rand = "0.10.3"
